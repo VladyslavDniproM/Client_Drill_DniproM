@@ -1,0 +1,16 @@
+.env
+
+# Кеші Python
+__pycache__/
+*.pyc
+
+# Ігнорувати IDE файли (опційно)
+.vscode/
+.idea/
+
+# Логи
+*.log
+
+# Файли, які генерує Flask
+instance/
+

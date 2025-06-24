@@ -15,6 +15,8 @@ client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
 
+print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
+
 MODEL_ENGINE = "gpt-3.5-turbo"
 
 SITUATIONS = [

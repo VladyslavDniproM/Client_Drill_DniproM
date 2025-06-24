@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8" />
+    <title>Віртуальний клієнт</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 6px;
+            max-width: 70%;
+        }
+        .user-message {
+            background-color: #d1e7dd;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .bot-message {
+            background-color: #f8d7da;
+            align-self: flex-start;
+            margin-right: auto;
+        }
+        #input-area {
+            display: flex;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 8px;
+            font-size: 1rem;
+        }
+        #send-button {
+            padding: 8px 16px;
+            font-size: 1rem;
+        }
+        #models-container {
+            margin-top: 10px;
+        }
+        .model-button {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            background: #eee;
+        }
+        #restart-button {
+            display: none;
+            margin-top: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Віртуальний клієнт шуруповертів</h1>
+
+    <div id="chat-container"></div>
+
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Ваше питання..." autocomplete="off" />
+        <button id="send-button">Надіслати</button>
+    </div>
+
+    <div id="models-container"></div>
+
+    <button id="restart-button">Почати заново</button>
+
+<script>
+    const chatContainer = document.getElementById("chat-container");
+    const userInput = document.getElementById("user-input");
+    const sendButton = document.getElementById("send-button");
+    const modelsContainer = document.getElementById("models-container");
+    const restartButton = document.getElementById("restart-button");
+
+    function addMessage(text, isUser) {
+        const div = document.createElement("div");
+        div.classList.add("message");
+        div.classList.add(isUser ? "user-message" : "bot-message");
+        div.textContent = text;
+        chatContainer.appendChild(div);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function clearModels() {
+        modelsContainer.innerHTML = "";
+    }
+
+    function showModels(models) {
+        clearModels();
+        models.forEach(model => {
+            const btn = document.createElement("button");
+            btn.classList.add("model-button");
+            btn.textContent = model;
+            btn.onclick = () => {
+                addMessage(`Я обираю модель: ${model}`, true);
+                clearModels();
+                disableInput();
+            };
+            modelsContainer.appendChild(btn);
+        });
+    }
+
+    function disableInput() {
+        userInput.disabled = true;
+        sendButton.disabled = true;
+        restartButton.style.display = "inline-block";
+    }
+
+    function enableInput() {
+        userInput.disabled = false;
+        sendButton.disabled = false;
+        restartButton.style.display = "none";
+    }
+
+    async function startChat() {
+        const res = await fetch("/start_chat");
+        const data = await res.json();
+        addMessage(data.reply, false);
+        enableInput();
+    }
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+        addMessage(message, true);
+        userInput.value = "";
+        const res = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+            addMessage(data.error, false);
+            disableInput();
+            return;
+        }
+
+        if (data.reply) {
+            addMessage(data.reply, false);
+        }
+
+        if (data.show_models) {
+            showModels(data.models);
+        }
+
+        if (data.chat_ended) {
+            disableInput();
+        }
+    }
+
+    sendButton.addEventListener("click", sendMessage);
+    userInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            sendMessage();
+        }
+    });
+
+    restartButton.addEventListener("click", () => {
+        chatContainer.innerHTML = "";
+        clearModels();
+        startChat();
+    });
+
+    startChat();
+</script>
+</body>
+</html>

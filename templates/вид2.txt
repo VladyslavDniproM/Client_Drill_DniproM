@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Dnipro-M бот</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f1f1;
+            margin: 0;
+            padding: 0;
+        }
+
+        #chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 80vh;
+            margin: 40px auto 0;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #dcf8c6;
+            align-self: flex-end;
+            text-align: right;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background-color: #eee;
+            align-self: flex-start;
+            text-align: left;
+            margin-right: auto;
+        }
+
+        #input-container {
+            max-width: 800px;
+            margin: 10px auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 10px;
+        }
+
+        #send-button {
+            padding: 10px 20px;
+        }
+
+        #status {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        #restart-button {
+            display: none;
+            margin: 10px auto;
+            padding: 10px 20px;
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #models-container {
+            display: none;
+            max-width: 800px;
+            margin: 10px auto;
+            text-align: center;
+        }
+
+        .model-button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #ff6600;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #aaa;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0%, 80%, 100% {
+                opacity: 0;
+            }
+            40% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container"></div>
+
+    <div id="status"></div>
+
+    <div id="input-container">
+        <input id="user-input" type="text" placeholder="Ваше повідомлення...">
+        <button id="send-button">Надіслати</button>
+    </div>
+
+    <div id="models-container">
+        <p id="models-prompt"></p>
+        <div id="models-buttons"></div>
+    </div>
+
+    <button id="restart-button">Почати спочатку</button>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const statusElement = document.getElementById('status');
+        const restartButton = document.getElementById('restart-button');
+        const modelsContainer = document.getElementById('models-container');
+        const modelsButtons = document.getElementById('models-buttons');
+        const modelsPrompt = document.getElementById('models-prompt');
+
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', isUser ? 'user-message' : 'bot-message');
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.classList.add('typing-indicator');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typing = document.getElementById('typing-indicator');
+            if (typing) typing.remove();
+        }
+
+        function disableChat() {
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            userInput.style.display = 'none';
+            sendButton.style.display = 'none';
+            modelsContainer.style.display = 'none';
+            statusElement.textContent = "Чат завершено.";
+            showRestartButton();
+        }
+
+        function showRestartButton() {
+            restartButton.style.display = 'inline-block';
+            restartButton.addEventListener('click', () => {
+                window.location.reload();
+            });
+        }
+
+        function showModelButtons(models, promptText) {
+            modelsPrompt.textContent = promptText;
+            modelsButtons.innerHTML = '';
+            models.forEach(model => {
+                const button = document.createElement('button');
+                button.textContent = model;
+                button.className = 'model-button';
+                button.onclick = () => sendModelChoice(model);
+                modelsButtons.appendChild(button);
+            });
+            modelsContainer.style.display = 'block';
+            userInput.style.display = 'none';
+        }
+
+        function hideModelButtons() {
+            modelsContainer.style.display = 'none';
+            userInput.style.display = 'block';
+        }
+
+        async function sendModelChoice(model) {
+            addMessage(model, true);
+            hideModelButtons();
+            showTypingIndicator();
+            statusElement.textContent = "Бот обробляє ваш вибір...";
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: model })
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    statusElement.textContent = "Помилка: " + data.error;
+                    if (data.chat_ended) disableChat();
+                } else {
+                    addMessage(data.reply, false);
+                    statusElement.textContent = "";
+                    if (data.chat_ended) {
+                        disableChat();
+                    }
+                }
+            } catch (error) {
+                statusElement.textContent = "Помилка з'єднання: " + error.message;
+            } finally {
+                hideTypingIndicator();
+            }
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            addMessage(message, true);
+            userInput.value = '';
+            showTypingIndicator();
+            statusElement.textContent = "Бот обдумує відповідь...";
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    statusElement.textContent = "Помилка: " + data.error;
+                    if (data.chat_ended) disableChat();
+                } else {
+                    addMessage(data.reply, false);
+                    statusElement.textContent = "";
+                    if (data.chat_ended) {
+                        disableChat();
+                    } else if (data.show_models) {
+                        showModelButtons(data.models, data.reply);
+                    }
+                }
+            } catch (error) {
+                statusElement.textContent = "Помилка з'єднання: " + error.message;
+            } finally {
+                hideTypingIndicator();
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            showTypingIndicator();
+            try {
+                const response = await fetch('/start_chat');
+                const data = await response.json();
+                if (data.reply) addMessage(data.reply, false);
+            } catch (e) {
+                addMessage("Добрий день! Мені потрібен шуруповерт. Що ви можете порадити?", false);
+            } finally {
+                hideTypingIndicator();
+            }
+        });
+    </script>
+</body>
+</html>

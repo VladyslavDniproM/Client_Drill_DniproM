@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестування продавців-консультантів</title>
+    <style>
+/* === RESET === */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* === BASE === */
+body {
+background-image: url("/static/Iv-2.jpg");
+  background-size: cover;         /* або contain — залежно від бажаного ефекту */
+  background-repeat: no-repeat;
+  background-position: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: #ffffff;
+  color: #333;
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+.background-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(0, 0, 0, 0.742); /* або 0.2-0.5 */
+  z-index: -1;
+}
+
+/* === HEADER === */
+h1 {
+  color: #ffffff;
+  text-align: center;
+  padding: 5px;
+  font-size: clamp(18px, 4vw, 24px);
+  margin: 0.5em 0;
+}
+
+/* === CHAT CONTAINER === */
+.chat-container {
+  background-color: #f4f4f4;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  padding: 10px 15px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 50dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin: 0 auto;
+}
+
+/* === MESSAGES === */
+.message {
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  border-radius: 18px;
+  max-width: 80%;
+  line-height: 1.4;
+  animation: fadeIn 0.3s ease;
+  word-wrap: break-word;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.bot-message {
+  background-color: #e0e0e0;
+  color: #333;
+  align-self: flex-start;
+  border-radius: 18px 18px 5px 18px;
+}
+.user-message {
+  background-color: #ff6f00;
+  color: white;
+  align-self: flex-end;
+  border-radius: 18px 18px 18px 5px;
+}
+
+/* === INPUT AREA === */
+.input-area {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  width: 90%;
+  max-width: 800px;
+  background-color: white;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+}
+#user-input {
+  flex-grow: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: clamp(14px, 3vw, 16px);
+  min-height: 20px;
+  max-height: 120px;
+  resize: vertical;
+}
+#send-button {
+  background-color: #ff6f00;
+  color: white;
+  border: none;
+  padding: 0 clamp(10px, 3vw, 20px);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: clamp(14px, 3vw, 16px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  min-width: 60px;
+  height: 44px;
+}
+#send-button:hover {
+  background-color: #e65c00;
+}
+#send-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* === STAGE INDICATOR === */
+.stage-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 90%;
+  max-width: 800px;
+  margin: 10px 0;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+.stage {
+  display: none;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  color: #ffffff;
+  transition: all 0.3s ease;
+  margin-bottom: 5px;
+  opacity: 0.5;
+  transform: scale(0.95);
+  transition: all 0.3s ease;
+}
+
+.stage.visible {
+    display: block; /* Показати */
+    opacity: 1;
+    transform: scale(1);
+}
+
+.stage-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центруємо вміст */
+    justify-content: center;
+}
+
+.stage.active {
+  background-color: #ff6f00;
+  color: white;
+  font-weight: bold;
+}
+
+/* === STATUS / TYPING === */
+.status {
+  font-style: italic;
+  font-size: clamp(12px, 2.5vw, 14px);
+  color: #ffffff;
+  text-align: center;
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.typing-indicator {
+  display: inline-block;
+  padding: 10px;
+  margin-left: 10px;
+}
+.typing-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #999;
+  margin: 0 2px;
+  animation: typingAnimation 1.4s infinite ease-in-out;
+}
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingAnimation {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-5px); }
+}
+
+/* === RESTART BUTTON === */
+#restart-button {
+  display: none;
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 9999;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: clamp(12px, 2.5vw, 14px);
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+#restart-button:hover {
+  background-color: #ff0000a5;
+}
+
+/* === MODELS SELECTION === */
+#models-container {
+  display: none;
+  margin-top: 15px;
+  text-align: center;
+  width: 90%;
+  max-width: 800px;
+  margin: 15px auto 0;
+}
+#models-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+.model-button {
+  min-width: 180px;
+  flex: 0 0 auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.model-button:hover {
+  background-color: #ff6f00;
+  transform: scale(1.03);
+}
+
+/* === MODEL OVERLAY === */
+.model-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.model-selector {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  max-width: 90%;
+  overflow: hidden;
+}
+.models-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding: 10px;
+  scroll-behavior: smooth;
+  max-width: 80vw;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+.arrow {
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  padding: 10px;
+  color: #333;
+}
+.arrow:hover {
+  color: #ff6600;
+}
+
+/* === PROGRESS === */
+.progress-hint {
+  color: #ffffff;
+  font-size: clamp(10px, 2vw, 12px);
+  text-align: center;
+  width: 90%;
+  max-width: 800px;
+  margin: 3px auto;
+}
+.progress-container {
+  margin-top: 10px;
+  width: 90%;
+  max-width: 800px;
+  height: 10px;
+  background-color: #eee;
+  border-radius: 5px;
+  overflow: hidden;
+  transition: opacity 0.5s ease;
+}
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background-color: #4caf50;
+  transition: width 0.3s ease-out;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+.fade-out {
+  opacity: 0;
+  transition: opacity 1s ease-out;
+}
+
+/* === MODAL === */
+.modal {
+  position: fixed;
+  z-index: 9999;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.modal.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+.modal-content {
+  background: rgb(255, 111, 0);
+  padding: 20px 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  text-align: left;
+  overflow-y: auto;
+}
+.modal-content h2 {
+  font-size: clamp(18px, 4vw, 22px);
+}
+.modal-content ul {
+  font-size: clamp(14px, 3vw, 16px);
+  padding-left: 20px;
+}
+.modal-content button {
+  padding: 20px 30px;
+  font-weight: bold;
+  font-size: clamp(14px, 3vw, 16px);
+  cursor: pointer;
+}
+
+/* === MOBILE FIXES === */
+@media (max-width: 600px) {
+  .input-area {
+    flex-direction: column;
+    gap: 8px;
+  }
+  #send-button {
+    width: 100%;
+  }
+  .model-button {
+    min-width: 100%;
+  }
+  .chat-container,
+  .input-area,
+  .stage-indicator,
+  .progress-hint,
+  .progress-container {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+    <div class="progress-hint" id="progressHint">Правильних питань: 0 / 5</div>
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="questionProgressBar"></div>
+    </div>
+
+    <h1>Клієнт зайшов до Вашого магазину...</h1>
+    <div class="background-overlay"></div>
+
+    <div class="chat-container" id="chat-container">
+        <!-- Чат буде додаватись сюди -->
+    </div>
+
+    <div class="input-area">
+        <input
+            type="text"
+            id="user-input"
+            placeholder="Напишіть ваше повідомлення..."
+            autocomplete="off"
+        />
+        <button id="send-button">Надіслати</button>
+    </div>
+
+    <!-- Контейнер для вибору моделей (залишився, але не показуємо) -->
+    <div id="models-container" style="display:none;">
+        <p id="models-prompt"></p>
+        <div id="models-buttons">
+            <!-- Кнопки моделей будуть додані динамічно -->
+        </div>
+
+    </div>
+        <div id="stage-indicator" class="stage-indicator">
+        <div class="stage" data-stage="1">Виявлення потреби</div>
+        <div class="stage" data-stage="2">Презентація товару</div>
+        <div class="stage" data-stage="3">Робота із запереченнями</div>
+        <div class="stage" data-stage="4">Аргументація заперечення</div>
+    </div>
+
+    <!-- Overlay для вибору моделей -->
+    <div id="modelOverlay" class="model-overlay">
+        <div class="model-selector">
+            <div id="modelLeftArrow" class="arrow">←</div>
+            <div id="modelsButtons" class="models-scroll"></div>
+            <div id="modelRightArrow" class="arrow">→</div>
+        </div>
+    </div>
+
+    <div id="top-area">
+        <div id="status" class="status">
+            Поставте перше питання клієнтові, дізнайтесь, для чого йому шуруповерт!
+        </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div style="text-align: center;">
+        <button id="restart-button">Почати новий діалог</button>
+    </div>
+
+    <div id="rules-modal" class="modal">
+        <div class="modal-content">
+            <h2>Правила комунікації з ботом</h2>
+            <ul>
+                <li>Будьте ввічливими та конкретними.</li>
+                <li>Ставте чіткі питання.</li>
+                <li>Не використовуйте нецензурну лексику.</li>
+                <li>Після 3-х непорозумінь сесія завершиться.</li>
+                <li>Якщо виникають проблеми — натисніть "Почати заново".</li>
+            </ul>
+            <button id="accept-rules-btn">Я ознайомився і готовий</button>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById("chat-container");
+        const userInput = document.getElementById("user-input");
+        const sendButton = document.getElementById("send-button");
+        const statusElement = document.getElementById("status");
+        const restartButton = document.getElementById("restart-button");
+        const modelsContainer = document.getElementById("models-container");
+        const modelsButtons = document.getElementById("modelsButtons"); // Оновлено, щоб використовувати overlay
+        const modelsPrompt = document.getElementById("models-prompt");
+        const progressHint = document.getElementById("progressHint");
+        const questionProgressBar = document.getElementById("questionProgressBar");
+        const modal = document.getElementById("rules-modal");
+        const acceptBtn = document.getElementById("accept-rules-btn");
+        const modelOverlay = document.getElementById("modelOverlay");
+        const modelLeftArrow = document.getElementById("modelLeftArrow");
+        const modelRightArrow = document.getElementById("modelRightArrow");
+
+        // Події
+        sendButton.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMessage();
+        });
+        restartButton.addEventListener("click", () => window.location.reload());
+
+        modelLeftArrow.onclick = () => {
+            modelsButtons.scrollBy({ left: -300, behavior: "smooth" });
+        };
+
+        modelRightArrow.onclick = () => {
+            modelsButtons.scrollBy({ left: 300, behavior: "smooth" });
+        };
+
+        function blockChat() {
+            userInput.disabled = true;
+            sendButton.disabled = true;
+        }
+
+        function unblockChat() {
+            userInput.disabled = false;
+            sendButton.disabled = false;
+        }
+
+        acceptBtn.addEventListener("click", () => {
+            modal.classList.add("hidden");
+            setTimeout(() => {
+                modal.style.display = "none";
+                unblockChat();
+                userInput.focus();
+            }, 300);
+            unblockChat();
+            userInput.focus();
+        });
+
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message");
+            messageDiv.classList.add(isUser ? "user-message" : "bot-message");
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement("div");
+            typingDiv.classList.add("typing-indicator");
+            typingDiv.id = "typing-indicator";
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById("typing-indicator");
+            if (typingIndicator) typingIndicator.remove();
+        }
+
+        function disableChat() {
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            hideModelButtons();
+            statusElement.textContent = "Діалог завершено";
+        }
+
+        function showModelButtons(models, promptText = "Оберіть модель:", attemptsLeft = 1) {
+            const modelData = {
+                "CD-218Q": {
+                    image: "/static/218Q.png",
+                    specs: [
+                        "24 Нм",
+                        "Швидкоз'ємний патрон",
+                        "Йде без акумулятора",
+                        "Легкий та компактний",
+                    ],
+                },
+                "CD-12QX": {
+                    image: "/static/CD12QX.png",
+                    specs: [
+                        "25 Нм",
+                        "Повний комплект",
+                        "Для нескладних завдань",
+                        "Повний комплект, в акції",
+                    ],
+                },
+                "CD-201HBC": {
+                    image: "/static/201HBC.png",
+                    specs: [
+                        "45 Нм",
+                        "Безщітковий двигун",
+                        "Для роботи навіть із цеглою",
+                        "Йде без акумулятора",
+                    ],
+                },
+                "CD-200BCULTRA": {
+                    image: "/static/200BCULTRA.png",
+                    specs: [
+                        "60 Нм",
+                        "Металевий патрон",
+                        "Найсильніший шуруповерт",
+                        "Йде без акумулятора",
+                    ],
+                },
+                "CD-200BCCOMPACT": {
+                    image: "/static/CD-200BCCOMPACT.png",
+                    specs: [
+                        "40 Нм",
+                        "Металевий патрон",
+                        "Найточніший шуруповерт",
+                        "Йде без акумулятора",
+                    ],
+                },
+                "CD-12CX": {
+                    image: "/static/CD12CX.png",
+                    specs: [
+                        "30 Нм",
+                        "Компактний та недорогий",
+                        "Пластиковий патрон",
+                        "Повний комлпект, в акції",
+                    ],
+                },
+                "CD-12BC": {
+                    image: "/static/CD-12BC.png",
+                    specs: [
+                        "40 Нм",
+                        "Металевий патрон",
+                        "Максимально компактний",
+                        "Йде без акумулятора",
+                    ],
+                },
+            };
+
+            modelsButtons.innerHTML = "";
+
+            models.forEach((model) => {
+                const data = modelData[model];
+                if (!data) return;
+
+                const button = document.createElement("button");
+                button.className = "model-button";
+
+                // Фото моделі
+                const img = document.createElement("img");
+                img.src = data.image;
+                img.alt = model;
+                img.style.width = "100px";
+                img.style.display = "block";
+                img.style.margin = "0 auto 10px";
+                button.appendChild(img);
+
+                // Назва моделі
+                const title = document.createElement("div");
+                title.textContent = model;
+                title.style.fontWeight = "bold";
+                title.style.textAlign = "center";
+                button.appendChild(title);
+
+                // Характеристики
+                const ul = document.createElement("ul");
+                ul.style.paddingLeft = "20px";
+                ul.style.marginTop = "8px";
+                data.specs.forEach((spec) => {
+                    const li = document.createElement("li");
+                    li.textContent = spec;
+                    ul.appendChild(li);
+                });
+                button.appendChild(ul);
+
+                // Обробник кліку
+                button.onclick = () => {
+                    addMessage(`Обираю модель: ${model}`, true);
+                    sendModelChoice(model);
+                };
+
+                modelsButtons.appendChild(button);
+            });
+
+            modelOverlay.style.display = "flex";
+            userInput.style.display = "none";
+            sendButton.style.display = "none";
+        }
+
+        function hideModelButtons() {
+            modelOverlay.style.display = "none";
+            userInput.style.display = "block";
+            sendButton.style.display = "inline-block";
+        }
+
+        async function sendModelChoice(model) {
+            hideModelButtons();
+            showTypingIndicator();
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: model }),
+                });
+
+                const data = await response.json();
+                console.log("Відповідь сервера:", data);
+                addMessage(data.reply, false);
+
+                if (data.show_models && data.models?.length) {
+                    showModelButtons(data.models, "Оберіть модель:", data.attempts_left || 1);
+                } else if (data.chat_ended) {
+                    disableChat();
+                    if (data.show_restart_button) {
+                        restartButton.style.display = "inline-block";
+                    }
+                }
+            } catch (error) {
+                console.error("Помилка:", error);
+                addMessage("Помилка зв'язку. Спробуйте ще раз.", false);
+            } finally {
+                hideTypingIndicator();
+            }
+        }
+
+        function updateStageIndicator(currentStage) {
+            const stages = document.querySelectorAll('.stage');
+
+            stages.forEach(stage => {
+                const stageNum = parseInt(stage.dataset.stage);
+
+                // Показуємо тільки ті, що менші або рівні поточному етапу
+                if (stageNum <= currentStage) {
+                    stage.classList.add('visible');
+                } else {
+                    stage.classList.remove('visible');
+                }
+
+                // Виділяємо поточний
+                stage.classList.remove('active');
+                if (stageNum === currentStage) {
+                    stage.classList.add('active');
+                }
+            });
+
+            const stageNames = {
+                1: "Етап: Виявлення потреби",
+                2: "Етап: Презентація товару",
+                3: "Етап: Робота із запереченнями",
+                4: "Етап: Аргументація заперечення"
+            };
+
+            statusElement.textContent = stageNames[currentStage] || "";
+        }
+
+        function updateProgressBar(progress) {
+        const percent = (Math.min(progress, 5) / 5) * 100;
+        questionProgressBar.style.width = `${percent}%`;
+
+        if (progress < 5) {
+            progressHint.textContent = `Правильних питань: ${progress} / 5`;
+            progressHint.style.opacity = "1";
+            document.getElementById("progressContainer").style.opacity = "1";
+            progressHint.style.display = "block";
+            document.getElementById("progressContainer").style.display = "block";
+        } else {
+            progressHint.textContent = "Достатньо питань! Тепер оберіть модель";
+
+            setTimeout(() => {
+                progressHint.style.opacity = "0";
+                document.getElementById("progressContainer").style.opacity = "0";
+            }, 1500);
+
+            setTimeout(() => {
+                progressHint.style.display = "none";
+                document.getElementById("progressContainer").style.display = "none";
+            }, 2000);
+        }
+    }
+
+   async function sendMessage() {
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    addMessage(message, true); // Повідомлення продавця
+    userInput.value = '';
+    showTypingIndicator();
+    statusElement.textContent = "Клієнт набирає відповідь...";
+
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message})
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const data = await response.json();
+
+        // Обробка відповіді
+        if (data.error) {
+            statusElement.textContent = "Помилка: " + data.error;
+            if (data.chat_ended) disableChat();
+            return;
+        }
+
+        if (data.show_restart_button) {
+            restartButton.style.display = "inline-block";
+        } else {
+            restartButton.style.display = "none";
+        }
+
+        // --- Нова логіка для етапу 3 (технічні питання) ---
+        if (data.stage === 3) {
+                // Просто додаємо одне питання — не розділяємо
+            addMessage(data.reply, false);
+            statusElement.textContent = "Клієнт уточнює деталі про модель...";
+            userInput.focus();
+
+            // Додаємо питання по одному з затримкою
+            questions.forEach((question, index) => {
+                setTimeout(() => {
+                    addMessage(question, false);
+                    // Прокручуємо чат до останнього повідомлення
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, index * 1000); // Затримка 1 сек між питаннями
+            });
+        } else {
+            // Для інших етапів - стандартна обробка
+            addMessage(data.reply, false);
+        }
+
+        // Обробка етапу вибору моделі
+        if (data.show_models) {
+            showModelButtons(data.models, "Оберіть модель:", data.attempts_left);
+        }
+
+        if (data.stage !== undefined) {
+            updateStageIndicator(data.stage);
+        }
+
+        // Оновлення статусу для етапу 3
+        if (data.stage === 3) {
+            statusElement.textContent = "Клієнт уточнює деталі про модель...";
+            userInput.focus();
+        }
+
+        // Оновлення прогресу
+        if (data.question_progress !== undefined) {
+            updateProgressBar(data.question_progress);
+        }
+
+        // Завершення діалогу
+        if (data.chat_ended) {
+            disableChat();
+            if (data.model_chosen) {
+                setTimeout(() => {
+                    addMessage("Дякую! Я беру цю модель.", false);
+                }, 1000);
+            }
+        } else {
+            statusElement.textContent = "";
+        }
+
+    } catch (error) {
+        console.error("Помилка:", error);
+        statusElement.textContent = "Помилка з'єднання";
+        addMessage("Вибачте, сталася помилка. Спробуйте ще раз.", false);
+    } finally {
+        hideTypingIndicator();
+    }
+}
+
+    // Стартове повідомлення при завантаженні
+    window.onload = async function () {
+        try {
+            const response = await fetch("/start_chat");
+            
+            const data = await response.json();
+            if (data.reply) addMessage(data.reply, false);
+        } catch (err) {
+            statusElement.textContent = "Помилка старту чату: " + err.message;
+        }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+    const chatContainer = document.querySelector('.chat-container');
+    
+    const firstMessage = document.createElement('div');
+    firstMessage.classList.add('message', 'user-message');
+    firstMessage.textContent = 'Добрий день! Вітаємо Вас в магазині Dnipro-M!';
+    
+    chatContainer.appendChild(firstMessage);
+    } , 1000);
+  });
+
+    // Події кнопки і Enter
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+    </script>
+</body>
+</html>

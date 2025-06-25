@@ -1,156 +1,25 @@
-from dotenv import load_dotenv
 import openai
 from flask import Flask, render_template, request, jsonify, session
+from dotenv import load_dotenv
 import os
 import random
 import re
-import traceback
-import logging
 
-logging.basicConfig(level=logging.DEBUG)
 load_dotenv()
-
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
 
-print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
-
+openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"
 
 SITUATIONS = [
   {
-    "id": 1,
-        "description": "Складання меблів (IKEA, кухонні гарнітури)",
-        "requirements": "легкість, регульований момент, ергономічність, маю 4А акумулятор",
-        "correct_model": "CD-218Q",
-        "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-201HBC", "CD-200BCCOMPACT", "CD-12BC", "CD-12CX"],
-        "hints": [
-            "Робота з ДСП — потрібна акуратність",
-            "Вже маю Ваш 4А акумулятор.",
-            "Уникати занадто потужних моделей, щоб не пошкодити матеріал",
-            "Необхідно максимально точно регулювати швидкість"
-        ],
-    },
-    {
-    "id": 2,
-    "description": "Ремонт у квартирі — монтаж гіпсокартону",
-    "requirements": "помірна потужність, зручність у використанні, швидкозатискний патрон, повний комплект",
-    "correct_model": "CD-12CX",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-218Q", "CD-200BCCOMPACT", "CD-12BC", "CD-201HBC"],
-    "hints": [
-        "Потрібно закручувати саморізи в металевий профіль",
-        "Бажано мати підсвітку",
-        "Часто працюю з витягнутою рукою — має бути легкий",
-        "Хочу, щоб був повним комплектом"
-    ]
-    },
-    {
-    "id": 3,
-    "description": "Подарунок татові — універсальний інструмент",
-    "requirements": "надійність, проста експлуатація, комплект у кейсі",
-    "correct_model": "CD-12QX", "CD-12CX"
-    "wrong_models": ["CD-200BCULTRA", "CD-218Q", "CD-200BCCOMPACT", "CD-12BC", "CD-201HBC"],
-    "hints": [
-        "Хочу, щоб був і для свердління, і для закручування",
-        "Бажано з двома акумуляторами",
-        "Не знаю точно, що саме йому треба — треба щось універсальне"
-    ],
-    },
-    {
-    "id": 4,
-    "description": "Монтаж вентканалів на даху",
-    "requirements": "висока потужність, ударна функція, стійкий до пилу",
-    "correct_model": "CD-201HBC",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-218Q", "CD-200BCCOMPACT", "CD-12BC", "CD-12CX"],
-    "hints": [
-        "Потрібно свердлити метал і цеглу, інколи газоблок",
-        "Працюю у складних умовах — важлива витривалість",
-        "Іноді потрібно працювати з великими свердлами"
-    ]
-    },
-    {
-    "id": 5,
-    "description": "Домашні роботи — полички, картини, дрібний ремонт",
-    "requirements": "компактність, універсальність, адекватна ціна, маю 2А акумулятор",
-    "correct_model": "CD-218Q",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-200BCCOMPACT", "CD-12BC", "CD-12CX", "CD-201HBC"],
-    "hints": [
-        "Використання кілька разів на місяць",
-        "Щоб легко було міняти насадки",
-        "Вже маю Ваш 20V акумулятор з ємністю на 2А"
-    ]
-    },
-    {
-    "id": 6,
-    "description": "Робота на виїзді — збірка комерційних меблів",
-    "requirements": "повним комлектом, 2 акумулятори, якісний кейс",
-    "correct_model": "CD-12QX",
-    "wrong_models": ["CD-200BCULTRA", "CD-218Q", "CD-200BCCOMPACT", "CD-12BC", "CD-12CX", "CD-201HBC"],
-    "hints": [
-        "Треба інструмент з швидкоз'ємним патроном",
-        "Часто переношу інструмент — важлива зручна валіза",
-        "Вже маю Ваш 12V шуруповерт, класний"
-    ]
-    },
-    {
-    "id": 7,
-    "description": "Свердління металу (профіль, труби)",
-    "requirements": "високий крутний момент, регулювання обертів, металевий патрон, маю вже шуруповерт Вашої компанії",
-    "correct_model": "CD-200BCULTRA",
-    "wrong_models": ["CD-12QX", "CD-218Q", "CD-200BCCOMPACT", "CD-12BC", "CD-12CX", "CD-201HBC"],
-    "hints": [
-        "Інколи треба просвердлити 3–5 мм метал",
-        "Має бути можливість затискати свердла до 13 мм",
-        "Шуруповерт повинен мати достатню потужність",
-        "У мого колеги шуруповерт 200BC Ultra, хочу такий самий"
-    ]
-    },
-    {
-    "id": 8,
-    "description": "Монтаж натяжних стель",
-    "requirements": "компактність, тиха робота, наявність гачка/кліпси для пояса, треба 12V шуруповерт",
-    "correct_model": "CD-12BC",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-218Q", "CD-200BCCOMPACT", "CD-12CX", "CD-201HBC"],
-    "hints": [
-        "Працюю на драбині — зручно, коли можна закріпити інструмент",
-        "Потрібна підсвітка, бо часто працюю в темних нішах",
-        "Шуруповерт повинен бути максимально компактним",
-        "Я користувач Вашої 12V лінійки, маю чотири акумулятори"
-    ]
-    },
-    {
-    "id": 9,
-    "description": "Професійне використання у майстерні",
-    "requirements": "висока точність, швидка зміна режимів, якість, маю 4А акумулятор",
-    "correct_model": "CD-200BCCOMPACT",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-218Q", "CD-12BC", "CD-12CX", "CD-201HBC"],
-    "hints": [
-        "Працюю з деревом і фанерою",
-        "Часто закручую саморізи у м'які матеріали, треба максимальна точність",
-        "Потрібна стабільність під навантаженням",
-        "Я користувач Вашої 20V лінійки, маю болгарку"
-    ]
-    },
-    {
-    "id": 10,
-    "description": "Шуруповерт для дружини — легкий та простий",
-    "requirements": "мінімальна вага, зручна ручка, інтуїтивне керування",
-    "correct_model": "CD-12QX",
-    "wrong_models": ["CD-200BCULTRA", "CD-218Q", "CD-200BCCOMPACT", "CD-12BC", "CD-12CX", "CD-201HBC"],
-    "hints": [
-        "Для неї важлива вага — не більше 1.2 кг",
-        "Потрібен для легких побутових завдань",
-        "Бажано, щоб був симпатичний вигляд :)"
-    ]
-    },
-    {
     "id": 11,
     "description": "Монтаж розеток та дрібна електрика",
     "requirements": "компактний, акумуляторний шуруповерт із точною регуляцією",
-    "correct_model": "CD-200BCCOMPACT",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-218Q", "CD-12BC", "CD-12CX", "CD-201HBC"],
+    "correct_model": "CD-201HBC",
+    "wrong_models": ["CD-12QX", "CD-200BC", "CD-218Q"],
     "hints": [
       "Я використовую шуруповерт для встановлення розеток і підключення дрібної електрики",
       "Потрібно щось дуже точне, щоб не зірвати різьбу",
@@ -162,13 +31,13 @@ SITUATIONS = [
   {
     "id": 12,
     "description": "Установка меблів у салоні краси",
-    "requirements": "акумуляторний, легкий шуруповерт 20V",
-    "correct_model": "CD-218Q",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-200BCCOMPACT", "CD-12BC", "CD-12CX", "CD-201HBC"],
+    "requirements": "акумуляторний, легкий шуруповерт із кейсом",
+    "correct_model": "CD-201HBC",
+    "wrong_models": ["CD-12QX", "CD-200BC", "CD-218Q"],
     "hints": [
       "Я майстер, встановлюю меблі в салонах — клієнти дивляться на інструмент",
       "Хочу, щоб шуруповерт виглядав охайно",
-      "Хочу саме 20V недорогий шуруповерт",
+      "Кейс — це зручно для транспортування",
       "Бажано, щоб був легкий і не шумний",
       "Не потрібна велика потужність, але важлива акуратність"
     ]
@@ -177,27 +46,27 @@ SITUATIONS = [
     "id": 13,
     "description": "Робота з ПВХ-панелями та легкими матеріалами",
     "requirements": "акумуляторний шуруповерт з мінімальною вагою та плавним запуском",
-    "correct_model": "CD-12BC",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-218Q", "CD-200BCCOMPACT", "CD-12CX", "CD-201HBC"],
+    "correct_model": "CD-201HBC",
+    "wrong_models": ["CD-12QX", "CD-200BC", "CD-218Q"],
     "hints": [
       "Я кріплю ПВХ-панелі, які легко пошкодити",
-      "Шуруповерт має бути дуже легким",
+      "Шуруповерт має бути дуже акуратним",
       "Мінімальна вага — це ключовий фактор",
-      "Маю Ваші 12V акумулятори",
+      "Плавний пуск — обов’язково",
       "Дуже чутливі матеріали — потрібен контроль"
     ]
   },
   {
     "id": 14,
-    "description": "Шуруповерт для свердління",
-    "requirements": "надійний, з ударним механізмом, безщітковий двигун",
+    "description": "Шуруповерт для автосервісу",
+    "requirements": "надійний, з LED-підсвіткою, акумулятор на довгий час",
     "correct_model": "CD-201HBC",
-    "wrong_models": ["CD-12QX", "CD-200BCULTRA", "CD-218Q", "CD-200BCCOMPACT", "CD-12BC", "CD-12CX"],
+    "wrong_models": ["CD-12QX", "CD-200BC", "CD-218Q"],
     "hints": [
-      "Я використовую інструмент на постійній основі",
-      "Повинна бути підсвітка",
-      "Роблю отвори в металі та цеглі, діаметри від 3 мм до 10 мм",
-      "Маю Ваш 20V акумулятор",
+      "Я використовую інструмент у моторному відсіку",
+      "Часто темно — тому потрібна підсвітка",
+      "Іноді потрібно крутити металеві панелі — має тягнути",
+      "Зручно, коли акумулятор тримає довго",
       "Шуруповерт повинен бути витривалим"
     ]
   }
@@ -205,12 +74,9 @@ SITUATIONS = [
 
 TOOL_MODELS = [
     "CD-12QX",
-    "CD-200BCULTRA",
+    "CD-200BC",
     "CD-201HBC",
-    "CD-218Q",
-    "CD-200BCCOMPACT",
-    "CD-12CX",
-    "CD-12BC"
+    "CD-218Q"
 ]
 
 UNACCEPTABLE_BEHAVIOR_PROMPT = """
@@ -256,7 +122,7 @@ def init_conversation():
     {UNACCEPTABLE_BEHAVIOR_PROMPT}
 
     Поведінка:
-    - Якщо користувач грубий або використовує лайливу лексику, або ж незрозумілі питання, що не стосуються розмови — завершуй діалог фразою "Я Вас не зрозумів"
+    - Якщо користувач грубий або використовує лайливу лексику — завершуй діалог фразою "Я Вас не зрозумів"
     - В іншому випадку — задавай додаткові запитання або висловлюй свою думку.
 
     Починай розмову нейтрально:  
@@ -300,9 +166,6 @@ def chat():
     print("Доступні моделі для вибору:", session.get("available_models"))
     user_input = request.json.get("message", "").strip()
 
-    if not request.json or "message" not in request.json:
-        return jsonify({"error": "Invalid request"}), 400
-
     session.setdefault("misunderstood_count", 0)
     session.setdefault("objection_round", 1)
 
@@ -321,13 +184,23 @@ def chat():
     if session["stage"] == 2:
         user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
         matched_models = [m for m in session["available_models"] if user_model in m.upper()]
+        index = session.get('current_question_index', 0)
 
         if not matched_models:
-            session["chat_active"] = False
+            session["wrong_model_attempts"] += 1
+            if session["wrong_model_attempts"] >= 2:
+                session["chat_active"] = False
+                return jsonify({
+                    "reply": "Ви двічі ввели некоректну модель. Завершую діалог.",
+                    "chat_ended": True,
+                    "show_restart_button": True
+                })
             return jsonify({
-                "reply": f"Ви обрали «{user_input}», але цієї моделі немає в списку. Діалог завершено.",
-                "chat_ended": True,
-                "show_restart_button": True
+                "reply": f"Ви обрали «{user_input}», але цієї моделі немає в списку. Спробуйте ще раз.",
+                "chat_ended": False,
+                "show_models": True,
+                "models": session["available_models"],
+                "attempts_left": 2 - session["wrong_model_attempts"]
             })
 
         user_model = matched_models[0].upper()
@@ -343,25 +216,23 @@ def chat():
             session["current_question_index"] = 0
             session["user_answers"] = {}
 
-            # Генеруємо уточнюючі питання через OpenAI
             prompt = f"""Ти клієнт, який обрав шуруповерт {user_model} для {session['situation']['description']}.
-            Згенеруй 3 уточнюючі питання про крутний момент даної моделі, будову та особливості цього шуруповерта, які ти хочеш дізнатись.
-            Ти маєш проаналізувати відповідь користувача на коректність відповіді. Якщо він написав просто цифру, не зараховуй її як правильну."""
+            Згенеруй 3 питання про **крутний момент**, **будову** та функції цього шуруповерта."""
 
             try:
-                response = client.chat.completions.create(
+                response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "Ти — клієнт, який задає уточнюючі питання про модель інструмента."},
+                        {"role": "system", "content": "Ти — клієнт, який має задати уточнюючі запитання про модель інструмента."},
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.6,
                     max_tokens=200
                 )
-                content = response.choices[0].message.content
-                # Розбиваємо текст на питання (кожне з нового рядка)
-                questions = [line.strip("1234567890.- ") for line in content.split("\n") if line.strip()]
+                content = response.choices[0].message.get("content", "")
+                questions = [line.strip(" 1234567890.-") for line in content.split('\n') if line.strip()]
                 session["generated_questions"] = questions
+                session.modified = True
 
                 first_question = questions[0] if questions else "Яке перше ваше питання про цю модель?"
 
@@ -370,54 +241,32 @@ def chat():
                     "chat_ended": False,
                     "stage": 3
                 })
-
             except Exception as e:
                 return jsonify({
-                    "reply": "Вибачте, сталася помилка при генерації уточнюючих питань. Спробуйте ще раз.",
+                    "reply": "Вибачте, сталася помилка при генерації питань. Спробуйте ще раз.",
                     "chat_ended": False
                 })
+
         else:
-            session["chat_active"] = False
-            return jsonify({
-                "reply": f"Ви обрали модель {user_model}, але вона не підходить для цієї ситуації. Діалог завершено.",
-                "chat_ended": True,
-                "show_restart_button": True
-            })
+            session["wrong_model_attempts"] += 1
+            if session["wrong_model_attempts"] >= 2:
+                session["chat_active"] = False
+                return jsonify({
+                        "reply": "На жаль, ви двічі обрали неправильну модель. Завершую діалог.",
+                        "show_restart_button": True,
+                        "chat_ended": True
+                    })
 
-    # [Решта вашого коду залишається незмінною до викликів OpenAI...]
-
-    # --- Обробка уточнюючих питань (stage 3) ---
-    if session.get("stage") == 3:
-        index = session.get('current_question_index', 0)
-        questions = session.get('generated_questions', [])
-        if not questions:
+    elif session["stage"] == 3:
+        if 'generated_questions' not in session or not session['generated_questions']:
             return jsonify({
                 "reply": "Питання не знайдені. Давайте почнемо спочатку.",
                 "chat_ended": True,
                 "show_restart_button": True
             })
 
-        if index >= len(questions):
-            # Всі питання задані, можна переходити далі
-            session["stage"] = 4
-            session["chat_active"] = True
-            objections = [
-                "Мені здається, це трохи дорогувато.",
-                "А це точно не якась китайська модель?",
-                "Ваша гарантія точно працює?",
-                "Я бачив в інтернеті дешевше.",
-                "Та ваш інструмент ламається ще й так.",
-                "На ринку знайду дешевше."
-            ]
-            chosen_objection = random.choice(objections)
-            session["current_objection"] = chosen_objection
-            return jsonify({
-                "reply": f"Хм... {chosen_objection}",
-                "chat_ended": False,
-                "stage": 4
-            })
-
-        current_question = questions[index]
+        index = session.get('current_question_index', 0)
+        current_question = session['generated_questions'][index]
 
         # GPT-перевірка: чи по темі відповідь
         gpt_prompt = f"Питання: '{current_question}'\nВідповідь: '{user_input}'\n\nЧи стосується ця відповідь суті питання? Відповідай тільки 'так' або 'ні'."
@@ -430,7 +279,7 @@ def chat():
                     {"role": "user", "content": gpt_prompt}
                 ],
                 temperature=0,
-                max_tokens=100
+                max_tokens=50
             )
             is_relevant = validation.choices[0].message["content"].strip().lower()
 
@@ -454,8 +303,8 @@ def chat():
             session.setdefault('user_answers', {})[current_question] = user_input
             session['current_question_index'] += 1
 
-            if session['current_question_index'] < len(questions):
-                next_question = questions[session['current_question_index']]
+            if session['current_question_index'] < len(session['generated_questions']):
+                next_question = session['generated_questions'][session['current_question_index']]
                 return jsonify({
                     "reply": next_question,
                     "chat_ended": False
@@ -488,7 +337,7 @@ def chat():
         objection = session.get("current_objection", "Заперечення")
         seller_reply = user_input
 
-        # --- Перший раунд: GPT генерує уточнення або сумнів ---
+    # --- Перший раунд: GPT генерує уточнення або сумнів ---
         if session["objection_round"] == 1:
             gpt_prompt = f"Клієнт сказав: '{objection}'. Продавець відповів: '{seller_reply}'. Напиши коротку відповідь клієнта, яка містить сумнів або уточнення, без остаточного рішення."
 
@@ -517,42 +366,37 @@ def chat():
                     "chat_ended": False
                 })
 
-        # --- Другий раунд: GPT оцінює остаточно ---
+    # --- Другий раунд: GPT оцінює остаточно ---
         elif session["objection_round"] == 2:
             seller_reply_full = session["last_seller_reply"] + " " + seller_reply
             gpt_prompt = (
-                f"Клієнт сказав: '{objection}'. Продавець відповів: '{seller_reply_full}'."
+                f"Клієнт сказав: '{objection}'. Продавець відповів: '{seller_reply_full}'. "
+                "Ти — клієнт, який висловив заперечення. Якщо продавець відповів логічно, аргументовано і хоча б частково розвіяв сумнів — "
+                "напиши лише слово «переконливо». Якщо відповідь нечітка або не містить нічого корисного — напиши «непереконливо». "
             )
 
             try:
-                print(f"[DEBUG] GPT prompt:\n{gpt_prompt}")  # Дебаг
-
                 result = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "Ти — клієнт, який висловив заперечення. "
-                            "Твоє завдання — оцінити відповідь продавця."
-                            "Якщо відповідь логічна, аргументована — напиши лише слово «переконливо». "
-                            "Якщо відповідь коротка, нечітка, ухильна, не містить змістовної інформації — напиши лише слово «непереконливо». "
-                            "Не вигадуй додаткових коментарів. Відповідь має містити лише одне слово: «переконливо» або «непереконливо»."
-                        )
-                    },
+                        {"role": "system", "content": (
+                            "Ти — клієнт, який висловив заперечення. Якщо продавець відповів логічно, аргументовано "
+                            "Якщо відповідь містить хоч один вагомий аргумент — вважай її переконливою. Навіть якщо аргумент простий, але логічний, напиши «переконливо»."
+                            "Якщо відповідь зовсім не відповідає на заперечення, напиши «непереконливо»."
+                        )},
                         {"role": "user", "content": gpt_prompt}
                     ],
-                    temperature=0,
-                    max_tokens=10
+                    temperature=0.6,
+                    max_tokens=40
                 )
 
                 rating = result.choices[0].message["content"].strip().lower()
-                print(f"[DEBUG] GPT оцінив як: '{rating}'")  # Для дебагу
+                print(f"Оцінка GPT: '{rating}'")  # Для дебагу
 
                 session["chat_active"] = False
                 session["objection_round"] = 1  # обнуляємо для наступного запуску
 
-                if rating == "переконливо":
+                if "переконливо" in rating:
                     reply = "Дякую, ви мене переконали! Я готовий зробити покупку."
                 else:
                     reply = "На жаль, ви мене не переконали. Завершую діалог."
@@ -564,15 +408,15 @@ def chat():
                 })
 
             except Exception as e:
-                print(f"[ERROR] {e}")  # Для дебагу
                 return jsonify({
                     "reply": "Сталася помилка при оцінці відповіді. Спробуйте ще раз.",
                     "chat_ended": False
                 })
 
+
     # --- Стандартна логіка для stage 1 ---
     session["history"].append({"role": "user", "content": user_input})
-    session["history"] = [session["history"][0]] + session["history"][-12:]
+    session["history"] = [session["history"][0]] + session["history"][-8:]
 
     try:
         if session["stage"] == 1 and is_question(user_input):
@@ -581,13 +425,13 @@ def chat():
                 session["unique_questions"].append(normalized)
                 session["question_count"] += 1
 
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model=MODEL_ENGINE,
             messages=session["history"],
             temperature=0.3,
             max_tokens=300
         )
-        assistant_reply = response.choices[0].message.content
+        assistant_reply = response.choices[0].message["content"]
         session["history"].append({"role": "assistant", "content": assistant_reply})
 
         if "я вас не зрозумів" in assistant_reply.lower():
@@ -627,11 +471,10 @@ def chat():
         })
 
     except Exception as e:
-            print("[ERROR]", e)
-            print(traceback.format_exc())
-            return jsonify({"reply": "Сталася внутрішня помилка сервера. Спробуйте ще раз.", "chat_ended": False}), 500
-
-# [Решта вашого коду залишається незмінною...]
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+        return jsonify({
+            "reply": "Виникла помилка при генерації відповіді. Спробуйте ще раз.",
+            "error": str(e)
+        }), 500
+    
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)

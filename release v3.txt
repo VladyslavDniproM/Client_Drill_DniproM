@@ -708,6 +708,13 @@ def chat():
                             "chat_ended": True,
                             "show_restart_button": True
                         })
+                
+                answer = response.choices[0].message["content"].strip()
+                session["history"].append({"role": "assistant", "content": answer})
+                    
+                if session["question_count"] >= 3 and not session.get("hint_shown", False):
+                    session["hint_shown"] = True
+                    session.modified = True
 
                 # Стандартна відповідь (з показом кнопки після 3 запитань)
                 return jsonify({
@@ -715,7 +722,8 @@ def chat():
                     "chat_ended": False,
                     "stage": 1,
                     "question_progress": session["question_count"],
-                    "show_model_button": session["question_count"] >= 3  # Показуємо кнопку після 3 запитань
+                    "show_model_button": session["question_count"] >= 3,  # Показуємо кнопку після 3 запитань
+                    "show_hint": session["question_count"] >= 3 and not session.get("hint_shown", False),
                 })
 
             except Exception as e:

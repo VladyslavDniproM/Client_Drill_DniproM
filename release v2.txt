@@ -300,7 +300,6 @@ def init_conversation():
     session['off_topic_count'] = 0
     session['misunderstood_count'] = 0
     session['objection_round'] = 1
-    session['warning_count'] = 0
 
     system_prompt = f"""
     Ти — віртуальний **клієнт магазину**, який **прийшов купити шуруповерт**.  
@@ -685,39 +684,23 @@ def chat():
                 answer = response.choices[0].message["content"].strip()
                 session["history"].append({"role": "assistant", "content": answer})
 
-                # Обробка для 8+ запитань (попередження)
-                if session["question_count"] >= 8:
-                    if session.get("warning_count", 0) < 2:
-                        session["warning_count"] = session.get("warning_count", 0) + 1
-                        warning_text = [
-                            "Я вже відповів на багато питань. Можливо, ви вже можете запропонувати мені модель?",
-                            "Мені вже набридло відповідати на стільки питань. Давайте вже до справи!"
-                        ][session["warning_count"] - 1]
-                        
-                        return jsonify({
-                            "reply": warning_text,
-                            "chat_ended": False,
-                            "stage": 1,
-                            "question_progress": session["question_count"],
-                            "show_model_button": True
-                        })
-                    else:
-                        session["chat_active"] = False
-                        return jsonify({
-                            "reply": "На цьому я завершую діалог. До побачення!",
-                            "chat_ended": True,
-                            "show_restart_button": True
-                        })
-
-                # Стандартна відповідь (з показом кнопки після 3 запитань)
-                return jsonify({
-                    "reply": answer,
-                    "chat_ended": False,
-                    "stage": 1,
-                    "question_progress": session["question_count"],
-                    "show_model_button": session["question_count"] >= 3  # Показуємо кнопку після 3 запитань
-                })
-
+                # Якщо питань більше 5 — переходимо до вибору моделі
+                if session["question_count"] >= 5:
+                    return jsonify({
+                        "reply": answer,
+                        "chat_ended": False,
+                        "stage": 1,
+                        "question_progress": session["question_count"],
+                        "show_model_button": True  # <--- ось ця нова ознака
+                    })
+                else:
+                    return jsonify({
+                        "reply": answer,
+                        "chat_ended": False,
+                        "stage": 1,
+                        "question_progress": session["question_count"],  # <-- Додай цю лінію
+                        "show_model_button": False  # <- важливо!
+                    })
             except Exception as e:
                 print(f"[ERROR] Помилка генерації відповіді: {e}")
                 return jsonify({
@@ -739,6 +722,11 @@ def chat():
                     "reply": "Ваше питання не зовсім стосується вибору шуруповерта. Спробуйте сформулювати інше.",
                     "chat_ended": False
                 })
+    return jsonify({
+        "reply": "Виникла помилка: поточний етап діалогу невідомий.",
+        "chat_ended": True,
+        "show_restart_button": True
+    })
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

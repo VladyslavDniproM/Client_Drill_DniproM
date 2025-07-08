@@ -1,9 +1,12 @@
 import openai
 from flask import Flask, render_template, request, jsonify, session
 from dotenv import load_dotenv
+from datetime import datetime
 import os
 import random
 import re
+import smtplib
+from email.mime.text import MIMEText
 
 load_dotenv()
 
@@ -60,8 +63,8 @@ SITUATIONS = [
         "id": 4,
         "description": "Ремонт електроніки, робота з дрібними кріпленнями",
         "requirements": "максимальний контроль обертів і точність",
-        "correct_models": ["CD-12QX", "CD-12CX", "CD-12BC"],
-        "wrong_models": ["CD-200BCULTRA", "CD-201HBC", "CD-218Q", "CD-200BCCOMPACT"],
+        "correct_models": ["CD-12QX", "CD-12CX", "CD-12BC", "CD-218Q"],
+        "wrong_models": ["CD-200BCULTRA", "CD-201HBC", "CD-200BCCOMPACT"],
         "hints": [
         "Мені точно потрібен 12V шуруповерт",
         "Працюю з дрібними гвинтами й електронікою",
@@ -286,11 +289,45 @@ def is_question(message):
         "потужн", "буд", "свер"
     ))
 
+def send_email_report(subject, body, to_email):
+    msg = MIMEText(body, 'plain', 'utf-8')
+    msg['Subject'] = subject
+    msg['From'] = os.getenv('EMAIL_ADDRESS')
+    msg['To'] = to_email
+
+    try:
+        with smtplib.SMTP(os.getenv('EMAIL_HOST'), int(os.getenv('EMAIL_PORT'))) as server:
+            server.starttls()
+            server.login(os.getenv('EMAIL_ADDRESS'), os.getenv('EMAIL_PASSWORD'))
+            server.send_message(msg)
+            print("[EMAIL] Звіт успішно відправлено.")
+    except Exception as e:
+        print(f"[EMAIL ERROR] Не вдалося надіслати лист: {str(e)}")
+
+@app.route('/authenticate', methods=['POST'])
+def authenticate():
+    seller_name = request.json.get("seller_name", "").strip()
+    if not seller_name:
+        return jsonify({"error": "Будь ласка, введіть ваше ПІБ"}), 400
+    
+    session['seller_name'] = seller_name
+    session.modified = True
+    return jsonify({"success": True, "message": f"Вітаємо, {seller_name}! Тепер ви можете розпочати діалог."})
+
+@app.errorhandler(500)
+def internal_error(error):
+    if 'seller_name' in session:
+        generate_report(session)  # Зберегти звіт навіть при помилці
+    return jsonify({"error": "Внутрішня помилка сервера"}), 500
+
 def init_conversation():
+    # Очистити всі попередні дані сесії
+    session.clear()
+    
     selected_situation = random.choice(SITUATIONS)
     session['situation'] = selected_situation
     session['current_situation_id'] = selected_situation["id"]
-    session['available_models'] = TOOL_MODELS  # Показуємо всі моделі
+    session['available_models'] = TOOL_MODELS.copy()  # Використовуємо копію, щоб уникнути модифікації оригіналу
     session['stage'] = 1
     session['chat_active'] = True
     session['message_count'] = 0
@@ -301,6 +338,12 @@ def init_conversation():
     session['misunderstood_count'] = 0
     session['objection_round'] = 1
     session['warning_count'] = 0
+    session['user_answers'] = {}
+    session['question_scores'] = []
+    session['model_score'] = 0
+    session['total_score'] = 0
+    session['seller_replies'] = []
+    session.modified = True 
 
     system_prompt = f"""
     Ти — віртуальний **клієнт магазину**, який **прийшов купити шуруповерт**.  
@@ -389,14 +432,11 @@ def restart_chat():
         "wrong_model_attempts", "user_answers", "off_topic_count",
         "objection_round", "generated_questions", "current_question_index",
         "current_situation_id", "situation", "last_seller_reply",
-        "current_objection"
+        "current_objection", "hint_shown", "question_scores", "model_score", "total_score", "seller_replies"
     ]
     for key in keys_to_clear:
         session.pop(key, None)
     return jsonify({"message": "Сесію скинуто."})
-
-def match_model(user_input, available_models):
-    return user_input.strip().upper() in [m.strip().upper() for m in available_models]
 
 @app.route("/show_models", methods=["POST"])
 def show_models():
@@ -406,6 +446,34 @@ def show_models():
         "stage": 2
     })
 
+def generate_report(session_data):
+    seller_name = session_data.get('seller_name', 'Невідомий продавець')
+    total_score = session_data.get('total_score', 0)
+    max_score = 20  # або інше значення з вашого коду
+    
+    report_lines = [
+        f"Звіт про діалог продавця: {seller_name}",
+        f"Дата: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"Оцінка: {total_score}/{max_score}",
+        "\nДіалог:",
+    ]
+    
+    # Додати всі репліки діалогу
+    for message in session_data.get('conversation_log', []):
+        role = "Клієнт" if message['role'] == 'assistant' else "Продавець"
+        report_lines.append(f"{role} ({message['timestamp']}): {message['message']}")
+    
+    # Додати результати оцінювання
+    report_lines.extend([
+        "\nРезультати:",
+        f"- Оцінка за модель: {session_data.get('model_score', 0)}/2",
+        f"- Оцінка за питання: {sum(q['score'] for q in session_data.get('question_scores', []))}/10",
+        f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/6",
+        f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/7"
+    ])
+    
+    return "\n".join(report_lines)
+
 @app.route("/chat", methods=["POST"])
 def chat():
     print("Доступні моделі для вибору:", session.get("available_models"))
@@ -414,31 +482,116 @@ def chat():
     print(f"[DEBUG] Користувач написав: {user_input}")
     print(f"[DEBUG] Поточна стадія: {session.get('stage')}")
 
+    # Ініціалізація змінних сесії
     session.setdefault("misunderstood_count", 0)
     session.setdefault("objection_round", 1)
+    session.setdefault("question_scores", [])
+    session.setdefault("user_answers", {})
+    session.setdefault("seller_replies", [])
+
+    if 'conversation_log' not in session:
+        session['conversation_log'] = []
+
+    session['conversation_log'].append({
+        'role': 'user',
+        'message': user_input,
+        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
 
     if "history" not in session or not session["history"]:
-            session["history"] = init_conversation()
-            session["stage"] = 1
-            session["question_count"] = 0
-            session["model"] = None
-            session["chat_active"] = True
-            session["unique_questions"] = []
-            session["misunderstood_count"] = 0
-            session["wrong_model_attempts"] = 0
-            session["user_answers"] = {}
+        session["history"] = init_conversation()
+        session["stage"] = 1
+        session["question_count"] = 0
+        session["model"] = None
+        session["chat_active"] = True
+        session["unique_questions"] = []
+        session["misunderstood_count"] = 0
+        session["wrong_model_attempts"] = 0
+        session["model_score"] = 0
+        session["total_score"] = 0
+        session["objection_round"] = 1
 
-        # --- Обробка етапу вибору моделі ---
-        # --- Обробка етапу вибору моделі ---
-    if session["stage"] == 2:
-        print(f"[DEBUG] Входимо в stage 2 — обробка вибору моделі: {user_input}")
+    # --- Stage 1: Питання клієнта ---
+    if session["stage"] == 1:
+        # Перевірка на нерелевантні питання
+        if not is_relevant_question_gpt(user_input, session["situation"]["description"]):
+            print(f"[SCORE] Нерелевантне питання: 0 балів | Поточний рахунок: {session.get('total_score', 0)}")
+            session["misunderstood_count"] += 1
+            session["question_scores"].append({"question": user_input, "score": 0})
             
+            if session["misunderstood_count"] >= 3:
+                session["chat_active"] = False
+                return jsonify({
+                    "reply": "Ви поставили декілька нерелевантних питань. Діалог завершено.",
+                    "chat_ended": True,
+                    "show_restart_button": True
+                })
+            return jsonify({
+                "reply": "Ваше питання не стосується вибору шуруповерта. Спробуйте інше питання.",
+                "chat_ended": False
+            })
+
+        # Обробка релевантних питань
+        is_duplicate = user_input.lower() in [q.lower() for q in session["unique_questions"]]
+        question_score = 2 if not is_duplicate else 1
+        print(f"[SCORE] {'Нове' if not is_duplicate else 'Повторне'} питання: +{question_score} бал(и)")
+        
+        if not is_duplicate:
+            session["unique_questions"].append(user_input)
+            session["question_count"] += 1
+
+        session["question_scores"].append({
+            "question": user_input,
+            "score": question_score
+        })
+
+        current_questions_score = sum(q["score"] for q in session["question_scores"])
+        max_questions_score = 5 * 2  # Максимум 5 питань по 2 бали
+        print(f"[SCORE] Загальний бал за питання: {current_questions_score}/{max_questions_score}")
+
+        # Обмеження кількості питань (максимум 5)
+        if session["question_count"] >= 6:
+            session["stage"] = 2
+            return jsonify({
+                "reply": "Я відповів на достатньо питань. Тепер ви можете запропонувати мені модель шуруповерта.",
+                "chat_ended": False,
+                "stage": 2,
+                "show_model_button": True
+            })
+
+        # Генерація відповіді GPT
+        session["history"].append({"role": "user", "content": user_input})
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=session["history"][-20:],
+                temperature=0.5,
+                max_tokens=150
+            )
+            answer = response.choices[0].message["content"].strip()
+            session["history"].append({"role": "assistant", "content": answer})
+
+            return jsonify({
+                "reply": answer,
+                "chat_ended": False,
+                "stage": 1,
+                "question_progress": session["question_count"],
+                "show_model_button": session["question_count"] >= 3
+            })
+        except Exception as e:
+            return jsonify({
+                "reply": "Вибачте, сталася помилка при відповіді. Спробуйте ще раз.",
+                "chat_ended": False
+            })
+
+    # --- Stage 2: Вибір моделі ---
+    elif session["stage"] == 2:
         user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
         matched_models = [m for m in session["available_models"] if user_model in m.upper()]
-        index = session.get('current_question_index', 0)
 
         if not matched_models:
             session["chat_active"] = False
+            session["model_score"] = 0
             return jsonify({
                 "reply": f"Ви обрали «{user_input}», але такої моделі немає в списку. Завершую діалог.",
                 "chat_ended": True,
@@ -455,16 +608,32 @@ def chat():
             })
 
         correct_models = [model.upper() for model in current_situation["correct_models"]]
+        partially_correct_models = [model.upper() for model in current_situation.get("partially_correct_models", [])]
 
-        if user_model.upper() in correct_models:
+        # Оцінка моделі
+        if user_model in correct_models:
+            session["model_score"] = 2
+            print(f"[SCORE] Правильна модель: +2 бали")
+        elif user_model in partially_correct_models:
+            session["model_score"] = 1
+            print(f"[SCORE] Частково правильна модель: +1 бал")
+        else:
+            session["model_score"] = 0
+            print(f"[SCORE] Неправильна модель: 0 балів")
+
+            print(f"[SCORE] Поточний бал за модель: {session['model_score']}/2")
+            print(f"[SCORE] Загальний бал: {session.get('total_score', 0) + session['model_score']}")
+
+        if session["model_score"] > 0:  # Якщо модель підходить
             session["model"] = user_model
             session["stage"] = 3
             session["current_question_index"] = 0
             session["user_answers"] = {}
 
-            prompt = f"""Ти клієнт, який обрав шуруповерт {user_model} для {session['situation']['description']}.
-    Згенеруй 3 питання про **крутний момент**, **зовнішню будову** та функції цього шуруповерта."""
-
+            # Генерація уточнюючих питань
+            prompt = f"""Ти клієнт, який обрав шуруповерт {user_model} для {session['situation']['description']}.\n
+            Згенеруй 3 питання про **крутний момент**, **зовнішню будову** та функції цього шуруповерта."""
+            
             try:
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
@@ -473,7 +642,7 @@ def chat():
                         {"role": "user", "content": prompt}
                     ],
                     temperature=0.6,
-                    max_tokens=200
+                    max_tokens=400
                 )
                 content = response.choices[0].message.get("content", "")
                 questions = [line.strip(" 1234567890.-") for line in content.split('\n') if line.strip()]
@@ -483,29 +652,26 @@ def chat():
                 first_question = questions[0] if questions else "Яке перше ваше питання про цю модель?"
 
                 return jsonify({
-                    "reply": f"Добре, модель {user_model} мені підходить. Зараз задам кілька уточнюючих питань по черзі.\n\n{first_question}",
+                    "reply": f"Добре, модель {user_model} мені підходить. Зараз задам кілька уточнюючих питань:\n\n{first_question}",
                     "chat_ended": False,
                     "stage": 3
                 })
-
             except Exception as e:
                 return jsonify({
                     "reply": "Вибачте, сталася помилка при генерації питань. Спробуйте ще раз.",
                     "chat_ended": False
                 })
-
         else:
-            # ❗️Ключова частина: відразу завершуємо при неправильній моделі
             session["chat_active"] = False
             return jsonify({
                 "reply": f"Модель «{user_model}» не підходить до вашої задачі. Завершую діалог.",
                 "chat_ended": True,
-                "show_restart_button": True,
-                "hide_choose_model_btn": True
+                "show_restart_button": True
             })
 
+    # --- Stage 3: Уточнюючі питання ---
     elif session["stage"] == 3:
-        if 'generated_questions' not in session or not session['generated_questions']:
+        if 'generated_questions' not in session:
             return jsonify({
                 "reply": "Питання не знайдені. Давайте почнемо спочатку.",
                 "chat_ended": True,
@@ -515,41 +681,44 @@ def chat():
         index = session.get('current_question_index', 0)
         current_question = session['generated_questions'][index]
 
-        # GPT-перевірка: чи по темі відповідь
-        gpt_prompt = f"Питання: '{current_question}'\nВідповідь: '{user_input}'\n\nЧи стосується ця відповідь суті питання? Відповідай тільки 'так' або 'ні'."
+        # Оцінка відповіді
+        gpt_prompt = f"""
+Оціни відповідь користувача на питання.
+Питання: "{current_question}"
+Відповідь: "{user_input}"
 
+Оціни за шкалою:
+2 — відповідь містить правильну інформацію
+1 — частково правильна або поверхнева
+0 — не по темі або занадто загальна
+
+Відповідай лише цифрою: 0, 1 або 2.
+"""
         try:
-            validation = openai.ChatCompletion.create(
+            evaluation = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "Ти перевіряєш відповідність відповіді суті питання. Відповідай лише 'так' або 'ні'."},
+                    {"role": "system", "content": "Ти оцінюєш відповідь на запитання. Відповідай лише числом: 0, 1 або 2."},
                     {"role": "user", "content": gpt_prompt}
                 ],
                 temperature=0,
-                max_tokens=100
+                max_tokens=10
             )
-            is_relevant = validation.choices[0].message["content"].strip().lower()
+            score = int(evaluation.choices[0].message["content"].strip() or 0)
+            print(f"[SCORE] Відповідь на питання {session['current_question_index']+1}: {score}/2 балів")
+            
+            session["user_answers"][current_question] = {
+                "answer": user_input,
+                "score": score
+            }
 
-            if is_relevant != "так":
-                session["off_topic_count"] = session.get("off_topic_count", 0) + 1
-                if session["off_topic_count"] >= 2:
-                    session["chat_active"] = False
-                    return jsonify({
-                        "reply": "Ви двічі надали відповідь не по темі. Діалог завершено.",
-                        "chat_ended": True,
-                        "show_restart_button": True
-                    })
-                else:
-                    return jsonify({
-                        "reply": f"Здається, ця відповідь не зовсім по темі. {current_question}",
-                        "chat_ended": False
-                    })
-
-            # Якщо відповідь по темі — скидаємо лічильник
-            session["off_topic_count"] = 0
-            session.setdefault('user_answers', {})[current_question] = user_input
+            current_answers_score = sum(a["score"] for a in session["user_answers"].values())
+            max_answers_score = 3 * 2  # 3 питання по 2 бали
+            print(f"[SCORE] Загальний бал за відповіді: {current_answers_score}/{max_answers_score}")
+            
             session['current_question_index'] += 1
 
+            # Перевірка чи залишились питання
             if session['current_question_index'] < len(session['generated_questions']):
                 next_question = session['generated_questions'][session['current_question_index']]
                 return jsonify({
@@ -557,188 +726,200 @@ def chat():
                     "chat_ended": False
                 })
             else:
+                # Перехід до Stage 4 (заперечення)
                 session["stage"] = 4
-                session["chat_active"] = True
+                answers_score = sum(a["score"] for a in session["user_answers"].values())
+                
+                if answers_score >= 5:
+                    feedback = "Гарний шуруповерт"
+                elif answers_score >= 3:
+                    feedback = "Шуруповерт непоганий."
+                else:
+                    feedback = "Зрозуміло."
+
                 objections = [
                     "Мені здається, це трохи дорогувато.",
                     "А це точно не якась китайська модель?",
                     "Ваша гарантія точно працює?",
                     "Я бачив в інтернеті дешевше."
                 ]
-                chosen_objection = random.choice(objections)
-                session["current_objection"] = chosen_objection
+                session["current_objection"] = random.choice(objections)
+                session["objection_round"] = 1
+
                 return jsonify({
-                    "reply": f"Хм... {chosen_objection}",
+                    "reply": f"{feedback}\n\nХм... {session['current_objection']}",
                     "chat_ended": False,
                     "stage": 4
                 })
-
         except Exception as e:
             return jsonify({
-                "reply": "Виникла помилка при перевірці відповіді. Спробуйте ще раз.",
+                "reply": "Виникла помилка при оцінюванні відповіді. Спробуйте ще раз.",
                 "chat_ended": False
             })
 
-    # --- Обробка заперечення (stage 4) ---
+    # --- Stage 4: Обробка заперечень ---
     elif session["stage"] == 4:
         objection = session.get("current_objection", "Заперечення")
         seller_reply = user_input
+        session["seller_replies"].append(seller_reply)
+        current_round = session.get("objection_round", 1)
 
-    # --- Перший раунд: GPT генерує уточнення або сумнів ---
-        if session["objection_round"] == 1:
-            gpt_prompt = f"Клієнт сказав: '{objection}'. Продавець відповів: '{seller_reply}'. Напиши коротку відповідь клієнта, яка містить сумнів або уточнення, без остаточного рішення."
-
+        if current_round <= 2:
             try:
+                history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
+                gpt_prompt = f"""
+    Ти — клієнт, який має заперечення: "{objection}".
+
+    Ось як продавець відповідав до цього моменту:
+    {history}
+
+    Відповідай як реалістичний клієнт. Реагуй природно на останню репліку продавця: "{seller_reply}".
+    Підтримуй контекст заперечення. Будь конкретним, але не надто коротким."""
+                
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "Ти — клієнт магазину інструментів. Твоя мета — сформулювати ввічливий сумнів або уточнення після відповіді продавця на заперечення."},
-                        {"role": "user", "content": gpt_prompt}
-                    ],
-                    temperature=0.5,
-                    max_tokens=200
-                )
-
-                reply = response.choices[0].message["content"].strip()
-                session["objection_round"] = 2
-                session["last_seller_reply"] = seller_reply
-
-                return jsonify({
-                    "reply": reply,
-                    "chat_ended": False
-                })
-            except Exception as e:
-                return jsonify({
-                    "reply": "Помилка при формуванні уточнення. Спробуйте ще раз.",
-                    "chat_ended": False
-                })
-
-    # --- Другий раунд: GPT оцінює остаточно ---
-        elif session["objection_round"] == 2:
-            seller_reply_full = session["last_seller_reply"] + " " + seller_reply
-            gpt_prompt = (
-                f"Клієнт сказав: '{objection}'. Продавець відповів: '{seller_reply_full}'. "
-                "Ти — клієнт, який висловив заперечення. Якщо продавець відповів логічно, аргументовано і хоча б частково розвіяв сумнів — "
-                "напиши лише слово «переконливо». Якщо відповідь нечітка або не містить нічого корисного — напиши «непереконливо». "
-            )
-
-            try:
-                result = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": (
-                            "Ти — клієнт, який висловив заперечення. Якщо продавець відповів логічно, аргументовано "
-                            "Якщо відповідь містить хоч один вагомий аргумент — вважай її переконливою. Навіть якщо аргумент простий, але логічний, напиши «переконливо»."
-                            "Якщо відповідь зовсім не відповідає на заперечення, напиши «непереконливо»."
-                        )},
+                        {"role": "system", "content": "Ти — клієнт у діалозі з продавцем. Відповідай чесно, логічно і згідно з контекстом заперечення."},
                         {"role": "user", "content": gpt_prompt}
                     ],
                     temperature=0.6,
-                    max_tokens=100
+                    max_tokens=200
                 )
-
-                rating = result.choices[0].message["content"].strip().lower()
-                print(f"Оцінка GPT: '{rating}'")  # Для дебагу
-
-                session["chat_active"] = False
-                session["objection_round"] = 1  # обнуляємо для наступного запуску
-
-                if "переконливо" in rating:
-                    reply = "Дякую, ви мене переконали! Я готовий зробити покупку."
-                else:
-                    reply = "На жаль, ви мене не переконали. Завершую діалог."
+                reply = response.choices[0].message["content"].strip()
+                session["objection_round"] += 1
+                session.modified = True
 
                 return jsonify({
                     "reply": reply,
-                    "chat_ended": True,
-                    "show_restart_button": True
+                    "chat_ended": False,
+                    "current_round": session["objection_round"]
                 })
-
             except Exception as e:
                 return jsonify({
-                    "reply": "Сталася помилка при оцінці відповіді. Спробуйте ще раз.",
+                    "reply": "Вибачте, сталася помилка під час відповіді. Спробуйте ще раз.",
                     "chat_ended": False
                 })
 
-
-    # --- Стандартна логіка для stage 1 ---
-    elif session["stage"] == 1:
-        # Перевірка, чи питання релевантне
-        if is_relevant_question_gpt(user_input, session["situation"]["description"]):
-            # Перевіряємо, чи питання нове
-            if user_input.lower() not in [q.lower() for q in session["unique_questions"]]:
-                session["unique_questions"].append(user_input)
-                session["question_count"] += 1
-
-            # Додаємо до історії
-            session["history"].append({"role": "user", "content": user_input})
-
-            # Генеруємо відповідь GPT
+        elif current_round == 3:
             try:
-                messages = session["history"][-10:]  # Беремо останні 10 повідомлень для контексту
+                if not session.get("seller_replies"):
+                    return jsonify({
+                        "reply": "Помилка: відсутні відповіді для оцінювання.",
+                        "chat_ended": True,
+                        "show_restart_button": True
+                    })
+
+                full_history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
+                evaluation_prompt = f"""
+    Ти — експерт з продажів, який оцінює відповіді продавця на заперечення клієнта.
+
+    Заперечення клієнта: "{objection}"
+
+    Ось відповіді продавця (по раундах):
+    {full_history}
+
+    Проаналізуй відповіді продавця за 4 критеріями:
+    1. Чіткість аргументів
+    2. Відповідність запереченню
+    3. Наявність доказів, прикладів або логіки
+    4. Логічна послідовність і побудова
+
+    Аргумент — це чітке пояснення з доказом, прикладом або логікою, яке прямо стосується заперечення.
+
+    🔻 Оціни рівень переконливості за шкалою:
+    - "переконливо" — якщо є **2 або більше сильні аргументи** – 7 балів
+    - "частково переконливо" — якщо є **1 сильний аргумент** – 3 бали
+    - "непереконливо" — якщо **немає** жодного аргументу або відповідь не по темі – 0 балів
+
+    Відповідай одним словом: "переконливо", "частково переконливо" або "непереконливо". Не додавай пояснень.
+    """
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
-                    messages=messages,
-                    temperature=0.5,
-                    max_tokens=150
+                    messages=[
+                        {"role": "system", "content": "Ти — експерт з оцінки комунікацій. Будь об'єктивним."},
+                        {"role": "user", "content": evaluation_prompt}
+                    ],
+                    temperature=0.3,
+                    max_tokens=50
                 )
-                answer = response.choices[0].message["content"].strip()
-                session["history"].append({"role": "assistant", "content": answer})
+                rating = response.choices[0].message["content"].strip().lower()
+                rating = rating.splitlines()[0].strip()
+                
+                if rating == "переконливо":
+                    objection_score = 7
+                elif rating == "частково переконливо":
+                    objection_score = 3
+                elif rating == "непереконливо":
+                    objection_score = 0
+                else:
+                    objection_score = 0
 
-                # Обробка для 8+ запитань (попередження)
-                if session["question_count"] >= 8:
-                    if session.get("warning_count", 0) < 2:
-                        session["warning_count"] = session.get("warning_count", 0) + 1
-                        warning_text = [
-                            "Я вже відповів на багато питань. Можливо, ви вже можете запропонувати мені модель?",
-                            "Мені вже набридло відповідати на стільки питань. Давайте вже до справи!"
-                        ][session["warning_count"] - 1]
-                        
-                        return jsonify({
-                            "reply": warning_text,
-                            "chat_ended": False,
-                            "stage": 1,
-                            "question_progress": session["question_count"],
-                            "show_model_button": True
-                        })
-                    else:
-                        session["chat_active"] = False
-                        return jsonify({
-                            "reply": "На цьому я завершую діалог. До побачення!",
-                            "chat_ended": True,
-                            "show_restart_button": True
-                        })
+                print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/7 балів)")
 
-                # Стандартна відповідь (з показом кнопки після 3 запитань)
-                return jsonify({
-                    "reply": answer,
-                    "chat_ended": False,
-                    "stage": 1,
-                    "question_progress": session["question_count"],
-                    "show_model_button": session["question_count"] >= 3  # Показуємо кнопку після 3 запитань
-                })
+                model_score = session.get("model_score", 0)
+                questions_score = sum(q["score"] for q in session.get("question_scores", [])) / 2
+                answers_score = sum(a["score"] for a in session.get("user_answers", {}).values())
+                total_score = model_score + questions_score + answers_score + objection_score
+                max_score = 2 + 5 + 6 + 7
 
-            except Exception as e:
-                print(f"[ERROR] Помилка генерації відповіді: {e}")
+                print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
+                print(f"[SCORE] За модель: {model_score}/2")
+                print(f"[SCORE] За питання: {questions_score}/5")
+                print(f"[SCORE] За відповіді: {answers_score}/6")
+                print(f"[SCORE] За заперечення: {objection_score}/7")
+                print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/20")
+
+                if total_score >= max_score * 0.8:
+                    feedback = "🔝 Чудово! Ви дуже впевнено провели клієнта до покупки."
+                elif total_score >= max_score * 0.6:
+                    feedback = "👍 Ваші відповіді були хорошими, але є над чим попрацювати."
+                else:
+                    feedback = "⚠️ Є недоліки в підході до клієнта. Рекомендується додаткове навчання."
+
+                if "переконливо" in rating:
+                    reply = "Дякую за розгорнуті відповіді! Ваші аргументи дуже переконливі. Я готовий до співпраці."
+                elif "частково" in rating:
+                    reply = "Дякую за розгорнуті відповіді. Деякі аргументи є переконливими, але у мене залишились сумніви."
+                else:
+                    reply = "Дякую за розгорнуті відповіді. На жаль, вони не розсіяли мої сумніви. Дякую за спробу."
+
+                full_reply = f"{reply}\n\n📊 Ваша оцінка: {total_score}/{max_score}\n{feedback}"
+
+                # Збереження звіту
+                report_content = generate_report(session)
+                report_filename = f"report_{session.get('seller_name', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                
+                # Створення папки reports, якщо її немає
+                os.makedirs('reports', exist_ok=True)
+                
+                send_email_report(
+                    subject=f"Звіт про діалог — {session.get('seller_name', 'Продавець')}",
+                    body=report_content,
+                    to_email="voloshchenko2014@gmail.com"
+                )
+
+                session.clear()
+                session.modified = True
+
                 return jsonify({
-                    "reply": "Вибачте, сталася помилка при відповіді. Спробуйте ще раз.",
-                    "chat_ended": False
-                })
-        else:
-            # Питання не релевантне
-            session["misunderstood_count"] = session.get("misunderstood_count", 0) + 1
-            if session["misunderstood_count"] >= 3:
-                session["chat_active"] = False
-                return jsonify({
-                    "reply": "Ви поставили декілька нерелевантних питань. Діалог завершено.",
+                    "reply": f"{full_reply}\n\nЗвіт збережено для вашого тренера.",
                     "chat_ended": True,
-                    "show_restart_button": True
+                    "show_restart_button": True,
+                    "report_filename": report_filename
                 })
-            else:
+            
+            except Exception as e:
+                print(f"Помилка при оцінюванні: {str(e)}")
                 return jsonify({
-                    "reply": "Ваше питання не зовсім стосується вибору шуруповерта. Спробуйте сформулювати інше.",
+                    "reply": "Вибачте, не вдалося обробити відповідь. Давайте спробуємо ще раз?",
                     "chat_ended": False
                 })
+
+    return jsonify({
+        "reply": "Виникла непередбачена помилка. Спробуйте ще раз.",
+        "chat_ended": True,
+        "show_restart_button": True
+    })
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

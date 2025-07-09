@@ -447,7 +447,7 @@ def show_models():
     })
 
 def generate_report(session_data):
-    seller_name = session_data.get('seller_name', 'Невідомий продавець')
+    seller_name = session_data.get('seller_name') or session.get('seller_name', 'Невідомий продавець')
     total_score = session_data.get('total_score', 0)
     max_score = 20  # або інше значення з вашого коду
     
@@ -560,7 +560,16 @@ def chat():
             })
 
         # Генерація відповіді GPT
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Додати повідомлення користувача до history і до conversation_log
         session["history"].append({"role": "user", "content": user_input})
+        session['conversation_log'].append({
+            'role': 'user',
+            'message': user_input,
+            'timestamp': now
+        })
+
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
@@ -569,7 +578,14 @@ def chat():
                 max_tokens=150
             )
             answer = response.choices[0].message["content"].strip()
+
+            # Додати відповідь GPT до history і до conversation_log
             session["history"].append({"role": "assistant", "content": answer})
+            session['conversation_log'].append({
+                'role': 'assistant',
+                'message': answer,
+                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
 
             return jsonify({
                 "reply": answer,

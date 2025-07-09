@@ -19,11 +19,6 @@ html, body {
 /* === BASE === */
 body {
 background-image: url("/static/Iv-2.jpg");
-  background-image: linear-gradient(
-        rgba(0, 0, 0, 0.5), 
-        rgba(0, 0, 0, 0.5)
-      ),
-      url("/static/Iv-2.jpg");
   background-size: cover;         /* або contain — залежно від бажаного ефекту */
   background-repeat: no-repeat;
   background-position: center;
@@ -35,36 +30,8 @@ background-image: url("/static/Iv-2.jpg");
   justify-content: flex-end;
   align-items: center;
   background-color: #ffffff;
-  color: #000000;
-  padding-top: 140px;
-}
-
-.top-panel {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 1000px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;         /* по центру по горизонталі */
-  justify-content: center;     /* по центру по вертикалі */
-
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.3),
-    rgba(255, 255, 255, 0.05)
-  );
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-
-  padding: 16px 24px;
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  text-align: center;
+  color: #333;
+  padding-top: env(safe-area-inset-top, 20px);
 }
 
 .background-overlay {
@@ -86,42 +53,18 @@ h1 {
 
 /* === CHAT CONTAINER === */
 .chat-container {
-  background: transparent;
-  backdrop-filter: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 20px;
+  background-color: #f4f4f4;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  padding: 10px 15px;
+  width: 90%;
+  max-width: 800px;
   max-height: 50dvh;
   overflow-y: auto;
   display: flex;
-  flex: 1;
   flex-direction: column;
   flex-grow: 1;
-  pointer-events: auto;
-}
-
-.chat-shell {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  width: 50vw;
-  max-width: 1000px;
-  height: 28vh;
-  overflow: hidden;
-
-  display: flex;
-  flex-direction: column;
-
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  pointer-events: none;
-  z-index: 999;
+  margin: 0 auto;
 }
 
 /* === MESSAGES === */
@@ -155,9 +98,13 @@ h1 {
 .input-area {
   display: flex;
   gap: 10px;
-  padding: 16px 20px;
-  background: transparent;
-  border-top: 1px solid rgba(255, 255, 255, 0.2); /* тонка межа */
+  padding: 15px;
+  width: 90%;
+  max-width: 800px;
+  background-color: white;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
 }
 #user-input {
   flex-grow: 1;
@@ -168,7 +115,6 @@ h1 {
   min-height: 20px;
   max-height: 120px;
   resize: vertical;
-  pointer-events: auto;
 }
 #send-button {
   background-color: #ff6f00;
@@ -192,35 +138,46 @@ h1 {
 }
 
 /* === STAGE INDICATOR === */
-.stage-indicator-single {
+.stage-indicator {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 16px;
-  margin-top: 12px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  width: 240px;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 90%;
   max-width: 800px;
-  font-weight: bold;
-  font-size: 14px;
-  color: white;
+  margin: 10px 0;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+.stage {
+  display: none;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  color: #ffffff;
+  transition: all 0.3s ease;
+  margin-bottom: 5px;
+  opacity: 0.5;
+  transform: scale(0.95);
   transition: all 0.3s ease;
 }
 
-.stage-indicator-single .stage {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeStage 0.4s forwards;
+.stage.visible {
+    display: block; /* Показати */
+    opacity: 1;
+    transform: scale(1);
 }
 
-@keyframes fadeStage {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.stage-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центруємо вміст */
+    justify-content: center;
+}
+
+.stage.active {
+  background-color: #ff6f00;
+  color: white;
+  font-weight: bold;
 }
 
 /* === STATUS / TYPING === */
@@ -290,23 +247,6 @@ h1 {
 }
 #restart-button:hover {
   background-color: #ff0000a5;
-}
-
-.chat-blur-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  pointer-events: none;
-
-  background: transparent;
-  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  z-index: 5;
 }
 
 #choose-model-btn {
@@ -477,7 +417,7 @@ h1 {
   visibility: hidden;
 }
 .modal-content {
-  background: rgb(0, 225, 255);
+  background: rgb(255, 111, 0);
   padding: 20px 30px;
   border-radius: 8px;
   width: 90%;
@@ -505,27 +445,6 @@ h1 {
   text-align: center;
 }
 
-#client-character {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px); /* трохи нижче на старті */
-  opacity: 0;
-  z-index: 1;
-  animation: fadeInUp 0.8s ease-out 1.5s forwards; /* 1.5s затримка */
-}
-
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
 #model-hint-modal button {
   background: white;
   color: #4CAF50;
@@ -540,160 +459,171 @@ h1 {
 
 /* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
 @media (max-width: 600px) {
-
-  .top-panel {
-    width: 95%;
-    padding: 12px 16px;
-    border-radius: 12px;
-  }
-
-  .stage-indicator-single {
-    width: auto;
-    font-size: 12px;
-    padding: 4px 10px;
-  }
-
-  .progress-hint {
-    font-size: 11px;
-  }
-
-  .progress-container {
-    height: 8px;
-  }
-
-  .chat-shell {
-    width: 100%;
-    left: 0;
-    transform: none;
-    border-radius: 0;
-    bottom: 0;
-    height: 42vh;
-  }
-
-  .chat-container {
+  /* Загальні налаштування */
+  body {
     padding: 10px;
-    max-height: 30vh;
+    padding-top: env(safe-area-inset-top, 10px);
   }
-
+  
+  /* Заголовок */
+  h1 {
+    font-size: 18px;
+    margin: 0.3em 0;
+  }
+  
+  /* Контейнер чату */
+  .chat-container {
+    width: 100%;
+    max-height: 55dvh;
+    padding: 8px 10px;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  /* Повідомлення */
   .message {
-    max-width: 95%;
+    max-width: 90%;
     padding: 8px 12px;
-    font-size: 14px;
+    margin-bottom: 10px;
   }
-
+  
+  /* Поле вводу */
   .input-area {
     flex-direction: column;
+    gap: 8px;
+    width: 100%;
     padding: 10px;
-    gap: 6px;
+    border-radius: 0 0 8px 8px;
   }
-
+  
   #user-input {
     padding: 10px;
     font-size: 14px;
-    min-height: 30px;
   }
-
+  
   #send-button {
     width: 100%;
-    height: 42px;
+    height: 40px;
+  }
+  
+  /* Індикатор прогресу */
+  .progress-hint, 
+  .progress-container {
+    width: 100%;
+  }
+  
+  /* Кнопка вибору моделі */
+  #choose-model-btn {
+    right: 10px;
+    bottom: 60%;
+    padding: 15px;
     font-size: 14px;
+    max-width: 150px;
+    white-space: normal;
   }
-
-  #client-character img {
-    max-height: 280px;
-  }
-
+  
+  /* Модальні вікна */
   .modal-content {
     width: 95%;
     padding: 15px 20px;
   }
-
+  
   .modal-content button {
     padding: 15px 20px;
     font-size: 14px;
   }
-
-  #choose-model-btn {
-    right: 10px;
-    bottom: 60%;
-    padding: 14px;
-    font-size: 13px;
-    max-width: 150px;
-    white-space: normal;
+  
+  /* Вибір моделей */
+  .model-overlay .model-selector {
+    flex-direction: column;
+    padding: 10px;
+    max-width: 95%;
+  }
+  
+  .models-scroll {
+    flex-direction: column;
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    gap: 10px;
+  }
+  
+  .model-button {
+    min-width: 100%;
+  }
+  
+  .arrow {
+    padding: 5px;
+    font-size: 24px;
+  }
+  
+  /* Індикатор етапів */
+  .stage-indicator {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+  }
+  
+  .stage {
+    margin-bottom: 0;
+    font-size: 11px;
+    padding: 3px 8px;
   }
 }
+
+/* Проміжні розміри (601-900px) */
 @media (min-width: 601px) and (max-width: 900px) {
-  .chat-shell {
-    width: 80%;
-    height: 36vh;
-  }
-
-  .top-panel {
-    width: 90%;
-  }
-
-  .message {
+  /* Кнопка вибору моделі */
+  #choose-model-btn {
+    right: 20px;
+    padding: 20px;
     font-size: 15px;
   }
-
-  #send-button {
-    font-size: 15px;
+  
+  /* Контейнер чату */
+  .chat-container {
+    max-height: 60dvh;
   }
+  
+  /* Модальні вікна */
+  .modal-content {
+    max-width: 90%;
+  }
+}
 
-  .stage-indicator-single {
-    font-size: 13px;
+/* Оптимізація для високих екранів */
+@media (max-height: 600px) {
+  .chat-container {
+    max-height: 45dvh;
+  }
+  
+  #choose-model-btn {
+    bottom: 55%;
+  }
+}
+
+/* Додаткові корективи для iOS */
+@supports (-webkit-touch-callout: none) {
+  .input-area {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
 }
 
 </style>
 </head>
 <body>
-<div class="top-panel">
-  <div class="progress-hint" id="progressHint">Правильних питань: 0 / 5</div>
-  <div class="progress-container" id="progressContainer">
-    <div class="progress-bar" id="questionProgressBar"></div>
-  </div>
-
-  <div id="top-title-area">
-    <h1 id="welcome-title">Клієнт зайшов до Вашого магазину...</h1>
-
-    <div id="stage-indicator" class="stage-indicator-single" style="display: none;">
-      <div id="stage-label" class="stage active">Етап: Виявлення потреби</div>
+    <div class="progress-hint" id="progressHint">Правильних питань: 0 / 5</div>
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="questionProgressBar"></div>
     </div>
-  </div>
-</div>
+
+    <h1>Клієнт зайшов до Вашого магазину...</h1>
+    <div class="background-overlay"></div>
 
     <button id="choose-model-btn" style="display: none;">Оберіть модель</button>
 
-    <div class="chat-shell">
-      <div class="chat-blur-overlay"></div>
-      <div class="chat-container" id="chat-container">
+    <div class="chat-container" id="chat-container">
         <!-- Чат буде додаватись сюди -->
-      </div>
-
-    <div class="input-area">
-        <input
-            type="text"
-            id="user-input"
-            placeholder="Напишіть ваше повідомлення..."
-            autocomplete="off"
-        />
-        <button id="send-button">Надіслати</button>
-      </div>
-    </div>
-
-    <div id="client-character" style="
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1;
-    ">
-      <img src="/static/clientpes.png" alt="Клієнт" style="
-        max-height: 640px;
-        border-radius: 16px;
-        filter: drop-shadow(0 0 8px rgba(0,0,0,0.3));
-      ">
     </div>
 
     <div id="auth-modal" class="modal">
@@ -710,12 +640,29 @@ h1 {
       </div>
   </div>
 
+    <div class="input-area">
+        <input
+            type="text"
+            id="user-input"
+            placeholder="Напишіть ваше повідомлення..."
+            autocomplete="off"
+        />
+        <button id="send-button">Надіслати</button>
+    </div>
+
     <!-- Контейнер для вибору моделей (залишився, але не показуємо) -->
     <div id="models-container" style="display:none;">
         <p id="models-prompt"></p>
         <div id="models-buttons">
             <!-- Кнопки моделей будуть додані динамічно -->
         </div>
+
+    </div>
+        <div id="stage-indicator" class="stage-indicator">
+        <div class="stage" data-stage="1">Виявлення потреби</div>
+        <div class="stage" data-stage="2">Презентація товару</div>
+        <div class="stage" data-stage="3">Робота із запереченнями</div>
+        <div class="stage" data-stage="4">Аргументація заперечення</div>
     </div>
 
     <!-- Overlay для вибору моделей -->
@@ -840,14 +787,6 @@ h1 {
             sendButton.disabled = true;
             hideModelButtons();
             statusElement.textContent = "Діалог завершено";
-        }
-
-        function showStageIndicator() {
-          const h1 = document.getElementById('welcome-title');
-          const indicator = document.getElementById('stage-indicator');
-
-          h1.style.display = 'none';
-          indicator.style.display = 'flex'; // або 'block' для вертикального вигляду
         }
 
         function showModelHint() {
@@ -1050,24 +989,35 @@ h1 {
           }
       }
 
-function updateStageIndicator(currentStage) {
-  const stageNames = {
-    1: "Етап: Виявлення потреби",
-    2: "Етап: Презентація товару",
-    3: "Етап: Робота із запереченнями",
-    4: "Етап: Аргументація заперечення"
-  };
+        function updateStageIndicator(currentStage) {
+            const stages = document.querySelectorAll('.stage');
 
-  const stageLabel = document.getElementById('stage-label');
-  if (!stageLabel) return;
+            stages.forEach(stage => {
+                const stageNum = parseInt(stage.dataset.stage);
 
-  stageLabel.textContent = stageNames[currentStage] || "";
+                // Показуємо тільки ті, що менші або рівні поточному етапу
+                if (stageNum <= currentStage) {
+                    stage.classList.add('visible');
+                } else {
+                    stage.classList.remove('visible');
+                }
 
-  // Перезапуск анімації (щоб кожен новий етап анімовано оновлювався)
-  stageLabel.classList.remove('stage'); 
-  void stageLabel.offsetWidth; // тригер перерендеру
-  stageLabel.classList.add('stage');
-}
+                // Виділяємо поточний
+                stage.classList.remove('active');
+                if (stageNum === currentStage) {
+                    stage.classList.add('active');
+                }
+            });
+
+            const stageNames = {
+                1: "Етап: Виявлення потреби",
+                2: "Етап: Презентація товару",
+                3: "Етап: Робота із запереченнями",
+                4: "Етап: Аргументація заперечення"
+            };
+
+            statusElement.textContent = stageNames[currentStage] || "";
+        }
 
    let sellerName = '';
 
@@ -1240,22 +1190,19 @@ function updateStageIndicator(currentStage) {
         
         // Починаємо чат
         try {
-          const response = await fetch("/start_chat");
-          const data = await response.json();
-
-          if (data.reply) {
-            addMessage(data.reply, false);       // додаємо перше повідомлення
-            unblockChat();                       // розблоковуємо поле вводу
-            userInput.focus();
+            const response = await fetch("/start_chat");
+            const data = await response.json();
             
-            // ← ДОДАЙ СЮДИ:
-            showStageIndicator();                // показуємо індикатор етапів
-          }
+            if (data.reply) {
+                addMessage(data.reply, false);
+                unblockChat();
+                userInput.focus();
+            }
         } catch (err) {
-          console.error("Помилка при старті чату:", err);
-          addMessage("Помилка при старті чату. Спробуйте ще раз.", false);
+            console.error("Помилка старту чату:", err);
+            addMessage("Помилка при старті чату. Спробуйте оновити сторінку.", false);
         }
-      });
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {

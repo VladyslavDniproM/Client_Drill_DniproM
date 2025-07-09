@@ -280,7 +280,7 @@ def show_models():
     })
 
 def generate_report(session_data):
-    seller_name = session_data.get('seller_name') or session.get('seller_name', 'Невідомий продавець')
+    seller_name = session_data.get('seller_name') or 'Невідомий продавець'
     total_score = session_data.get('total_score', 0)
     max_score = 20  # або інше значення з вашого коду
     
@@ -300,7 +300,7 @@ def generate_report(session_data):
     report_lines.extend([
         "\nРезультати:",
         f"- Оцінка за модель: {session_data.get('model_score', 0)}/2",
-        f"- Оцінка за питання: {sum(q['score'] for q in session_data.get('question_scores', []))}/10",
+        f"- Оцінка за питання: {sum(q['score'] for q in session_data.get('question_scores', []))}/5",
         f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/6",
         f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/7"
     ])
@@ -739,7 +739,8 @@ def chat():
                 full_reply = f"{reply}\n\n📊 Ваша оцінка: {total_score}/{max_score}\n{feedback}"
 
                 # Збереження звіту
-                report_content = generate_report(session)
+                session["total_score"] = total_score
+                report_content = generate_report(dict(session))
                 report_filename = f"report_{session.get('seller_name', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
                 
                 # Створення папки reports, якщо її немає

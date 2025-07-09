@@ -446,7 +446,8 @@ def show_models():
         "stage": 2
     })
 
-def generate_report(session_data, seller_name="Невідомий продавець"):
+def generate_report(session_data):
+    seller_name = session_data.get('seller_name', 'Невідомий продавець')
     total_score = session_data.get('total_score', 0)
     max_score = 20  # або інше значення з вашого коду
     
@@ -492,9 +493,9 @@ def chat():
         session['conversation_log'] = []
 
     session['conversation_log'].append({
-    'role': 'assistant',
-    'message': answer,
-    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        'role': 'user',
+        'message': user_input,
+        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
 
     if "history" not in session or not session["history"]:
@@ -885,7 +886,7 @@ def chat():
                 full_reply = f"{reply}\n\n📊 Ваша оцінка: {total_score}/{max_score}\n{feedback}"
 
                 # Збереження звіту
-                report_content = generate_report(session, seller_name=session.get("seller_name", "Невідомий продавець"))
+                report_content = generate_report(session)
                 report_filename = f"report_{session.get('seller_name', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
                 
                 # Створення папки reports, якщо її немає

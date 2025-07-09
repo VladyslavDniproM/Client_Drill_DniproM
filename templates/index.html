@@ -1026,7 +1026,7 @@ h1 {
               const response = await fetch("/chat", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ message: model }),
+                  body: JSON.stringify({ message: model, seller_name: sellerName }),
               });
 
               const data = await response.json();
@@ -1143,7 +1143,7 @@ function updateStageIndicator(currentStage) {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({message})
+            body: JSON.stringify({message, seller_name: sellerName})
         });
 
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);

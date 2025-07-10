@@ -44,7 +44,7 @@ background-image: url("/static/Iv-2.jpg");
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 750px;
+  width: 90%;
   max-width: 1000px;
 
   display: flex;
@@ -106,7 +106,7 @@ h1 {
   left: 50%;
   transform: translateX(-50%);
 
-  width: 750px;
+  width: 50vw;
   max-width: 1000px;
   height: 28vh;
   overflow: hidden;
@@ -201,7 +201,7 @@ h1 {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  width: 540px;
+  width: 240px;
   max-width: 800px;
   font-weight: bold;
   font-size: 14px;
@@ -506,7 +506,7 @@ h1 {
 
 #client-character {
   position: fixed;
-  bottom: 40px;
+  bottom: 80px;
   left: 50%;
   transform: translateX(-50%) translateY(20px); /* трохи нижче на старті */
   opacity: 0;
@@ -692,7 +692,7 @@ h1 {
       transition: opacity 0.2s ease;
     ">
       <img id="client-avatar" src="" alt="Клієнт" style="
-        max-height: 520px;
+        max-height: 640px;
         border-radius: 16px;
         filter: drop-shadow(0 0 8px rgba(0,0,0,0.3));
       ">
@@ -738,7 +738,7 @@ h1 {
     <div id="model-hint-modal" class="modal hidden">
       <div class="modal-content">
         <h2>Порада</h2>
-        <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Але не спішіть: краще поставте ще декілька запитань!</p>
+        <p>Тепер ви можете обрати модель шуруповерта, яка відповідає потребам клієнта. Але не спішіть: краще поставте ще декілька запитань!</p>
         <button id="close-hint-btn">Зрозуміло</button>
       </div>
     </div>

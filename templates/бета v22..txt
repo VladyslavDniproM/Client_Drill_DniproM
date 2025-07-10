@@ -44,7 +44,7 @@ background-image: url("/static/Iv-2.jpg");
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 750px;
+  width: 90%;
   max-width: 1000px;
 
   display: flex;
@@ -106,7 +106,7 @@ h1 {
   left: 50%;
   transform: translateX(-50%);
 
-  width: 750px;
+  width: 50vw;
   max-width: 1000px;
   height: 28vh;
   overflow: hidden;
@@ -201,7 +201,7 @@ h1 {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  width: 540px;
+  width: 240px;
   max-width: 800px;
   font-weight: bold;
   font-size: 14px;
@@ -506,7 +506,7 @@ h1 {
 
 #client-character {
   position: fixed;
-  bottom: 40px;
+  bottom: 80px;
   left: 50%;
   transform: translateX(-50%) translateY(20px); /* трохи нижче на старті */
   opacity: 0;
@@ -692,7 +692,7 @@ h1 {
       transition: opacity 0.2s ease;
     ">
       <img id="client-avatar" src="" alt="Клієнт" style="
-        max-height: 520px;
+        max-height: 640px;
         border-radius: 16px;
         filter: drop-shadow(0 0 8px rgba(0,0,0,0.3));
       ">
@@ -715,7 +715,7 @@ h1 {
     <!-- Контейнер для вибору моделей (залишився, але не показуємо) -->
     <div id="models-container" style="display:none;">
         <p id="models-prompt"></p>
-        <div id="models-buttons">
+        <div id="modelsButtons">
             <!-- Кнопки моделей будуть додані динамічно -->
         </div>
     </div>
@@ -738,7 +738,7 @@ h1 {
     <div id="model-hint-modal" class="modal hidden">
       <div class="modal-content">
         <h2>Порада</h2>
-        <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Але не спішіть: краще поставте ще декілька запитань!</p>
+        <p>Тепер ви можете обрати модель шуруповерта, яка відповідає потребам клієнта. Але не спішіть: краще поставте ще декілька запитань!</p>
         <button id="close-hint-btn">Зрозуміло</button>
       </div>
     </div>
@@ -896,223 +896,196 @@ h1 {
           }
       }
 
-        function showModelButtons(models, promptText = "Оберіть модель:", attemptsLeft = 1) {
-          const modelData = {
-              "CD-218Q": {
-                  image: "/static/218Q.png",
-                  specs: [
-                      "24 Нм",
-                      "Швидкоз'ємний патрон",
-                      "Йде без акумулятора",
-                      "Легкий та компактний",
-                  ],
-              },
-              "CD-12QX": {
-                  image: "/static/CD12QX.png",
-                  specs: [
-                      "25 Нм",
-                      "Повний комплект",
-                      "Для нескладних завдань",
-                      "Повний комплект, в акції",
-                  ],
-              },
-              "CD-201HBC": {
-                  image: "/static/201HBC.png",
-                  specs: [
-                      "45 Нм",
-                      "Безщітковий двигун",
-                      "Для роботи навіть із цеглою",
-                      "Йде без акумулятора",
-                  ],
-              },
-              "CD-200BCULTRA": {
-                  image: "/static/200BCULTRA.png",
-                  specs: [
-                      "60 Нм",
-                      "Металевий патрон",
-                      "Найсильніший шуруповерт",
-                      "Йде без акумулятора",
-                  ],
-              },
-              "CD-200BCCOMPACT": {
-                  image: "/static/CD-200BCCOMPACT.png",
-                  specs: [
-                      "40 Нм",
-                      "Металевий патрон",
-                      "Найточніший шуруповерт",
-                      "Йде без акумулятора",
-                  ],
-              },
-              "CD-12CX": {
-                  image: "/static/CD12CX.png",
-                  specs: [
-                      "30 Нм",
-                      "Компактний та недорогий",
-                      "Пластиковий патрон",
-                      "Повний комлпект, в акції",
-                  ],
-              },
-              "CD-12BC": {
-                  image: "/static/CD-12BC.png",
-                  specs: [
-                      "40 Нм",
-                      "Металевий патрон",
-                      "Максимально компактний",
-                      "Йде без акумулятора",
-                  ],
-              },
-              "GS-140SE": {
-                  image: "/static/gs140se.png",
-                  specs: [
-                      "1400 Вт",
-                      "125 мм діаметр диску",
-                      "Регулювання та підтримка обертів",
-                      "Коротка ручка",
-                  ],
-              },
-              "GL-160SE": {
-                  image: "/static/gl160se.png",
-                  specs: [
-                      "1600 Вт",
-                      "150 мм діаметр диску",
-                      "Регулювання обертів та підтримка потужності",
-                      "Довга ручка",
-                  ],
-              },
-              "GS-98": {
-                  image: "/static/gs98.png",
-                  specs: [
-                      "980 Вт",
-                      "125 мм діаметр диску",
-                      "Найдешевша та найпопулярніша КШМ",
-                      "Коротка ручка",
-                  ],
-              },
-              "GS-100S": {
-                  image: "/static/gs100s.png",
-                  specs: [
-                      "1000 Вт",
-                      "125 мм діаметр диску",
-                      "Компактна КШМ із регулятором обертів",
-                      "Коротка ручка",
-                  ],
-              },
-              "CG-12BC": {
-                  image: "/static/cg12bc.png",
-                  specs: [
-                      "76 мм діаметр диску",
-                      "12V болгарка",
-                      "Максимально компактна",
-                      "Має плавний пуск та захист від випадкового ввімкнення",
-                  ],
-              },
-              "GL-125S": {
-                  image: "/static/gl125s.png",
-                  specs: [
-                      "125 мм діаметр диску",
-                      "1250 Вт",
-                      "Проста та дешева КШМ",
-                      "Довга ручка",
-                  ],
-              },
-              "DGA-201": {
-                  image: "/static/dga201.png",
-                  specs: [
-                      "125 мм діаметр диску",
-                      "20V модель КШМ",
-                      "Зручна, проста та автономна",
-                      "Немає жодних особливих функцій",
-                  ],
-              },
-          };
-            modelsButtons.innerHTML = "";
+function showModelButtons(models, promptText = "Оберіть модель:", attemptsLeft = 1) {
+    // Перевірка наявності необхідних елементів DOM
+    const modelsButtons = document.getElementById('modelsButtons');
+    const modelOverlay = document.getElementById('modelOverlay');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
 
-            models.forEach((model) => {
-                const data = modelData[model];
-                if (!data) return;
+    if (!modelsButtons || !modelOverlay || !userInput || !sendButton) {
+        console.error("Один або кілька елементів DOM не знайдено!");
+        return;
+    }
 
-                const button = document.createElement("button");
-                button.className = "model-button";
+    const modelData = {
+        "CD-218Q": {
+            image: "/static/218Q.png",
+            specs: [
+                "24 Нм",
+                "Швидкоз'ємний патрон",
+                "Йде без акумулятора",
+                "Легкий та компактний",
+            ],
+        },
+        "CD-12QX": {
+            image: "/static/CD12QX.png",
+            specs: [
+                "25 Нм",
+                "Повний комплект",
+                "Для нескладних завдань",
+                "Повний комплект, в акції",
+            ],
+        },
+        "CD-201HBC": {
+            image: "/static/201HBC.png",
+            specs: [
+                "45 Нм",
+                "Безщітковий двигун",
+                "Для роботи навіть із цеглою",
+                "Йде без акумулятора",
+            ],
+        },
+        "CD-200BCULTRA": {
+            image: "/static/200BCULTRA.png",
+            specs: [
+                "60 Нм",
+                "Металевий патрон",
+                "Найсильніший шуруповерт",
+                "Йде без акумулятора",
+            ],
+        },
+        "CD-200BCCOMPACT": {
+            image: "/static/CD-200BCCOMPACT.png",
+            specs: [
+                "40 Нм",
+                "Металевий патрон",
+                "Найточніший шуруповерт",
+                "Йде без акумулятора",
+            ],
+        },
+        "CD-12CX": {
+            image: "/static/CD12CX.png",
+            specs: [
+                "30 Нм",
+                "Компактний та недорогий",
+                "Пластиковий патрон",
+                "Повний комлпект, в акції",
+            ],
+        },
+        "CD-12BC": {
+            image: "/static/CD-12BC.png",
+            specs: [
+                "40 Нм",
+                "Металевий патрон",
+                "Максимально компактний",
+                "Йде без акумулятора",
+            ],
+        },
+        "GS-140SE": {
+            image: "/static/gs140se.png",
+            specs: [
+                "1400 Вт",
+                "125 мм діаметр диску",
+                "Регулювання та підтримка обертів",
+                "Коротка ручка",
+            ],
+        },
+        "GL-160SE": {
+            image: "/static/gl160se.png",
+            specs: [
+                "1600 Вт",
+                "150 мм діаметр диску",
+                "Регулювання обертів та підтримка потужності",
+                "Довга ручка",
+            ],
+        },
+        "GS-98": {
+            image: "/static/gs98.png",
+            specs: [
+                "980 Вт",
+                "125 мм діаметр диску",
+                "Найдешевша та найпопулярніша КШМ",
+                "Коротка ручка",
+            ],
+        },
+        "GS-100S": {
+            image: "/static/gs100s.png",
+            specs: [
+                "1000 Вт",
+                "125 мм діаметр диску",
+                "Компактна КШМ із регулятором обертів",
+                "Коротка ручка",
+            ],
+        },
+        "CG-12BC": {
+            image: "/static/cg12bc.png",
+            specs: [
+                "76 мм діаметр диску",
+                "12V болгарка",
+                "Максимально компактна",
+                "Має плавний пуск та захист від випадкового ввімкнення",
+            ],
+        },
+        "GL-125S": {
+            image: "/static/gl125s.png",
+            specs: [
+                "125 мм діаметр диску",
+                "1250 Вт",
+                "Проста та дешева КШМ",
+                "Довга ручка",
+            ],
+        },
+        "DGA-201": {
+            image: "/static/dga201.png",
+            specs: [
+                "125 мм діаметр диску",
+                "20V модель КШМ",
+                "Зручна, проста та автономна",
+                "Немає жодних особливих функцій",
+            ],
+        },
+    };
 
-                // Фото моделі
-                const img = document.createElement("img");
-                img.src = data.image;
-                img.alt = model;
-                img.style.width = "100px";
-                img.style.display = "block";
-                img.style.margin = "0 auto 10px";
-                button.appendChild(img);
+    modelsButtons.innerHTML = "";
 
-                // Назва моделі
-                const title = document.createElement("div");
-                title.textContent = model;
-                title.style.fontWeight = "bold";
-                title.style.textAlign = "center";
-                button.appendChild(title);
+    models.forEach((model) => {
+        const data = modelData[model];
+        if (!data) return;
 
-                // Характеристики
-                const ul = document.createElement("ul");
-                ul.style.paddingLeft = "20px";
-                ul.style.marginTop = "8px";
-                data.specs.forEach((spec) => {
-                    const li = document.createElement("li");
-                    li.textContent = spec;
-                    ul.appendChild(li);
-                });
-                button.appendChild(ul);
+        const button = document.createElement("button");
+        button.className = "model-button";
 
-                // Обробник кліку
-                button.onclick = () => {
-                    addMessage(`Обираю модель: ${model}`, true);
-                    sendModelChoice(model);
-                };
+        // Фото моделі
+        const img = document.createElement("img");
+        img.src = data.image;
+        img.alt = model;
+        img.style.width = "100px";
+        img.style.display = "block";
+        img.style.margin = "0 auto 10px";
+        button.appendChild(img);
 
-                modelsButtons.appendChild(button);
-            });
+        // Назва моделі
+        const title = document.createElement("div");
+        title.textContent = model;
+        title.style.fontWeight = "bold";
+        title.style.textAlign = "center";
+        button.appendChild(title);
 
-            modelOverlay.style.display = "flex";
-            userInput.style.display = "none";
-            sendButton.style.display = "none";
-        }
+        // Характеристики
+        const ul = document.createElement("ul");
+        ul.style.paddingLeft = "20px";
+        ul.style.marginTop = "8px";
+        data.specs.forEach((spec) => {
+            const li = document.createElement("li");
+            li.textContent = spec;
+            ul.appendChild(li);
+        });
+        button.appendChild(ul);
 
-        function hideModelButtons() {
-            modelOverlay.style.display = "none";
-            userInput.style.display = "block";
-            sendButton.style.display = "inline-block";
-        }
+        // Обробник кліку
+        button.onclick = () => {
+            addMessage(`Обираю модель: ${model}`, true);
+            sendModelChoice(model);
+        };
 
-        async function sendModelChoice(model) {
-          hideModelButtons();
-          showTypingIndicator();
-          // Приховуємо кнопку вибору моделі
-          document.getElementById("choose-model-btn").style.display = "none";
+        modelsButtons.appendChild(button);
+    });
 
-          try {
-              const response = await fetch("/chat", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ message: model, seller_name: sellerName }),
-              });
-
-              const data = await response.json();
-              console.log("Відповідь сервера:", data);
-              addMessage(data.reply, false);
-
-              if (data.show_models && data.models?.length) {
-                  showModelButtons(data.models, "Оберіть модель:", data.attempts_left || 1);
-              } else if (data.chat_ended) {
-                  disableChat();
-                  if (data.show_restart_button) {
-                      restartButton.style.display = "inline-block";
-                  }
-              }
-          } catch (error) {
-              console.error("Помилка:", error);
-              addMessage("Помилка зв'язку. Спробуйте ще раз.", false);
-          } finally {
-              hideTypingIndicator();
-          }
-      }
+    modelOverlay.style.display = "flex";
+    userInput.style.display = "none";
+    sendButton.style.display = "none";
+}
 
 function updateStageIndicator(currentStage) {
   const stageNames = {

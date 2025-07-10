@@ -196,7 +196,7 @@ def init_conversation():
     session.modified = True 
 
     system_prompt = f"""
-    Ти — віртуальний **клієнт магазину**, який **прийшов купити інструмент**.  
+    Ти — віртуальний **клієнт магазину**, який **прийшов купити шуруповерт**.  
     Твоя **єдина мета** — **отримати потрібну інформацію для покупки** згідно твоєї ситуації.
     Не висвітлюй ситуацію повністю. Користувач ставить питання – ти **відповідаєш по одному реченню**. 
     Ти **не є консультантом**, **не допомагаєш** користувачу, **не пропонуєш моделі**, **не ставиш зустрічних запитань**.
@@ -216,14 +216,15 @@ def init_conversation():
     Починай розмову нейтрально:  
     "Добрий день, мені потрібен інструмент."
     """
+
     return [
         {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": f"Добрий день, мені потрібен {session['situation']['description']}"}
+        {"role": "assistant", "content": "Добрий день, мені потрібен шуруповерт."}
     ]
 
 def is_relevant_question_gpt(question, situation_description):
     prompt = f"""
-    Чи є це питання релевантним для вибору інструменту в контексті цієї ситуації?
+    Чи є це питання релевантним для вибору шуруповерта в контексті цієї ситуації?
     Ситуація: {situation_description}
     
     Враховуй такі критерії:
@@ -294,20 +295,9 @@ def restart_chat():
 
 @app.route("/show_models", methods=["POST"])
 def show_models():
-    # Отримуємо поточну ситуацію
-    current_situation = session.get("situation")
-    
-    # Отримуємо правильні і неправильні моделі з поточної ситуації
-    correct_models = current_situation["correct_models"]
-    wrong_models = current_situation["wrong_models"]
-    
-    # Фільтруємо доступні моделі на основі ситуації
-    available_models = correct_models + wrong_models
-
-    session["stage"] = 2  # Переконуємось, що ми на правильному етапі для вибору моделі
-
+    session["stage"] = 2
     return jsonify({
-        "models": available_models,
+        "models": session.get("available_models", []),
         "stage": 2
     })
 
@@ -397,7 +387,7 @@ def chat():
                     "show_restart_button": True
                 })
             return jsonify({
-                "reply": "Ваше питання не стосується вибору інструменту. Спробуйте інше питання.",
+                "reply": "Ваше питання не стосується вибору шуруповерта. Спробуйте інше питання.",
                 "chat_ended": False
             })
 
@@ -423,7 +413,7 @@ def chat():
         if session["question_count"] >= 6:
             session["stage"] = 2
             return jsonify({
-                "reply": "Я відповів на достатньо питань. Тепер ви можете запропонувати мені модель інструменту.",
+                "reply": "Я відповів на достатньо питань. Тепер ви можете запропонувати мені модель шуруповерта.",
                 "chat_ended": False,
                 "stage": 2,
                 "show_model_button": True
@@ -517,8 +507,8 @@ def chat():
             session["user_answers"] = {}
 
             # Генерація уточнюючих питань
-            prompt = f"""Ти клієнт, який обрав інструмент {user_model} для {session['situation']['description']}.\n
-            Згенеруй 3 питання про **потужність**, **зовнішню будову** та функції цього інструменту."""
+            prompt = f"""Ти клієнт, який обрав шуруповерт {user_model} для {session['situation']['description']}.\n
+            Згенеруй 3 питання про **крутний момент**, **зовнішню будову** та функції цього шуруповерта."""
             
             
             try:
@@ -635,9 +625,9 @@ def chat():
                 answers_score = sum(a["score"] for a in session["user_answers"].values())
 
                 if answers_score >= 5:
-                    feedback = "Гарний інструмент."
+                    feedback = "Гарний шуруповерт"
                 elif answers_score >= 3:
-                    feedback = "інструмент непоганий."
+                    feedback = "Шуруповерт непоганий."
                 else:
                     feedback = "Зрозуміло."
 

@@ -19,7 +19,7 @@ MODEL_ENGINE = "gpt-3.5-turbo"
 SITUATIONS = [
     {
         "id": 1,
-        "description": "шуруповерт для збірки меблів",
+        "description": "Збірка меблів на об’єкті",
         "requirements": "легкий, зручний шуруповерт з хорошою ергономікою для тривалої роботи",
         "avatar": "id1.png",
         "behavior": "ставить професійні твердження",
@@ -35,7 +35,7 @@ SITUATIONS = [
     },
     {
         "id": 2,
-        "description": "шуруповерт для домашнього ремонту",
+        "description": "Домашній ремонт",
         "requirements": "недорогий та компактний шуруповерт для побутових задач",
         "avatar": "id2.png",
         "behavior": "агресивно відповідає",
@@ -51,7 +51,7 @@ SITUATIONS = [
     },
     {
         "id": 3,
-        "description": "подарунок татові – шуруповерт",
+        "description": "Подарунок татові",
         "requirements": "компактний, простий у використанні шуруповерт для базових робіт",
         "avatar": "id4.png",
         "behavior": "спокійно відповідає",
@@ -67,7 +67,7 @@ SITUATIONS = [
     },
     {
         "id": 4,
-        "description": "шуруповерт для ремонту електроніки, робота з дрібними кріпленнями ",
+        "description": "Ремонт електроніки, робота з дрібними кріпленнями",
         "requirements": "максимальний контроль обертів і точність",
         "avatar": "clientpes.png",
         "behavior": "любить жарти",
@@ -80,22 +80,6 @@ SITUATIONS = [
         "Сильною потужністю можна нашкодити",
         "Працюю у вузьких місцях"
         ]
-    },
-    {
-        "id": 5,
-        "description": "КШМ для різання, шліфування та зачистки",
-        "requirements": "мережева болгарка, висока потужність і зручність у роботі",
-        "avatar": "clientpes.png",
-        "behavior": "переважно спокійний, іноді схильний до експериментів",
-        "correct_models": ["GS-140SE", "GL-160SE"],
-        "wrong_models": ["GS-98", "GS-100S", "CG-12BC", "GL-125S", "DGA-201"],
-        "hints": [
-        "Мені точно потрібна мережева болгарка для шліфування металу",
-        "Працюю з металом та шліфую великі поверхні",
-        "Важлива висока потужність, продуктивність і надійність",
-        "Треба болгарка на 125 мм діаметр диску",
-        "Хочу надійно контролювати інструмент"
-        ]
     }
 ]
 
@@ -106,14 +90,7 @@ TOOL_MODELS = [
     "CD-218Q",
     "CD-200BCCOMPACT",
     "CD-12CX",
-    "CD-12BC",
-    "GS-140SE",
-    "GL-160SE",
-    "GS-98",
-    "GS-100S",
-    "CG-12BC",
-    "GL-125S",
-    "DGA-201"
+    "CD-12BC"
 ]
 
 UNACCEPTABLE_BEHAVIOR_PROMPT = """
@@ -196,7 +173,7 @@ def init_conversation():
     session.modified = True 
 
     system_prompt = f"""
-    Ти — віртуальний **клієнт магазину**, який **прийшов купити інструмент**.  
+    Ти — віртуальний **клієнт магазину**, який **прийшов купити шуруповерт**.  
     Твоя **єдина мета** — **отримати потрібну інформацію для покупки** згідно твоєї ситуації.
     Не висвітлюй ситуацію повністю. Користувач ставить питання – ти **відповідаєш по одному реченню**. 
     Ти **не є консультантом**, **не допомагаєш** користувачу, **не пропонуєш моделі**, **не ставиш зустрічних запитань**.
@@ -214,16 +191,17 @@ def init_conversation():
     - В іншому випадку — задавай додаткові запитання або висловлюй свою думку.
 
     Починай розмову нейтрально:  
-    "Добрий день, мені потрібен інструмент."
+    "Добрий день, мені потрібен шуруповерт."
     """
+
     return [
         {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": f"Добрий день, мені потрібен {session['situation']['description']}"}
+        {"role": "assistant", "content": "Добрий день, мені потрібен шуруповерт."}
     ]
 
 def is_relevant_question_gpt(question, situation_description):
     prompt = f"""
-    Чи є це питання релевантним для вибору інструменту в контексті цієї ситуації?
+    Чи є це питання релевантним для вибору шуруповерта в контексті цієї ситуації?
     Ситуація: {situation_description}
     
     Враховуй такі критерії:
@@ -294,20 +272,9 @@ def restart_chat():
 
 @app.route("/show_models", methods=["POST"])
 def show_models():
-    # Отримуємо поточну ситуацію
-    current_situation = session.get("situation")
-    
-    # Отримуємо правильні і неправильні моделі з поточної ситуації
-    correct_models = current_situation["correct_models"]
-    wrong_models = current_situation["wrong_models"]
-    
-    # Фільтруємо доступні моделі на основі ситуації
-    available_models = correct_models + wrong_models
-
-    session["stage"] = 2  # Переконуємось, що ми на правильному етапі для вибору моделі
-
+    session["stage"] = 2
     return jsonify({
-        "models": available_models,
+        "models": session.get("available_models", []),
         "stage": 2
     })
 
@@ -397,7 +364,7 @@ def chat():
                     "show_restart_button": True
                 })
             return jsonify({
-                "reply": "Ваше питання не стосується вибору інструменту. Спробуйте інше питання.",
+                "reply": "Ваше питання не стосується вибору шуруповерта. Спробуйте інше питання.",
                 "chat_ended": False
             })
 
@@ -423,7 +390,7 @@ def chat():
         if session["question_count"] >= 6:
             session["stage"] = 2
             return jsonify({
-                "reply": "Я відповів на достатньо питань. Тепер ви можете запропонувати мені модель інструменту.",
+                "reply": "Я відповів на достатньо питань. Тепер ви можете запропонувати мені модель шуруповерта.",
                 "chat_ended": False,
                 "stage": 2,
                 "show_model_button": True
@@ -517,8 +484,8 @@ def chat():
             session["user_answers"] = {}
 
             # Генерація уточнюючих питань
-            prompt = f"""Ти клієнт, який обрав інструмент {user_model} для {session['situation']['description']}.\n
-            Згенеруй 3 питання про **потужність**, **зовнішню будову** та функції цього інструменту."""
+            prompt = f"""Ти клієнт, який обрав шуруповерт {user_model} для {session['situation']['description']}.\n
+            Згенеруй 3 питання про **крутний момент**, **зовнішню будову** та функції цього шуруповерта."""
             
             
             try:
@@ -620,6 +587,12 @@ def chat():
             max_answers_score = 3 * 2  # 3 питання по 2 бали
             print(f"[SCORE] Загальний бал за відповіді: {current_answers_score}/{max_answers_score}")
 
+            session['conversation_log'].append({
+                'role': 'assistant',
+                'message': next_question,
+                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+
             session['current_question_index'] += 1
 
             # Перехід до наступного питання
@@ -635,9 +608,9 @@ def chat():
                 answers_score = sum(a["score"] for a in session["user_answers"].values())
 
                 if answers_score >= 5:
-                    feedback = "Гарний інструмент."
+                    feedback = "Гарний шуруповерт"
                 elif answers_score >= 3:
-                    feedback = "інструмент непоганий."
+                    feedback = "Шуруповерт непоганий."
                 else:
                     feedback = "Зрозуміло."
 
@@ -694,6 +667,11 @@ def chat():
                 reply = response.choices[0].message["content"].strip()
                 session["objection_round"] += 1
                 session.modified = True
+                session['conversation_log'].append({
+                    'role': 'assistant',
+                    'message': reply,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }) 
 
                 return jsonify({
                     "reply": reply,

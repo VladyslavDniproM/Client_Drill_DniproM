@@ -609,9 +609,12 @@ def chat():
             content = response.choices[0].message.get("content", "")
             questions = [line.strip(" 1234567890.-") for line in content.split('\n') if line.strip()]
             session["generated_questions"] = questions
-            session.modified = True
-
+            
+            session["history"].append({"role": "user", "content": user_input})
             first_question = questions[0] if questions else "Яке перше ваше питання про цю модель?"
+            session["history"].append({"role": "assistant", "content": first_question})
+
+            session.modified = True
 
             return jsonify({
                 "reply": f"Добре, {user_model} виглядає непогано. А таке питання:\n\n{first_question}",
@@ -636,6 +639,8 @@ def chat():
 
         index = session.get('current_question_index', 0)
         current_question = session['generated_questions'][index]
+
+        session["history"].append({"role": "user", "content": user_input})
 
         # Оцінка відповіді
         gpt_prompt = f"""
@@ -700,6 +705,9 @@ def chat():
             # Перехід до наступного питання
             if session['current_question_index'] < len(session['generated_questions']):
                 next_question = session['generated_questions'][session['current_question_index']]
+                session["history"].append({"role": "assistant", "content": next_question})
+                session.modified = True
+
                 return jsonify({
                     "reply": next_question,
                     "chat_ended": False
@@ -725,6 +733,10 @@ def chat():
                 session["current_objection"] = random.choice(objections)
                 session["objection_round"] = 1
 
+                final_reply = f"{feedback}\n\nХм... {session['current_objection']}"
+                session["history"].append({"role": "assistant", "content": final_reply})
+                session.modified = True
+
                 return jsonify({
                     "reply": f"{feedback}\n\nХм... {session['current_objection']}",
                     "chat_ended": False,
@@ -744,6 +756,8 @@ def chat():
         seller_reply = user_input
         session["seller_replies"].append(seller_reply)
         current_round = session.get("objection_round", 1)
+
+        session["history"].append({"role": "user", "content": seller_reply})
 
         if current_round <= 2:
             try:
@@ -767,6 +781,8 @@ def chat():
                     max_tokens=200
                 )
                 reply = response.choices[0].message["content"].strip()
+
+                session["history"].append({"role": "assistant", "content": reply})
                 session["objection_round"] += 1
                 session.modified = True
 
@@ -867,6 +883,10 @@ def chat():
                     reply = "Клієнт незадоволений консультацією."
 
                 full_reply = f"{reply}\n\n📊 Ваша оцінка: {total_score}/{max_score}\n{feedback}"
+
+                session["history"].append({"role": "assistant", "content": full_reply})
+                session["total_score"] = total_score
+                session.modified = True
 
                 # Збереження звіту
                 session["total_score"] = total_score

@@ -648,7 +648,7 @@ h1 {
 </head>
 <body>
 <div class="top-panel">
-  <div class="progress-hint" id="progressHint">Зарахованих питань: 0 / 7</div>
+  <div class="progress-hint" id="progressHint">Правильних питань: 0 / 5</div>
   <div class="progress-container" id="progressContainer">
     <div class="progress-bar" id="questionProgressBar"></div>
   </div>
@@ -866,22 +866,20 @@ h1 {
         document.getElementById("close-hint-btn").addEventListener("click", hideModelHint);
 
         // Оновіть функцію updateProgressBar
-      function updateProgressBar(progress, maxQuestions = 5) {
-          const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
+        function updateProgressBar(progress) {
+          const percent = (Math.min(progress, 5) / 5) * 100;
           questionProgressBar.style.width = `${percent}%`;
 
-          console.log(`Current progress: ${progress}`);
-
-          if (progress < maxQuestions) {
-              progressHint.textContent = `Запитань поставлено: ${progress} / ${maxQuestions}`;
+          if (progress < 5) {
+              progressHint.textContent = `Правильних питань: ${progress} / 5`;
               progressHint.style.opacity = "1";
               document.getElementById("progressContainer").style.opacity = "1";
               progressHint.style.display = "block";
               document.getElementById("progressContainer").style.display = "block";
-
+              
               if (progress >= 3) {
                   document.getElementById("choose-model-btn").style.display = "inline-block";
-                  showModelHint();
+                  showModelHint(); // Це важливо - викликаємо підказку
               } else {
                   document.getElementById("choose-model-btn").style.display = "none";
               }
@@ -1083,10 +1081,13 @@ h1 {
             sendButton.style.display = "inline-block";
         }
 
-        async function sendModelChoice(model) {
+    async function sendModelChoice(model) {
         hideModelButtons();
         showTypingIndicator();
-        
+
+        // Приховуємо кнопку вибору моделі
+        document.getElementById("choose-model-btn").style.display = "none";
+
         try {
             const response = await fetch("/chat", {
                 method: "POST",
@@ -1095,18 +1096,13 @@ h1 {
             });
 
             const data = await response.json();
-            
-            // Додаємо повідомлення тільки якщо це не перехід на stage 3
-            if (!data.stage || data.stage !== 3) {
-                addMessage(data.reply, false);
-            }
+            console.log("Відповідь сервера:", data);
+            addMessage(data.reply, false);
 
+            // Якщо сервер повертає stage 3, обробляємо це
             if (data.stage === 3) {
-                // Обробляємо перехід на stage 3
-                if (data.model_chosen === false) {
-                    addMessage("На жаль, ця модель не підходить.", false);
-                }
-                addMessage(data.reply, false);
+                // Показуємо уточнюючі питання
+                showClarifyingQuestions(data.generated_questions);
             }
 
             if (data.show_models && data.models?.length) {
@@ -1284,7 +1280,7 @@ function updateStageIndicator(currentStage) {
 
         // Оновлення прогресу
         if (data.question_progress !== undefined) {
-            updateProgressBar(data.question_progress, 7);
+            updateProgressBar(data.question_progress);
         }
 
         // Завершення діалогу
@@ -1345,7 +1341,7 @@ function updateStageIndicator(currentStage) {
         setTimeout(() => {
     const chatContainer = document.querySelector('.chat-container');
     
-    const firstMessage = document.createproElement('div');
+    const firstMessage = document.createElement('div');
     firstMessage.classList.add('message', 'user-message');
     firstMessage.textContent = 'Добрий день! Вітаємо Вас в магазині Dnipro-M!';
     

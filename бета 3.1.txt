@@ -381,7 +381,7 @@ def chat():
         session["total_score"] = 0
         session["objection_round"] = 1
 
-        # --- Stage 1: Питання клієнта ---
+    # --- Stage 1: Питання клієнта ---
     if session["stage"] == 1:
         # Перевірка на нерелевантні питання
         if not is_relevant_question_gpt(user_input, session["situation"]["description"]):
@@ -394,13 +394,6 @@ def chat():
 
             if session["misunderstood_count"] >= 3:
                 session["chat_active"] = False
-                # Генерація звіту та збереження його в змінну report_content
-                report_content = generate_report(session)  # Зберегти звіт навіть при помилці
-                send_email_report(
-                    subject=f"Звіт про діалог — {session.get('seller_name', 'Продавець')}",
-                    body=report_content,  # Використовуємо згенерований звіт
-                    to_email="voloshchenko2014@gmail.com"
-                )
                 return jsonify({
                     "reply": "Ви поставили декілька нерелевантних питань. Діалог завершено.",
                     "chat_ended": True,
@@ -618,12 +611,6 @@ def chat():
 
             if session['irrelevant_answers'] >= 2:
                 session['chat_active'] = False
-                report_content = generate_report(session)  # Зберегти звіт навіть при помилці
-                send_email_report(
-                    subject=f"Звіт про діалог — {session.get('seller_name', 'Продавець')}",
-                    body=report_content,
-                    to_email="voloshchenko2014@gmail.com"
-                )
                 return jsonify({
                     "reply": "Вибачте, я не отримав потрібної інформації. Я, мабуть, піду в інший магазин.",
                     "chat_ended": True,

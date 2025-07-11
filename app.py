@@ -759,7 +759,7 @@ def chat():
 
         session["history"].append({"role": "user", "content": seller_reply})
 
-        if current_round <= 2:
+        if current_round < 2:
             try:
                 history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
                 gpt_prompt = f"""
@@ -797,7 +797,7 @@ def chat():
                     "chat_ended": False
                 })
 
-        elif current_round == 3:
+        elif current_round == 2:
             try:
                 if not session.get("seller_replies"):
                     return jsonify({

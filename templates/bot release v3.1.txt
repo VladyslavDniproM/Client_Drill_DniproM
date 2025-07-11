@@ -338,32 +338,6 @@ h1 {
 
 /* Адаптація для малих екранів */
 @media (max-width: 900px) {
-    html, body {
-    overflow-x: hidden;
-    overflow-y: auto;
-    width: 100%;
-    height: 100%;
-    position: fixed; /* Фіксуємо розміри */
-    touch-action: pan-y; /* Тільки вертикальний скрол */
-    -webkit-overflow-scrolling: touch; /* Плавний скрол для iOS */
-  }
-
-  /* Запобігає підскакуванню контенту при фокусі на input */
-  input, textarea {
-    touch-action: manipulation;
-  }
-
-  /* Фіксуємо чат у межах екрану */
-  .chat-container {
-    max-height: calc(100dvh - 200px); /* Враховує висоту інших елементів */
-    overflow-y: auto;
-  }
-
-  /* Додатковий фікс для iOS */
-  .chat-shell {
-    -webkit-overflow-scrolling: touch;
-  }
-
   #choose-model-btn {
     right: -100px;
     padding: 12px 12px 12px 20px;

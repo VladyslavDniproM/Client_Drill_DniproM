@@ -752,12 +752,10 @@ def chat():
     elif session["stage"] == 4:
         objection = session.get("current_objection", "Заперечення")
         seller_reply = user_input
-        current_round = len(session.get("seller_replies", [])) + 1
-
-        session["history"].append({"role": "user", "content": seller_reply})
+        session["seller_replies"].append(seller_reply)
+        current_round = session.get("objection_round", 1)
 
         if current_round <= 2:
-            session["seller_replies"].append(seller_reply)
             try:
                 history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
                 gpt_prompt = f"""
@@ -767,7 +765,7 @@ def chat():
     {history}
 
     Відповідай як реалістичний клієнт. Реагуй природно на останню репліку продавця: "{seller_reply}".
-    Підтримуй контекст заперечення. Будь конкретним, але відповідай двома-трьома реченнями максимум."""
+    Підтримуй контекст заперечення. Будь конкретним, але не надто коротким."""
                 
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
@@ -779,8 +777,6 @@ def chat():
                     max_tokens=200
                 )
                 reply = response.choices[0].message["content"].strip()
-
-                session["history"].append({"role": "assistant", "content": reply})
                 session["objection_round"] += 1
                 session.modified = True
 
@@ -795,7 +791,7 @@ def chat():
                     "chat_ended": False
                 })
 
-        elif current_round == 2:
+        elif current_round == 3:
             try:
                 if not session.get("seller_replies"):
                     return jsonify({
@@ -817,12 +813,13 @@ def chat():
     1. Чіткість аргументів
     2. Відповідність запереченню
     3. Наявність доказів, прикладів або логіки
+    4. Логічна послідовність і побудова
 
     Аргумент — це чітке пояснення з доказом, прикладом або логікою, яке прямо стосується заперечення.
 
     🔻 Оціни рівень переконливості за шкалою:
-    - "переконливо" — якщо є **сильні аргументи** – 5 балів
-    - "частково переконливо" — якщо є **2 стандартних аргументи** – 3 бали
+    - "переконливо" — якщо є **2 або більше сильні аргументи** – 7 балів
+    - "частково переконливо" — якщо є **1 сильний аргумент** – 3 бали
     - "непереконливо" — якщо **немає** жодного аргументу або відповідь не по темі – 0 балів
 
     Відповідай одним словом: "переконливо", "частково переконливо" або "непереконливо". Не додавай пояснень.
@@ -843,7 +840,7 @@ def chat():
                 rating = match.group(1) if match else "непереконливо"
                 
                 if rating == "переконливо":
-                    objection_score = 5
+                    objection_score = 7
                 elif rating == "частково переконливо":
                     objection_score = 3
                 elif rating == "непереконливо":
@@ -857,14 +854,14 @@ def chat():
                 questions_score = sum(q["score"] for q in session.get("question_scores", []))
                 answers_score = sum(a["score"] for a in session.get("user_answers", {}).values())
                 total_score = model_score + questions_score + answers_score + objection_score
-                max_score = 5 + 5 + 6 + 5
+                max_score = 2 + 5 + 6 + 7
 
                 print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
-                print(f"[SCORE] За модель: {model_score}/5")
+                print(f"[SCORE] За модель: {model_score}/2")
                 print(f"[SCORE] За питання: {questions_score}/5")
                 print(f"[SCORE] За відповіді: {answers_score}/6")
-                print(f"[SCORE] За заперечення: {objection_score}/5")
-                print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/21")
+                print(f"[SCORE] За заперечення: {objection_score}/7")
+                print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/20")
 
                 if total_score >= max_score * 0.8:
                     feedback = "🔝 Чудово! Ви дуже впевнено провели клієнта до покупки."
@@ -881,10 +878,6 @@ def chat():
                     reply = "Клієнт незадоволений консультацією."
 
                 full_reply = f"{reply}\n\n📊 Ваша оцінка: {total_score}/{max_score}\n{feedback}"
-
-                session["history"].append({"role": "assistant", "content": full_reply})
-                session["total_score"] = total_score
-                session.modified = True
 
                 # Збереження звіту
                 session["total_score"] = total_score

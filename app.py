@@ -650,7 +650,7 @@ def chat():
 
 Оціни відповідь продавця за цією шкалою:
 
-2 — відповідь містить **характеристику** (наприклад, цифру, функцію або конструктивну особливість) **і пояснення**, що вона означає або як допомагає клієнту
+2 — відповідь містить **характеристику** (наприклад, цифру, функцію або конструктивну особливість) і пояснення, що вона означає або як допомагає клієнту
 1 — відповідь містить **лише характеристику**, без пояснення її користі чи призначення
 0 — відповідь **не по темі** або **занадто загальна**
 
@@ -720,7 +720,7 @@ def chat():
                 if answers_score >= 5:
                     feedback = "Гарний інструмент."
                 elif answers_score >= 3:
-                    feedback = "інструмент непоганий."
+                    feedback = "Інструмент непоганий."
                 else:
                     feedback = "Зрозуміло."
 
@@ -748,18 +748,16 @@ def chat():
                 "chat_ended": False
             })
 
-
-
     # --- Stage 4: Обробка заперечень ---
     elif session["stage"] == 4:
         objection = session.get("current_objection", "Заперечення")
         seller_reply = user_input
-        session["seller_replies"].append(seller_reply)
-        current_round = session.get("objection_round", 1)
+        current_round = len(session.get("seller_replies", [])) + 1
 
         session["history"].append({"role": "user", "content": seller_reply})
 
-        if current_round < 2:
+        if current_round <= 2:
+            session["seller_replies"].append(seller_reply)
             try:
                 history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
                 gpt_prompt = f"""
@@ -769,7 +767,7 @@ def chat():
     {history}
 
     Відповідай як реалістичний клієнт. Реагуй природно на останню репліку продавця: "{seller_reply}".
-    Підтримуй контекст заперечення. Будь конкретним, але не надто коротким."""
+    Підтримуй контекст заперечення. Будь конкретним, але відповідай двома-трьома реченнями максимум."""
                 
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",

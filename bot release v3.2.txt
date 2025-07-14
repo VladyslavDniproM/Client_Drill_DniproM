@@ -724,34 +724,8 @@ def chat():
                     "Мені здається, це трохи дорогувато.",
                     "А це точно не якась китайська модель?",
                     "Ваша гарантія точно працює?",
-                    "Я бачив в інтернеті дешевше.",
-                    "А чому так дорого, якщо це не професійний бренд?",
-                    "Мені для дому, навіщо мені така потужність і така ціна?",
-                    "Може, мені дешевше взяти набір на ринку?",
-                    "Це точно не з перероблених матеріалів?",
-                    "Де цей інструмент виробляється?",
-                    "Чому я ніколи не чув про цей бренд?",
-                    "А він точно підійде до мого акумулятора?",
-                    "Мені здається, у нього занадто маленький крутний момент.",
-                    "А він не буде перегріватись при довгій роботі?",
-                    "А що входить у комплект? Чому без кейсу?",
-                    "Тут немає регулювання обертів, правда?",
-                    "А є така ж модель з насадками?",
-                    "А якщо зламається — ви точно полагодите?",
-                    "А є сервіс у моєму місті?",
-                    "Мій сусід купив Bosch — каже, не ризикуй з іншими.",
-                    "Я бачив у сусідньому магазині схожий — але на 500 грн дешевше.",
-                    "Я не дуже в цьому розбираюся, раптом я щось не те куплю?",
-                    "Може, краще взяти дротову модель?",
-                    "А цей інструмент точно витримає інтенсивну роботу?",
-                    "А якщо впаде — він не розіб’ється?",
-                    "Чому такий короткий кабель?",
-                    "А цей бренд взагалі ще існує?",
-                    "Це промоакція чи така ціна завжди?",
-                    "А чому на цю модель немає знижки?"
+                    "Я бачив в інтернеті дешевше."
                 ]
-
-                session["objections"] = objections
                 session["current_objection"] = random.choice(objections)
                 session["objection_round"] = 1
 
@@ -772,169 +746,105 @@ def chat():
 
     # --- Stage 4: Обробка заперечень ---
     elif session["stage"] == 4:
-        phase = session.get("objection_phase", 0)
-        user_input = user_input.strip()
+        objection = session.get("current_objection", "Заперечення")
+        seller_reply = user_input
+        session["seller_replies"].append(seller_reply)
+        current_round = session.get("objection_round", 1)
 
-        if "seller_replies" not in session:
-            session["seller_replies"] = []
-
-        if "objections" not in session:
-            objections = [
-                "Мені здається, це трохи дорогувато.",
-                "А це точно не якась китайська модель?",
-                "Ваша гарантія точно працює?",
-                "Я бачив в інтернеті дешевше."
-            ]
-            random.shuffle(objections)
-            session["objections"] = objections
-
-        if phase == 0:
-            session["current_objection"] = session["objections"][0]
-            session["objection_phase"] = 1
-            session.modified = True
-            return jsonify({
-                "reply": session["current_objection"],
-                "chat_ended": False
-            })
-
-        elif phase == 1:
-            session["seller_replies"].append(user_input)
-            session["objection_phase"] = 2
-            session.modified = True
-
-            clarification_prompt = f"""
-    Ти — клієнт, який має заперечення: "{session['current_objection']}".
-    Ось як продавець відповів: "{user_input}"
-    Постав уточнююче запитання по цьому запереченню. Не повторюй його, не використовуй формальні фрази.
-    """
+        if current_round <= 2:
             try:
-                clarification_response = openai.ChatCompletion.create(
+                history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
+                gpt_prompt = f"""
+    Ти — клієнт, який має заперечення: "{objection}".
+
+    Ось як продавець відповідав до цього моменту:
+    {history}
+
+    Відповідай як реалістичний клієнт. Реагуй природно на останню репліку продавця: "{seller_reply}".
+    Підтримуй контекст заперечення. Будь конкретним, але не надто коротким."""
+                
+                response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
-                    messages=[{"role": "user", "content": clarification_prompt}],
-                    temperature=0.7,
-                    max_tokens=100
+                    messages=[
+                        {"role": "system", "content": "Ти — клієнт у діалозі з продавцем. Відповідай чесно, логічно і згідно з контекстом заперечення."},
+                        {"role": "user", "content": gpt_prompt}
+                    ],
+                    temperature=0.6,
+                    max_tokens=200
                 )
-                clarification = clarification_response.choices[0].message["content"].strip()
+                reply = response.choices[0].message["content"].strip()
+                session["objection_round"] += 1
+                session.modified = True
+
                 return jsonify({
-                    "reply": clarification,
-                    "chat_ended": False
+                    "reply": reply,
+                    "chat_ended": False,
+                    "current_round": session["objection_round"]
                 })
             except Exception as e:
                 return jsonify({
-                    "reply": "Помилка при генерації уточнення.",
+                    "reply": "Вибачте, сталася помилка під час відповіді. Спробуйте ще раз.",
                     "chat_ended": False
                 })
 
-        elif phase == 2:
-            session["seller_replies"].append(user_input)
-            session["current_objection"] = session["objections"][1]
-            session["objection_phase"] = 3
-            session.modified = True
-            return jsonify({
-                "reply": session["current_objection"],
-                "chat_ended": False
-            })
-
-        elif phase == 3:
-            session["seller_replies"].append(user_input)
-            session["objection_phase"] = 4
-            session.modified = True
-
-            clarification_prompt = f"""
-    Ти — клієнт, який має заперечення: "{session['current_objection']}".
-    Ось як продавець відповів: "{user_input}"
-    Постав уточнююче запитання по цьому запереченню. Не повторюй його, не використовуй формальні фрази.
-    """
+        elif current_round == 3:
             try:
-                clarification_response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[{"role": "user", "content": clarification_prompt}],
-                    temperature=0.7,
-                    max_tokens=100
-                )
-                clarification = clarification_response.choices[0].message["content"].strip()
-                return jsonify({
-                    "reply": clarification,
-                    "chat_ended": False
-                })
-            except Exception as e:
-                return jsonify({
-                    "reply": "Помилка при генерації уточнення.",
-                    "chat_ended": False
-                })
+                if not session.get("seller_replies"):
+                    return jsonify({
+                        "reply": "Помилка: відсутні відповіді для оцінювання.",
+                        "chat_ended": True,
+                        "show_restart_button": True
+                    })
 
-        elif phase == 4:
-            session["seller_replies"].append(user_input)
-            session["objection_phase"] = 5
-            session.modified = True
-
-            # Далі запускаємо оцінку так, як у тебе раніше:
-            # оцінюємо 2 блоки по 2 відповіді
-
-            seller_replies = session.get("seller_replies", [])
-            objections = session.get("objections", [])
-
-            if len(seller_replies) < 4 or len(objections) < 2:
-                return jsonify({
-                    "reply": "Недостатньо відповідей для оцінювання.",
-                    "chat_ended": True,
-                    "show_restart_button": True
-                })
-
-            first_objection_replies = seller_replies[0:2]
-            second_objection_replies = seller_replies[2:4]
-
-            def rate_responses(objection, replies):
-                full_history = "\n".join([f"Раунд {i+1}: {r}" for i, r in enumerate(replies)])
+                full_history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
                 evaluation_prompt = f"""
     Ти — експерт з продажів, який оцінює відповіді продавця на заперечення клієнта.
 
     Заперечення клієнта: "{objection}"
-    Ось відповіді продавця:
+
+    Ось відповіді продавця (по раундах):
     {full_history}
 
-    Оціни за критеріями:
+    Проаналізуй відповіді продавця за 4 критеріями:
     1. Чіткість аргументів
     2. Відповідність запереченню
-    3. Докази або приклади
-    4. Логічність
+    3. Наявність доказів, прикладів або логіки
+    4. Логічна послідовність і побудова
 
-    🔻 Оціни:
-    - "переконливо" — 2+ аргументи
-    - "частково переконливо" — 1 аргумент
-    - "непереконливо" — 0 аргументів
+    Аргумент — це чітке пояснення з доказом, прикладом або логікою, яке прямо стосується заперечення.
 
-    Відповідь лише одним словом.
+    🔻 Оціни рівень переконливості за шкалою:
+    - "переконливо" — якщо є **2 або більше сильні аргументи** – 7 балів
+    - "частково переконливо" — якщо є **1 сильний аргумент** – 3 бали
+    - "непереконливо" — якщо **немає** жодного аргументу або відповідь не по темі – 0 балів
+
+    Відповідай одним словом: "переконливо", "частково переконливо" або "непереконливо". Не додавай пояснень.
     """
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
-                    messages=[{"role": "user", "content": evaluation_prompt}],
+                    messages=[
+                        {"role": "system", "content": "Ти — експерт з оцінки комунікацій. Будь об'єктивним."},
+                        {"role": "user", "content": evaluation_prompt}
+                    ],
                     temperature=0.3,
-                    max_tokens=30
+                    max_tokens=50
                 )
-                raw = response.choices[0].message["content"].strip().lower()
-                match = re.search(r"(переконливо|частково переконливо|непереконливо)", raw)
-                return match.group(1) if match else "непереконливо"
+                raw_rating = response.choices[0].message["content"].strip().lower()
 
-            first_score = rate_responses(objections[0], first_objection_replies)
-            second_score = rate_responses(objections[1], second_objection_replies)
+                # Витягнути перше зі слів: переконливо, частково переконливо, непереконливо
+                match = re.search(r"(переконливо|частково переконливо|непереконливо)", raw_rating)
+                rating = match.group(1) if match else "непереконливо"
+                
+                if rating == "переконливо":
+                    objection_score = 7
+                elif rating == "частково переконливо":
+                    objection_score = 3
+                elif rating == "непереконливо":
+                    objection_score = 0
+                else:
+                    objection_score = 0
 
-            successful_responses = sum([
-                first_score in ["переконливо", "частково переконливо"],
-                second_score in ["переконливо", "частково переконливо"]
-            ])
-
-            if successful_responses == 2:
-                objection_score = 9
-            elif successful_responses == 1:
-                objection_score = 4
-            else:
-                objection_score = 0
-
-            session["objection_score"] = objection_score
-            session.modified = True
-
-                print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/9 балів)")
+                print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/7 балів)")
 
                 model_score = session.get("model_score", 0)
                 questions_score = sum(q["score"] for q in session.get("question_scores", []))

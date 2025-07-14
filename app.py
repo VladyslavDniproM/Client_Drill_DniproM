@@ -572,7 +572,7 @@ def chat():
 
         # Оцінка моделі
         if user_model in correct_models:
-            session["model_score"] = 5
+            session["model_score"] = 4
             print(f"[SCORE] Правильна модель: +2 бали")
         elif user_model in partially_correct_models:
             session["model_score"] = 1
@@ -833,7 +833,7 @@ def chat():
     Аргумент — це чітке пояснення з доказом, прикладом або логікою, яке прямо стосується заперечення.
 
     🔻 Оціни рівень переконливості за шкалою:
-    - "переконливо" — якщо є **2 або більше сильні аргументи** – 7 балів
+    - "переконливо" — якщо є **2 або більше сильні аргументи** – 5 балів
     - "частково переконливо" — якщо є **1 сильний аргумент** – 3 бали
     - "непереконливо" — якщо **немає** жодного аргументу або відповідь не по темі – 0 балів
 
@@ -855,7 +855,7 @@ def chat():
                 rating = match.group(1) if match else "непереконливо"
                 
                 if rating == "переконливо":
-                    objection_score = 7
+                    objection_score = 5
                 elif rating == "частково переконливо":
                     objection_score = 3
                 elif rating == "непереконливо":
@@ -863,19 +863,19 @@ def chat():
                 else:
                     objection_score = 0
 
-                print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/7 балів)")
+                print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/5 балів)")
 
                 model_score = session.get("model_score", 0)
                 questions_score = sum(q["score"] for q in session.get("question_scores", []))
                 answers_score = sum(a["score"] for a in session.get("user_answers", {}).values())
                 total_score = model_score + questions_score + answers_score + objection_score
-                max_score = 2 + 5 + 6 + 7
+                max_score = 5 + 4 + 6 + 5
 
                 print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
-                print(f"[SCORE] За модель: {model_score}/2")
+                print(f"[SCORE] За модель: {model_score}/4")
                 print(f"[SCORE] За питання: {questions_score}/5")
                 print(f"[SCORE] За відповіді: {answers_score}/6")
-                print(f"[SCORE] За заперечення: {objection_score}/7")
+                print(f"[SCORE] За заперечення: {objection_score}/5")
                 print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/20")
 
                 if total_score >= max_score * 0.8:

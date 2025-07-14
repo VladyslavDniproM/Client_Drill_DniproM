@@ -1117,7 +1117,6 @@ h1 {
 
         async function sendModelChoice(model) {
         hideModelButtons();
-        document.getElementById("choose-model-btn").style.display = "none";
         showTypingIndicator();
         
         try {

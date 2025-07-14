@@ -752,7 +752,6 @@ h1 {
             <div id="modelLeftArrow" class="arrow">←</div>
             <div id="modelsButtons" class="models-scroll"></div>
             <div id="modelRightArrow" class="arrow">→</div>
-            <div id="close-model-overlay" class="arrow" style="margin-left: 10px;">✖</div>
         </div>
     </div>
 
@@ -892,10 +891,6 @@ h1 {
         // Обробник для кнопки закриття
         document.getElementById("close-hint-btn").addEventListener("click", hideModelHint);
 
-        document.getElementById("close-model-overlay").addEventListener("click", hideModelButtons);
-
-        let modelHintShown = false;
-
         // Оновіть функцію updateProgressBar
       function updateProgressBar(progress, maxQuestions = 5) {
           const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
@@ -913,7 +908,6 @@ h1 {
               if (progress >= 3) {
                   document.getElementById("choose-model-btn").style.display = "inline-block";
                   showModelHint();
-                  modelHintShown = true;
               } else {
                   document.getElementById("choose-model-btn").style.display = "none";
               }
@@ -1117,7 +1111,6 @@ h1 {
 
         async function sendModelChoice(model) {
         hideModelButtons();
-        document.getElementById("choose-model-btn").style.display = "none";
         showTypingIndicator();
         
         try {

@@ -656,6 +656,11 @@ def generate_report(session_data):
     
     return "\n".join(report_lines)
 
+@app.after_request
+def allow_iframe(response):
+    response.headers['X-Frame-Options'] = 'https://ako.dnipro-m.ua/'
+    return response
+
 @app.route("/chat", methods=["POST"])
 def chat():
     print("Доступні моделі для вибору:", session.get("available_models"))

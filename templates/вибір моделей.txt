@@ -771,6 +771,20 @@ h1 {
       </div>
     </div>
 
+    <div id="category-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>Оберіть категорію інструменту</h2>
+        <select id="tool-category-select">
+          <option value="all">Всі інструменти</option>
+          <option value="drill">Шуруповерти</option>
+          <option value="grinder">Болгарки</option>
+          <option value="rotary">Перфоратори</option>
+          <option value="welder">Інвертори</option>
+        </select>
+        <button id="confirm-category-btn">Почати</button>
+      </div>
+    </div>
+
     <div id="rules-modal" class="modal">
         <div class="modal-content">
             <h2>Правила комунікації з ботом</h2>
@@ -1506,45 +1520,21 @@ function updateStageIndicator(currentStage) {
 }
 
     // Стартове повідомлення при завантаженні
-    document.getElementById('accept-rules-btn').addEventListener('click', async () => {
+    document.getElementById('accept-rules-btn').addEventListener('click', () => {
       const rulesModal = document.getElementById('rules-modal');
-      rulesModal.style.display = 'none';
+      const categoryModal = document.getElementById('category-modal');
 
-      // Починаємо чат
-      try {
-        const response = await fetch("/start_chat");
-        const data = await response.json();
-
-        if (data.reply) {
-          addMessage(data.reply, false);       // додаємо перше повідомлення
-          unblockChat();                       // розблоковуємо поле вводу
-          userInput.focus();
-          showStageIndicator();                // показуємо індикатор етапів
-
-          // Зміна зображення клієнта
-      const clientCharacter = document.getElementById("client-character");
-      const clientAvatar = document.getElementById("client-avatar");
-
-      if (data.avatar) {
-        clientAvatar.src = `/static/${data.avatar}`;
-      }
-      clientCharacter.style.display = "block";
-      {
-          }
-        }
-      } catch (err) {
-        console.error("Помилка при старті чату:", err);
-        addMessage("Помилка при старті чату. Спробуйте ще раз.", false);
-      }
+      rulesModal.classList.add('hidden');      // приховати правила
+      categoryModal.classList.remove('hidden'); // показати вибір категорії
     });
 
     window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
     const chatContainer = document.querySelector('.chat-container');
     
-    const firstMessage = document.createproElement('div');
-    firstMessage.classList.add('message', 'user-message');
-    firstMessage.textContent = 'Добрий день! Вітаємо Вас в магазині Dnipro-M!';
+    const firstMessage = document.createElement('div');
+      firstMessage.classList.add('message', 'user-message');
+      firstMessage.textContent = 'Добрий день! Вітаємо Вас в магазині Dnipro-M!';
     
     chatContainer.appendChild(firstMessage);
     } , 1000);
@@ -1557,6 +1547,10 @@ function updateStageIndicator(currentStage) {
         } else {
             console.error("Кнопка закриття підказки не знайдена");
         }
+    });
+
+    document.getElementById("choose-category-btn").addEventListener("click", () => {
+      document.getElementById("category-modal").classList.remove("hidden");
     });
 
     document.getElementById("choose-model-btn").addEventListener("click", async () => {
@@ -1573,6 +1567,49 @@ function updateStageIndicator(currentStage) {
           addMessage("Помилка при завантаженні моделей. Спробуйте ще раз.", false);
       }
   });
+
+      document.addEventListener('DOMContentLoaded', () => {
+      const confirmBtn = document.getElementById("confirm-category-btn");
+      if (confirmBtn) {
+        confirmBtn.addEventListener("click", async () => {
+          const category = document.getElementById("tool-category-select").value;
+
+          await fetch("/select_category", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ category })
+          });
+
+          document.getElementById("category-modal").classList.add("hidden");
+
+          try {
+            const response = await fetch("/start_chat");
+            const data = await response.json();
+
+            if (data.reply) {
+              addMessage(data.reply, false);
+              unblockChat();
+              userInput.focus();
+              showStageIndicator();
+
+              const clientCharacter = document.getElementById("client-character");
+              const clientAvatar = document.getElementById("client-avatar");
+
+              if (data.avatar) {
+                clientAvatar.src = `/static/${data.avatar}`;
+              }
+              clientCharacter.style.display = "block";
+            }
+          } catch (err) {
+            console.error("Помилка при старті чату:", err);
+            addMessage("Помилка при старті чату. Спробуйте ще раз.", false);
+          }
+        });
+      } else {
+        console.error("Кнопка confirm-category-btn не знайдена в DOM.");
+      }
+    });
+    
     </script>
 </body>
 </html>

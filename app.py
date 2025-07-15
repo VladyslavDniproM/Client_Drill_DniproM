@@ -555,8 +555,7 @@ def chat():
                 "reply": "Ця модель не підходить для моїх потреб. Давайте продовжимо.",
                 "chat_ended": False,
                 "stage": 3,
-                "model_chosen": False,  # Додайте цей прапорець
-                "hide_choose_model_btn": True
+                "model_chosen": False  # Додайте цей прапорець
             })
 
         user_model = matched_models[0].upper()
@@ -613,11 +612,6 @@ def chat():
             session["history"].append({"role": "user", "content": user_input})
             first_question = questions[0] if questions else "Яке перше ваше питання про цю модель?"
             session["history"].append({"role": "assistant", "content": first_question})
-            session['conversation_log'].append({
-                'role': 'assistant',
-                'message': first_question,
-                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            })
 
             session.modified = True
 
@@ -712,11 +706,6 @@ def chat():
                 next_question = session['generated_questions'][session['current_question_index']]
                 session["history"].append({"role": "assistant", "content": next_question})
                 session.modified = True
-                session['conversation_log'].append({
-                    'role': 'assistant',
-                    'message': next_question,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
 
                 return jsonify({
                     "reply": next_question,
@@ -762,11 +751,6 @@ def chat():
                 final_reply = f"{feedback}\n\nХм... {session['current_objection']}"
                 session["history"].append({"role": "assistant", "content": final_reply})
                 session.modified = True
-                session['conversation_log'].append({  # Додано для звіту
-                    'role': 'assistant',
-                    'message': final_reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
 
                 return jsonify({
                     "reply": f"{feedback}\n\nХм... {session['current_objection']}",
@@ -786,7 +770,7 @@ def chat():
         session["seller_replies"].append(seller_reply)
         current_round = session.get("objection_round", 1)
 
-        if current_round < 2:
+        if current_round <= 2:
             try:
                 history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
                 gpt_prompt = f"""
@@ -808,12 +792,6 @@ def chat():
                     max_tokens=200
                 )
                 reply = response.choices[0].message["content"].strip()
-                session["history"].append({"role": "assistant", "content": reply})
-                session['conversation_log'].append({  # Додано для звіту
-                    'role': 'assistant',
-                    'message': reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
                 session["objection_round"] += 1
                 session.modified = True
 
@@ -915,11 +893,6 @@ def chat():
                     reply = "Клієнт незадоволений консультацією."
 
                 full_reply = f"{reply}\n\n📊 Ваша оцінка: {total_score}/{max_score}\n{feedback}"
-                session['conversation_log'].append({  # Додано для звіту
-                    'role': 'assistant',
-                    'message': full_reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
 
                 # Збереження звіту
                 session["total_score"] = total_score

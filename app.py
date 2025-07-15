@@ -786,7 +786,7 @@ def chat():
         session["seller_replies"].append(seller_reply)
         current_round = session.get("objection_round", 1)
 
-        if current_round <= 2:
+        if current_round < 2:
             try:
                 history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
                 gpt_prompt = f"""

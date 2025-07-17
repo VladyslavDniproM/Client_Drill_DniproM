@@ -686,15 +686,21 @@ def chat():
 
     if 'conversation_log' not in session:
         session['conversation_log'] = []  # Ініціалізуємо conversation_log, якщо він відсутній
+        print("Ініціалізовано 'conversation_log'")
 
+    # Ініціалізація інших значень, якщо вони відсутні
     session.setdefault('seller_name', 'Невідомий продавець')
     session.setdefault('stage', 1)
 
+    # Додавання нового повідомлення в conversation_log
     session['conversation_log'].append({
         'role': 'user',
         'message': user_input,
         'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
+
+    # Логування після додавання
+    print("Додано повідомлення в 'conversation_log'")
 
     if "history" not in session or not session["history"]:
         session["history"] = init_conversation()

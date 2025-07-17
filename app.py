@@ -9,16 +9,26 @@ import smtplib
 from email.mime.text import MIMEText
 from flask_session import Session
 
+load_dotenv()
+
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "віртуальнийклієнт")
+
+app.config.update(
+    SESSION_COOKIE_SAMESITE='None',  # Дозволяє куки в iframe
+    SESSION_COOKIE_SECURE=True,      # Вимагає HTTPS
+    SESSION_COOKIE_NAME='drill_session',
+    SESSION_TYPE='filesystem',       # Зберігання сесій у файлах
+    SESSION_PERMANENT=False,         # Сесія не буде вічною
+    SESSION_USE_SIGNER=True,         # Підписуємо куки для безпеки
+    SESSION_FILE_THRESHOLD=100       # Макс. кількість файлів сесії
+)
 
 app.config['SESSION_TYPE'] = 'filesystem'  # Зберігаємо сесії на файловій системі
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 Session(app)
 
-load_dotenv()
-
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "віртуальнийклієнт")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"
 
@@ -582,9 +592,14 @@ def match_model(user_input, available_models):
 
 @app.route('/')
 def home():
-    if "unique_questions" not in session:
-        session["unique_questions"] = []
-    return render_template('index.html')
+    instance_id = request.args.get('instance')
+    if instance_id:
+        session['instance_id'] = instance_id  # Зберігаємо ID інстансу в сесії
+    
+    response = make_response(render_template('index.html'))
+    response.headers['Content-Security-Policy'] = f"frame-ancestors https://ako.dnipro-m.ua;"
+    response.headers['X-Frame-Options'] = 'ALLOW-FROM https://ako.dnipro-m.ua'
+    return response
 
 @app.route('/start_chat')
 def start_chat():
@@ -680,6 +695,9 @@ def allow_iframe(response):
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    instance_id = request.json.get('instance') or session.get('instance_id')
+    if not instance_id:
+        return jsonify({"error": "Instance ID missing"}), 400
     # Ініціалізація всіх критичних змінних сесії
     session.setdefault('conversation_log', [])
     session.setdefault('seller_name', request.json.get("seller_name", "Невідомий продавець"))

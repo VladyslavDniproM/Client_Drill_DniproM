@@ -581,10 +581,10 @@ def match_model(user_input, available_models):
 
 @app.route('/')
 def home():
-    instance_id = request.args.get('instance')
+    instance_id = request.args.get('instance', 'default_value')
     if instance_id:
         session['instance_id'] = instance_id  # Зберігаємо ID інстансу в сесії
-        return jsonify({"message": "Instance ID stored successfully!"})  # Повертаємо відповідь
+         return jsonify({"message": f"Instance ID is: {instance_id}"}) # Повертаємо відповідь
     else:
         return jsonify({"error": "Instance ID is missing."}), 400  # Повертаємо відповідь у разі відсутності instance_id
 

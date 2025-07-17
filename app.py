@@ -584,6 +584,10 @@ def home():
     instance_id = request.args.get('instance')
     if instance_id:
         session['instance_id'] = instance_id  # Зберігаємо ID інстансу в сесії
+        return jsonify({"message": "Instance ID stored successfully!"})  # Повертаємо відповідь
+    else:
+        return jsonify({"error": "Instance ID is missing."}), 400  # Повертаємо відповідь у разі відсутності instance_id
+
 
 @app.route('/start_chat')
 def start_chat():

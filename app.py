@@ -1,5 +1,5 @@
 import openai
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, make_response
 from dotenv import load_dotenv
 from datetime import datetime
 import os

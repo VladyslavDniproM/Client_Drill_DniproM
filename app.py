@@ -9,6 +9,8 @@ import smtplib
 from email.mime.text import MIMEText
 from flask_session import Session
 
+app = Flask(__name__)
+
 app.config['SESSION_TYPE'] = 'filesystem'  # Зберігаємо сесії на файловій системі
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
@@ -16,9 +18,7 @@ Session(app)
 
 load_dotenv()
 
-app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "віртуальнийклієнт")
-
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"
 

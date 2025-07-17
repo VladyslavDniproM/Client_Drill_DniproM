@@ -7,6 +7,12 @@ import random
 import re
 import smtplib
 from email.mime.text import MIMEText
+from flask_session import Session
+
+app.config['SESSION_TYPE'] = 'filesystem'  # Зберігаємо сесії на файловій системі
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+Session(app)
 
 load_dotenv()
 
@@ -655,6 +661,14 @@ def generate_report(session_data):
     ])
     
     return "\n".join(report_lines)
+
+@app.after_request
+def apply_caching(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, proxy-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    response.headers["Set-Cookie"] = "SameSite=None; Secure"  # Дозволяє сесію через iframe
+    return response
 
 @app.after_request
 def allow_iframe(response):

@@ -1,5 +1,5 @@
 import openai
-from flask import Flask, render_template, request, jsonify, session, make_response
+from flask import Flask, render_template, request, jsonify, session
 from dotenv import load_dotenv
 from datetime import datetime
 import os
@@ -9,26 +9,16 @@ import smtplib
 from email.mime.text import MIMEText
 from flask_session import Session
 
-load_dotenv()
-
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "віртуальнийклієнт")
-
-app.config.update(
-    SESSION_COOKIE_SAMESITE='None',  # Дозволяє куки в iframe
-    SESSION_COOKIE_SECURE=True,      # Вимагає HTTPS
-    SESSION_COOKIE_NAME='drill_session',
-    SESSION_TYPE='filesystem',       # Зберігання сесій у файлах
-    SESSION_PERMANENT=False,         # Сесія не буде вічною
-    SESSION_USE_SIGNER=True,         # Підписуємо куки для безпеки
-    SESSION_FILE_THRESHOLD=100       # Макс. кількість файлів сесії
-)
 
 app.config['SESSION_TYPE'] = 'filesystem'  # Зберігаємо сесії на файловій системі
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 Session(app)
 
+load_dotenv()
+
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "віртуальнийклієнт")
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"
 
@@ -580,7 +570,6 @@ def is_relevant_question_gpt(question, situation_description):
         print(f"Помилка: {str(e)}")
         return False
 
-
 def match_model(user_input, available_models):
     user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
     matched_models = [m for m in available_models if user_model in m.upper()]
@@ -595,11 +584,6 @@ def home():
     instance_id = request.args.get('instance')
     if instance_id:
         session['instance_id'] = instance_id  # Зберігаємо ID інстансу в сесії
-    
-    response = make_response(render_template('index.html'))
-    response.headers['Content-Security-Policy'] = f"frame-ancestors https://ako.dnipro-m.ua;"
-    response.headers['X-Frame-Options'] = 'ALLOW-FROM https://ako.dnipro-m.ua'
-    return response
 
 @app.route('/start_chat')
 def start_chat():
@@ -686,11 +670,20 @@ def apply_caching(response):
     return response
 
 @app.after_request
-def allow_iframe(response):
-    # Дозволити iframe тільки для конкретного сайту (сучасний спосіб)
+def set_security_headers(response):
+    # Налаштування для iframe
     response.headers['Content-Security-Policy'] = "frame-ancestors https://ako.dnipro-m.ua;"
-    # Видалити старий X-Frame-Options (якщо він був)
-    response.headers.pop('X-Frame-Options', None)
+    response.headers['X-Frame-Options'] = 'ALLOW-FROM https://ako.dnipro-m.ua'
+    
+    # Додаткові заголовки безпеки
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    
+    # Куки для iframe
+    response.headers.add('Set-Cookie', 'SameSite=None; Secure')
+    
     return response
 
 @app.route("/chat", methods=["POST"])
@@ -698,6 +691,12 @@ def chat():
     instance_id = request.json.get('instance') or session.get('instance_id')
     if not instance_id:
         return jsonify({"error": "Instance ID missing"}), 400
+
+    data = request.get_json()
+    instance_id = data.get('instance') or session.get('instance_id')
+    if not instance_id:
+        return jsonify({"error": "Instance ID required"}), 400
+
     # Ініціалізація всіх критичних змінних сесії
     session.setdefault('conversation_log', [])
     session.setdefault('seller_name', request.json.get("seller_name", "Невідомий продавець"))

@@ -680,42 +680,39 @@ def allow_iframe(response):
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    
-    if 'conversation_log' not in session:
-        session['conversation_log'] = []  # Ініціалізуємо conversation_log, якщо він відсутній
-        print("Ініціалізовано 'conversation_log'")
-
-    print("Доступні моделі для вибору:", session.get("available_models"))
-    user_input = request.json.get("message", "").strip()
-
-    print(f"[DEBUG] Користувач написав: {user_input}")
-    print(f"[DEBUG] Поточна стадія: {session.get('stage')}")
-
-    # Ініціалізація змінних сесії
-    session.setdefault("misunderstood_count", 0)
-    session.setdefault("objection_round", 1)
-    session.setdefault("question_scores", [])
-    session.setdefault("user_answers", {})
-    session.setdefault("seller_replies", [])
-
-    if 'seller_name' not in session:
-        seller_name = request.json.get("seller_name")
-        if seller_name:
-            session['seller_name'] = seller_name
-
-    # Ініціалізація інших значень, якщо вони відсутні
-    session.setdefault('seller_name', 'Невідомий продавець')
+    # Ініціалізація всіх критичних змінних сесії
+    session.setdefault('conversation_log', [])
+    session.setdefault('seller_name', request.json.get("seller_name", "Невідомий продавець"))
     session.setdefault('stage', 1)
+    session.setdefault('misunderstood_count', 0)
+    session.setdefault('objection_round', 1)
+    session.setdefault('question_scores', [])
+    session.setdefault('user_answers', {})
+    session.setdefault('seller_replies', [])
+    session.setdefault('available_models', [])
+    session.setdefault('history', init_conversation() if 'history' not in session else session['history'])
 
-    # Додавання нового повідомлення в conversation_log
-    session['conversation_log'].append({
-        'role': 'user',
-        'message': user_input,
-        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    })
+    user_input = request.json.get("message", "").strip()
+    print(f"[DEBUG] Поточний стан сесії: {list(session.keys())}")
+    print(f"[DEBUG] Користувач написав: {user_input}")
+    print(f"[DEBUG] Поточна стадія: {session['stage']}")
 
-    # Логування після додавання
-    print("Додано повідомлення в 'conversation_log'")
+    # Запис повідомлення в лог
+    try:
+        session['conversation_log'].append({
+            'role': 'user',
+            'message': user_input,
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+        session.modified = True
+        print(f"[DEBUG] Оновлений conversation_log: {session['conversation_log'][-1]}")
+    except Exception as e:
+        print(f"[ERROR] Помилка запису в conversation_log: {str(e)}")
+        session['conversation_log'] = [{
+            'role': 'user', 
+            'message': user_input,
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }]
 
     if "history" not in session or not session["history"]:
         session["history"] = init_conversation()

@@ -675,14 +675,14 @@ def chat():
     session.setdefault("question_scores", [])
     session.setdefault("user_answers", {})
     session.setdefault("seller_replies", [])
-
+    
     if 'seller_name' not in session:
         seller_name = request.json.get("seller_name")
         if seller_name:
             session['seller_name'] = seller_name
 
-    if 'conversation_log' not in session:
-        session['conversation_log'] = []
+    # Використовуємо setdefault для conversation_log, щоб уникнути помилок KeyError
+    session.setdefault('conversation_log', [])
 
     session['conversation_log'].append({
         'role': 'user',

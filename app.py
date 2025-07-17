@@ -11,7 +11,7 @@ from email.mime.text import MIMEText
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "віртуальнийклієнт")
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"
@@ -552,7 +552,7 @@ def is_relevant_question_gpt(question, situation_description):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # або gpt-3.5-turbo, якщо треба
+            model="gpt-3.5-turbo",  # або gpt-3.5-turbo, якщо треба
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=10,
@@ -648,7 +648,7 @@ def generate_report(session_data):
     # Додати результати оцінювання
     report_lines.extend([
         "\nРезультати:",
-        f"- Оцінка за модель: {session_data.get('model_score', 0)}/2",
+        f"- Оцінка за модель: {session_data.get('model_score', 0)}/4",
         f"- Оцінка за питання: {sum(q['score'] for q in session_data.get('question_scores', []))}/5",
         f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/6",
         f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/5"
@@ -685,7 +685,9 @@ def chat():
             session['seller_name'] = seller_name
 
     if 'conversation_log' not in session:
-        session['conversation_log'] = []
+        session.setdefault('conversation_log', [])
+        session.setdefault('seller_name', 'Невідомий продавець')
+        session.setdefault('stage', 1)
 
     session['conversation_log'].append({
         'role': 'user',

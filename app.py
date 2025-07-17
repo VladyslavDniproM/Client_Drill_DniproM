@@ -13,6 +13,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
 
+app.config['SESSION_TYPE'] = 'filesystem'  # Зберігання сесії у файловій системі
+app.config['SESSION_PERMANENT'] = False  # Якщо False, сесія завершується, коли користувач закриває браузер
+app.config['SESSION_USE_SIGNER'] = True  # Використовуємо підпис для сесій
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"
 

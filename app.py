@@ -680,6 +680,11 @@ def allow_iframe(response):
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    
+    if 'conversation_log' not in session:
+        session['conversation_log'] = []  # Ініціалізуємо conversation_log, якщо він відсутній
+        print("Ініціалізовано 'conversation_log'")
+
     print("Доступні моделі для вибору:", session.get("available_models"))
     user_input = request.json.get("message", "").strip()
 
@@ -697,10 +702,6 @@ def chat():
         seller_name = request.json.get("seller_name")
         if seller_name:
             session['seller_name'] = seller_name
-
-    if 'conversation_log' not in session:
-        session['conversation_log'] = []  # Ініціалізуємо conversation_log, якщо він відсутній
-        print("Ініціалізовано 'conversation_log'")
 
     # Ініціалізація інших значень, якщо вони відсутні
     session.setdefault('seller_name', 'Невідомий продавець')

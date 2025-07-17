@@ -648,7 +648,7 @@ def generate_report(session_data):
     # Додати результати оцінювання
     report_lines.extend([
         "\nРезультати:",
-        f"- Оцінка за модель: {session_data.get('model_score', 0)}/2",
+        f"- Оцінка за модель: {session_data.get('model_score', 0)}/4",
         f"- Оцінка за питання: {sum(q['score'] for q in session_data.get('question_scores', []))}/5",
         f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/6",
         f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/5"

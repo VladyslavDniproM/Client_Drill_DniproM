@@ -7,18 +7,12 @@ import random
 import re
 import smtplib
 from email.mime.text import MIMEText
-from flask_session import Session
-
-app = Flask(__name__)
-
-app.config['SESSION_TYPE'] = 'filesystem'  # Зберігаємо сесії на файловій системі
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_USE_SIGNER'] = True
-Session(app)
 
 load_dotenv()
 
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "віртуальнийклієнт")
+app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"
 
@@ -558,7 +552,7 @@ def is_relevant_question_gpt(question, situation_description):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # або gpt-3.5-turbo, якщо треба
+            model="gpt-4",  # або gpt-3.5-turbo, якщо треба
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=10,
@@ -570,7 +564,8 @@ def is_relevant_question_gpt(question, situation_description):
         print(f"Помилка: {str(e)}")
         return False
 
-def match_model(user_input, available_models):7
+
+def match_model(user_input, available_models):
     user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
     matched_models = [m for m in available_models if user_model in m.upper()]
     
@@ -581,13 +576,9 @@ def match_model(user_input, available_models):7
 
 @app.route('/')
 def home():
-    instance_id = request.args.get('instance', 'default_value')
-    if instance_id:
-        session['instance_id'] = instance_id  # Зберігаємо ID інстансу в сесії
-        return jsonify({"message": f"Instance ID is: {instance_id}"})  # Повертаємо відповідь
-    else:
-        return jsonify({"error": "Instance ID is missing."}), 400 
-
+    if "unique_questions" not in session:
+        session["unique_questions"] = []
+    return render_template('index.html')
 
 @app.route('/start_chat')
 def start_chat():
@@ -666,74 +657,38 @@ def generate_report(session_data):
     return "\n".join(report_lines)
 
 @app.after_request
-def apply_caching(response):
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, proxy-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    response.headers["Set-Cookie"] = "SameSite=None; Secure"  # Дозволяє сесію через iframe
-    return response
-
-@app.after_request
-def set_security_headers(response):
-    # Налаштування для iframe
-    response.headers['Content-Security-Policy'] = "frame-ancestors https://ako.dnipro-m.ua;"
-    response.headers['X-Frame-Options'] = 'ALLOW-FROM https://ako.dnipro-m.ua'
-    
-    # Додаткові заголовки безпеки
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    
-    # Куки для iframe
-    response.headers.add('Set-Cookie', 'SameSite=None; Secure')
-    
+def allow_iframe(response):
+    response.headers['X-Frame-Options'] = 'https://ako.dnipro-m.ua/'
     return response
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    instance_id = request.json.get('instance') or session.get('instance_id')
-    if not instance_id:
-        return jsonify({"error": "Instance ID missing"}), 400
-
-    data = request.get_json()
-    instance_id = data.get('instance') or session.get('instance_id')
-    if not instance_id:
-        return jsonify({"error": "Instance ID required"}), 400
-
-    # Ініціалізація всіх критичних змінних сесії
-    session.setdefault('conversation_log', [])
-    session.setdefault('seller_name', request.json.get("seller_name", "Невідомий продавець"))
-    session.setdefault('stage', 1)
-    session.setdefault('misunderstood_count', 0)
-    session.setdefault('objection_round', 1)
-    session.setdefault('question_scores', [])
-    session.setdefault('user_answers', {})
-    session.setdefault('seller_replies', [])
-    session.setdefault('available_models', [])
-    session.setdefault('history', init_conversation() if 'history' not in session else session['history'])
-
+    print("Доступні моделі для вибору:", session.get("available_models"))
     user_input = request.json.get("message", "").strip()
-    print(f"[DEBUG] Поточний стан сесії: {list(session.keys())}")
-    print(f"[DEBUG] Користувач написав: {user_input}")
-    print(f"[DEBUG] Поточна стадія: {session['stage']}")
 
-    # Запис повідомлення в лог
-    try:
-        session['conversation_log'].append({
-            'role': 'user',
-            'message': user_input,
-            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
-        session.modified = True
-        print(f"[DEBUG] Оновлений conversation_log: {session['conversation_log'][-1]}")
-    except Exception as e:
-        print(f"[ERROR] Помилка запису в conversation_log: {str(e)}")
-        session['conversation_log'] = [{
-            'role': 'user', 
-            'message': user_input,
-            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }]
+    print(f"[DEBUG] Користувач написав: {user_input}")
+    print(f"[DEBUG] Поточна стадія: {session.get('stage')}")
+
+    # Ініціалізація змінних сесії
+    session.setdefault("misunderstood_count", 0)
+    session.setdefault("objection_round", 1)
+    session.setdefault("question_scores", [])
+    session.setdefault("user_answers", {})
+    session.setdefault("seller_replies", [])
+
+    if 'seller_name' not in session:
+        seller_name = request.json.get("seller_name")
+        if seller_name:
+            session['seller_name'] = seller_name
+
+    if 'conversation_log' not in session:
+        session['conversation_log'] = []
+
+    session['conversation_log'].append({
+        'role': 'user',
+        'message': user_input,
+        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
 
     if "history" not in session or not session["history"]:
         session["history"] = init_conversation()

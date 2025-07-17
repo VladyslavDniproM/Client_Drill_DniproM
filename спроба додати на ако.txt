@@ -685,10 +685,9 @@ def chat():
             session['seller_name'] = seller_name
 
     if 'conversation_log' not in session:
-        session['conversation_log'] = []  # Ініціалізуємо conversation_log, якщо він відсутній
-
-    session.setdefault('seller_name', 'Невідомий продавець')
-    session.setdefault('stage', 1)
+        session.setdefault('conversation_log', [])
+        session.setdefault('seller_name', 'Невідомий продавець')
+        session.setdefault('stage', 1)
 
     session['conversation_log'].append({
         'role': 'user',

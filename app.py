@@ -675,6 +675,9 @@ def chat():
     session.setdefault("question_scores", [])
     session.setdefault("user_answers", {})
     session.setdefault("seller_replies", [])
+
+    if 'conversation_log' not in session:
+        session['conversation_log'] = []
     
     if 'seller_name' not in session:
         seller_name = request.json.get("seller_name")

@@ -556,7 +556,7 @@ def is_relevant_question_gpt(question, situation_description):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # або gpt-3.5-turbo, якщо треба
+            model="gpt-3.5-turbo",  # або gpt-3.5-turbo, якщо треба
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=10,

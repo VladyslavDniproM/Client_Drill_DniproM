@@ -570,7 +570,7 @@ def is_relevant_question_gpt(question, situation_description):
         print(f"Помилка: {str(e)}")
         return False
 
-def match_model(user_input, available_models):
+def match_model(user_input, available_models):7
     user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
     matched_models = [m for m in available_models if user_model in m.upper()]
     
@@ -584,9 +584,9 @@ def home():
     instance_id = request.args.get('instance', 'default_value')
     if instance_id:
         session['instance_id'] = instance_id  # Зберігаємо ID інстансу в сесії
-         return jsonify({"message": f"Instance ID is: {instance_id}"}) # Повертаємо відповідь
+        return jsonify({"message": f"Instance ID is: {instance_id}"})  # Повертаємо відповідь
     else:
-        return jsonify({"error": "Instance ID is missing."}), 400  # Повертаємо відповідь у разі відсутності instance_id
+        return jsonify({"error": "Instance ID is missing."}), 400 
 
 
 @app.route('/start_chat')

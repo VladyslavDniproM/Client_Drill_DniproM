@@ -13,6 +13,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
 
+app.config['SESSION_TYPE'] = 'filesystem'  # Зберігання сесії у файловій системі
+app.config['SESSION_PERMANENT'] = False  # Якщо False, сесія завершується, коли користувач закриває браузер
+app.config['SESSION_USE_SIGNER'] = True  # Використовуємо підпис для сесій
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"
 
@@ -552,7 +556,7 @@ def is_relevant_question_gpt(question, situation_description):
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # або gpt-3.5-turbo, якщо треба
+            model="gpt-3.5-turbo",  # або gpt-3.5-turbo, якщо треба
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=10,
@@ -676,13 +680,16 @@ def chat():
     session.setdefault("user_answers", {})
     session.setdefault("seller_replies", [])
 
+    if 'conversation_log' not in session:
+        session['conversation_log'] = []
+    
     if 'seller_name' not in session:
         seller_name = request.json.get("seller_name")
         if seller_name:
             session['seller_name'] = seller_name
 
-    if 'conversation_log' not in session:
-        session['conversation_log'] = []
+    # Використовуємо setdefault для conversation_log, щоб уникнути помилок KeyError
+    session.setdefault('conversation_log', [])
 
     session['conversation_log'].append({
         'role': 'user',

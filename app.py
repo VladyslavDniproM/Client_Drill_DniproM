@@ -5,6 +5,8 @@ from datetime import datetime
 import os
 import random
 import re
+import zlib
+import base64
 import smtplib
 from email.mime.text import MIMEText
 
@@ -479,6 +481,26 @@ def authenticate():
     session.modified = True
     return jsonify({"success": True, "message": f"Вітаємо, {seller_name}! Тепер ви можете розпочати діалог."})
 
+def get_situation_from_session():
+    # Отримуємо стиснуту ситуацію з сесії
+    compressed_situation_base64 = session.get('compressed_situation', '')
+    if compressed_situation_base64:
+        # Розкодовуємо з base64
+        compressed_situation = base64.b64decode(compressed_situation_base64)
+        
+        # Розпаковуємо дані
+        decompressed_data_bytes = zlib.decompress(compressed_situation)
+        decompressed_data_str = decompressed_data_bytes.decode('utf-8')
+        
+        # Заміна eval на JSON
+        try:
+            situation = json.loads(decompressed_data_str)  # Безпечніше розбирати через JSON
+            return situation
+        except ValueError as e:
+            print(f"Помилка при розборі даних: {e}")
+            return None
+    return None
+
 @app.errorhandler(500)
 def internal_error(error):
     if 'seller_name' in session:
@@ -491,6 +513,15 @@ def init_conversation():
     
     selected_situation = random.choice(SITUATIONS)
     session['situation'] = selected_situation
+    
+    # Компресуємо дані ситуації
+    situation_str = str(selected_situation)  # Перетворюємо в рядок
+    situation_bytes = situation_str.encode('utf-8')  # Перетворюємо в байти
+    compressed_situation = zlib.compress(situation_bytes)  # Стискаємо
+    compressed_situation_base64 = base64.b64encode(compressed_situation).decode('utf-8')  # Кодуємо в base64
+    session['compressed_situation'] = compressed_situation_base64  # Зберігаємо в сесії
+
+    # Зберігаємо інші дані сесії
     session['current_situation_id'] = selected_situation["id"]
     session['available_models'] = TOOL_MODELS.copy()  # Використовуємо копію, щоб уникнути модифікації оригіналу
     session['stage'] = 1
@@ -509,7 +540,7 @@ def init_conversation():
     session['total_score'] = 0
     session['seller_replies'] = []
     session['irrelevant_answers'] = 0
-    session.modified = True 
+    session.modified = True
 
     system_prompt = f"""
     Ти — віртуальний **клієнт магазину**, який **прийшов купити інструмент**.  
@@ -577,6 +608,25 @@ def match_model(user_input, available_models):
         return None  # Модель не знайдена
     
     return matched_models[0]
+
+@app.route('/save_data')
+def save_data():
+    # Дані, які хочемо стиснути
+    data = "Це великі дані, які потрібно стиснути, щоб зменшити розмір сесії."
+
+    # Перетворюємо дані в байтовий формат
+    data_bytes = data.encode('utf-8')
+
+    # Компресуємо дані
+    compressed_data = zlib.compress(data_bytes)
+
+    # Перетворюємо стиснуті дані в base64 для збереження в сесії
+    compressed_data_base64 = base64.b64encode(compressed_data).decode('utf-8')
+
+    # Зберігаємо в сесії
+    session['compressed_data'] = compressed_data_base64
+
+    return jsonify({"message": "Дані збережено в сесії!"})
 
 @app.route('/')
 def home():

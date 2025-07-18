@@ -99,26 +99,24 @@ h1 {
   flex-direction: column;
   flex-grow: 1;
   pointer-events: auto;
+  width: 100%;  /* Залишаємо ширину 100% для адаптивності */
 }
 
+/* === CHAT SHELL === */
 .chat-shell {
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-
-  width: 750px;
+  width: 90%; /* Ширина на мобільних пристроях */
   max-width: 1000px;
   height: 28vh;
   overflow: hidden;
-
   display: flex;
   flex-direction: column;
-
   background: linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   z-index: 999;
@@ -157,8 +155,9 @@ h1 {
   gap: 10px;
   padding: 16px 20px;
   background: transparent;
-  border-top: 1px solid rgba(255, 255, 255, 0.2); /* тонка межа */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 #user-input {
   flex-grow: 1;
   padding: 12px;
@@ -169,7 +168,9 @@ h1 {
   max-height: 120px;
   resize: vertical;
   pointer-events: auto;
+  width: 100%; /* Оновлено для мобільних пристроїв */
 }
+
 #send-button {
   background-color: #ff6f00;
   color: white;
@@ -337,41 +338,6 @@ h1 {
   box-shadow: -2px 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Адаптація для малих екранів */
-@media (max-width: 900px) {
-    html, body {
-    overflow-x: hidden;
-    overflow-y: auto;
-    width: 100%;
-    height: 100%;
-    position: fixed; /* Фіксуємо розміри */
-    touch-action: pan-y; /* Тільки вертикальний скрол */
-    -webkit-overflow-scrolling: touch; /* Плавний скрол для iOS */
-  }
-
-  /* Запобігає підскакуванню контенту при фокусі на input */
-  input, textarea {
-    touch-action: manipulation;
-  }
-
-  /* Фіксуємо чат у межах екрану */
-  .chat-container {
-    max-height: calc(100dvh - 200px); /* Враховує висоту інших елементів */
-    overflow-y: auto;
-  }
-
-  /* Додатковий фікс для iOS */
-  .chat-shell {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  #choose-model-btn {
-    right: -100px;
-    padding: 12px 12px 12px 20px;
-    font-size: 14px;
-  }
-}
-
 /* === MODELS SELECTION === */
 #models-container {
   display: none;
@@ -381,15 +347,17 @@ h1 {
   max-width: 800px;
   margin: 15px auto 0;
 }
+
 #models-buttons {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column; /* Вертикальний скрол */
   gap: 10px;
   justify-content: center;
   margin-top: 10px;
 }
+
 .model-button {
-  min-width: 180px;
+  width: 100%;  /* Зробити кожну модель повною шириною екрана */
   flex: 0 0 auto;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -399,12 +367,13 @@ h1 {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
+
 .model-button:hover {
   background-color: #ff6f00;
   transform: scale(1.03);
 }
 
-/* === MODEL OVERLAY === */
+/* Overlay для вибору моделей */
 .model-overlay {
   position: fixed;
   top: 0; left: 0;
@@ -415,26 +384,30 @@ h1 {
   align-items: center;
   z-index: 9999;
 }
+
 .model-selector {
   background: #fff;
   padding: 20px;
   border-radius: 12px;
   display: flex;
   align-items: center;
+  flex-direction: column; /* Вертикальна орієнтація моделей */
   max-width: 90%;
   overflow: hidden;
 }
+
 .models-scroll {
   display: flex;
-  overflow-x: auto;
+  flex-direction: column; /* Вертикальний скрол */
+  overflow-y: auto;
   gap: 16px;
   padding: 10px;
-  scroll-behavior: smooth;
-  max-width: 80vw;
+  max-height: 70vh; /* Обмежуємо висоту на мобільних пристроях */
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #ccc transparent;
 }
+
 .arrow {
   font-size: 28px;
   font-weight: bold;
@@ -443,6 +416,7 @@ h1 {
   padding: 10px;
   color: #333;
 }
+
 .arrow:hover {
   color: #ff6600;
 }
@@ -565,109 +539,51 @@ h1 {
 }
 
 /* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
-@media (max-width: 600px) {
-
-  .top-panel {
-    width: 95%;
-    padding: 12px 16px;
-    border-radius: 12px;
-  }
-
-  .stage-indicator-single {
-    width: auto;
-    font-size: 12px;
-    padding: 4px 10px;
-  }
-
-  .progress-hint {
-    font-size: 11px;
-  }
-
-  .progress-container {
-    height: 8px;
-  }
-
+@media screen and (max-width: 768px) {
+  /* Зміни для чату */
   .chat-shell {
-    width: 100%;
-    left: 0;
-    transform: none;
-    border-radius: 0;
-    bottom: 0;
-    height: 42vh;
+    width: 100%;  /* Змінюємо ширину для мобільних пристроїв */
+    max-width: 100%;
+    height: 50vh;  /* Більше місця для чату на мобільному */
   }
 
-  .chat-container {
-    padding: 10px;
-    max-height: 30vh;
-  }
-
-  .message {
-    max-width: 95%;
-    padding: 8px 12px;
-    font-size: 14px;
-  }
-
+  /* Зміни для введення */
   .input-area {
-    flex-direction: column;
-    padding: 10px;
-    gap: 6px;
+    padding: 8px 12px;
   }
 
   #user-input {
-    padding: 10px;
     font-size: 14px;
-    min-height: 30px;
   }
 
+  /* Зміни для кнопки "Надіслати" */
   #send-button {
-    width: 100%;
-    height: 42px;
-    font-size: 14px;
+    padding: 8px;
+    font-size: 16px;
   }
 
-  #client-character img {
-    max-height: 280px;
+  /* Вибір моделей */
+  #models-buttons {
+    display: block;  /* Виставляємо вертикальний порядок */
   }
 
-  .modal-content {
-    width: 95%;
-    padding: 15px 20px;
-  }
-
-  .modal-content button {
-    padding: 15px 20px;
-    font-size: 14px;
-  }
-
-  #choose-model-btn {
-    right: 10px;
-    bottom: 60%;
-    padding: 14px;
-    font-size: 13px;
-    max-width: 150px;
-    white-space: normal;
+  .model-button {
+    width: 100%; /* Кожна кнопка на мобільному займає всю ширину */
+    text-align: center;
   }
 }
-@media (min-width: 601px) and (max-width: 900px) {
+
+@media screen and (min-width: 769px) and (max-width: 1024px) {
   .chat-shell {
+    width: 85%; /* Можна збільшити ширину чату для планшетів */
+  }
+
+  .model-overlay {
     width: 80%;
-    height: 36vh;
   }
 
-  .top-panel {
-    width: 90%;
-  }
-
-  .message {
-    font-size: 15px;
-  }
-
-  #send-button {
-    font-size: 15px;
-  }
-
-  .stage-indicator-single {
-    font-size: 13px;
+  .model-button {
+    width: 48%; /* Зменшуємо ширину кнопок моделей */
   }
 }
 

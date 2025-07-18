@@ -99,24 +99,26 @@ h1 {
   flex-direction: column;
   flex-grow: 1;
   pointer-events: auto;
-  width: 100%;  /* Залишаємо ширину 100% для адаптивності */
 }
 
-/* === CHAT SHELL === */
 .chat-shell {
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 90%; /* Ширина на мобільних пристроях */
+
+  width: 750px;
   max-width: 1000px;
   height: 28vh;
   overflow: hidden;
+
   display: flex;
   flex-direction: column;
+
   background: linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   z-index: 999;
@@ -155,9 +157,8 @@ h1 {
   gap: 10px;
   padding: 16px 20px;
   background: transparent;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.2); /* тонка межа */
 }
-
 #user-input {
   flex-grow: 1;
   padding: 12px;
@@ -168,9 +169,7 @@ h1 {
   max-height: 120px;
   resize: vertical;
   pointer-events: auto;
-  width: 100%; /* Оновлено для мобільних пристроїв */
 }
-
 #send-button {
   background-color: #ff6f00;
   color: white;
@@ -347,17 +346,15 @@ h1 {
   max-width: 800px;
   margin: 15px auto 0;
 }
-
 #models-buttons {
   display: flex;
-  flex-direction: column; /* Вертикальний скрол */
+  flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
   margin-top: 10px;
 }
-
 .model-button {
-  width: 100%;  /* Зробити кожну модель повною шириною екрана */
+  min-width: 180px;
   flex: 0 0 auto;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -367,13 +364,12 @@ h1 {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
-
 .model-button:hover {
   background-color: #ff6f00;
   transform: scale(1.03);
 }
 
-/* Overlay для вибору моделей */
+/* === MODEL OVERLAY === */
 .model-overlay {
   position: fixed;
   top: 0; left: 0;
@@ -384,30 +380,26 @@ h1 {
   align-items: center;
   z-index: 9999;
 }
-
 .model-selector {
   background: #fff;
   padding: 20px;
   border-radius: 12px;
   display: flex;
   align-items: center;
-  flex-direction: column; /* Вертикальна орієнтація моделей */
   max-width: 90%;
   overflow: hidden;
 }
-
 .models-scroll {
   display: flex;
-  flex-direction: column; /* Вертикальний скрол */
-  overflow-y: auto;
+  overflow-x: auto;
   gap: 16px;
   padding: 10px;
-  max-height: 70vh; /* Обмежуємо висоту на мобільних пристроях */
+  scroll-behavior: smooth;
+  max-width: 80vw;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #ccc transparent;
 }
-
 .arrow {
   font-size: 28px;
   font-weight: bold;
@@ -416,7 +408,6 @@ h1 {
   padding: 10px;
   color: #333;
 }
-
 .arrow:hover {
   color: #ff6600;
 }
@@ -540,50 +531,44 @@ h1 {
 
 /* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
 @media screen and (max-width: 768px) {
-  /* Зміни для чату */
-  .chat-shell {
-    width: 100%;  /* Змінюємо ширину для мобільних пристроїв */
-    max-width: 100%;
-    height: 50vh;  /* Більше місця для чату на мобільному */
-  }
-
-  /* Зміни для введення */
-  .input-area {
-    padding: 8px 12px;
-  }
-
-  #user-input {
-    font-size: 14px;
-  }
-
-  /* Зміни для кнопки "Надіслати" */
-  #send-button {
-    padding: 8px;
-    font-size: 16px;
-  }
-
-  /* Вибір моделей */
+  /* Вертикальний вибір моделей на мобільних */
   #models-buttons {
-    display: block;  /* Виставляємо вертикальний порядок */
+    display: flex;
+    flex-direction: column; /* Вертикальний напрямок */
+    gap: 15px;
+    justify-content: flex-start;
   }
 
   .model-button {
-    width: 100%; /* Кожна кнопка на мобільному займає всю ширину */
-    text-align: center;
-  }
-}
-
-@media screen and (min-width: 769px) and (max-width: 1024px) {
-  .chat-shell {
-    width: 85%; /* Можна збільшити ширину чату для планшетів */
+    width: 100%; /* Моделі займають всю ширину */
   }
 
   .model-overlay {
-    width: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
   }
 
-  .model-button {
-    width: 48%; /* Зменшуємо ширину кнопок моделей */
+  .models-scroll {
+    display: flex;
+    flex-direction: column; /* Вертикальний скрол */
+    overflow-y: auto;
+    gap: 16px;
+    padding: 10px;
+    max-height: 70vh; /* Обмежуємо висоту на мобільних пристроях */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc transparent;
+  }
+}
+
+/* === Слайдер для планшетів === */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  #models-buttons {
+    display: flex;
+    flex-wrap: wrap; /* Можна використовувати декілька моделей на одному рядку */
+    gap: 15px;
   }
 }
 

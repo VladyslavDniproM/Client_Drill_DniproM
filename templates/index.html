@@ -819,8 +819,6 @@ h1 {
       </div>
     </div>
 
-    <audio id="botAudio" style="display:none;"></audio>
-
     <div id="rules-modal" class="modal">
         <div class="modal-content">
             <h2>Правила комунікації з ботом</h2>
@@ -1494,11 +1492,6 @@ function updateStageIndicator(currentStage) {
         if (data.stage === 3) {
                 // Просто додаємо одне питання — не розділяємо
             addMessage(data.reply, false);
-                if (data.audio_base64) {
-                const audioElem = document.getElementById("botAudio");
-                audioElem.src = "data:audio/mp3;base64," + data.audio_base64;
-                audioElem.play();
-            }
             statusElement.textContent = "Клієнт уточнює деталі про модель...";
             userInput.focus();
 
@@ -1513,12 +1506,6 @@ function updateStageIndicator(currentStage) {
         } else {
             // Для інших етапів - стандартна обробка
             addMessage(data.reply, false);
-        }
-
-            if (data.audio_base64) {
-        const audioElem = document.getElementById("botAudio");
-        audioElem.src = "data:audio/mp3;base64," + data.audio_base64;
-        audioElem.play();
         }
 
         // Обробка етапу вибору моделі
@@ -1597,7 +1584,7 @@ function updateStageIndicator(currentStage) {
         console.error("Помилка при старті чату:", err);
         addMessage("Помилка при старті чату. Спробуйте ще раз.", false);
       }
-  });
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {

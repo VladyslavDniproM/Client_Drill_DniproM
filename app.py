@@ -10,7 +10,6 @@ import base64
 import smtplib
 from email.mime.text import MIMEText
 from flask_session import Session
-from google.cloud import texttospeech
 
 load_dotenv()
 
@@ -477,30 +476,6 @@ def send_email_report(subject, body, to_email):
     except Exception as e:
         print(f"[EMAIL ERROR] Не вдалося надіслати лист: {str(e)}")
 
-def synthesize_speech(text):
-    client = texttospeech.TextToSpeechClient()
-
-    synthesis_input = texttospeech.SynthesisInput(text=text)
-
-    voice = texttospeech.VoiceSelectionParams(
-        language_code="uk-UA",
-        ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
-    )
-
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
-    )
-
-    response = client.synthesize_speech(
-        input=synthesis_input,
-        voice=voice,
-        audio_config=audio_config
-    )
-
-    # Повертаємо base64 закодований звук, щоб передати на фронт
-    audio_content = base64.b64encode(response.audio_content).decode("utf-8")
-    return audio_content
-
 @app.route('/authenticate', methods=['POST'])
 def authenticate():
     seller_name = request.json.get("seller_name", "").strip()
@@ -872,11 +847,8 @@ def chat():
                 'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
 
-            audio_base64 = synthesize_speech(answer)
-
             return jsonify({
                 "reply": answer,
-                "audio_base64": audio_base64, 
                 "chat_ended": False,
                 "stage": 1,
                 "question_progress": session["question_count"],

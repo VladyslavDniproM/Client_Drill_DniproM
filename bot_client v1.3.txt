@@ -9,6 +9,7 @@ import zlib
 import base64
 import smtplib
 from email.mime.text import MIMEText
+from flask_session import Session
 
 load_dotenv()
 
@@ -18,6 +19,10 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
 app.config['SESSION_TYPE'] = 'filesystem'  # Зберігання сесії у файловій системі
 app.config['SESSION_PERMANENT'] = False  # Якщо False, сесія завершується, коли користувач закриває браузер
 app.config['SESSION_USE_SIGNER'] = True  # Використовуємо підпис для сесій
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Шлях для зберігання сесій
+app.config['SESSION_FILE_THRESHOLD'] = 100  # Макс. кількість файлів сесій
+
+Session(app)
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 MODEL_ENGINE = "gpt-3.5-turbo"

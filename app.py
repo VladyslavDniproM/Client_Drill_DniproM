@@ -14,16 +14,6 @@ from google.cloud import texttospeech
 
 load_dotenv()
 
-if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-    try:
-        decoded_credentials = base64.b64decode(os.getenv("GOOGLE_APPLICATION_CREDENTIALS")).decode("utf-8")
-        with open("gcloud_credentials.json", "w") as f:
-            f.write(decoded_credentials)
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "gcloud_credentials.json"
-        print("[TTS] Google credentials JSON збережено.")
-    except Exception as e:
-        print(f"[TTS ERROR] Не вдалося розпакувати ключ: {e}")
-
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
 
@@ -487,6 +477,30 @@ def send_email_report(subject, body, to_email):
     except Exception as e:
         print(f"[EMAIL ERROR] Не вдалося надіслати лист: {str(e)}")
 
+def synthesize_speech(text):
+    client = texttospeech.TextToSpeechClient()
+
+    synthesis_input = texttospeech.SynthesisInput(text=text)
+
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="uk-UA",
+        ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+    )
+
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3
+    )
+
+    response = client.synthesize_speech(
+        input=synthesis_input,
+        voice=voice,
+        audio_config=audio_config
+    )
+
+    # Повертаємо base64 закодований звук, щоб передати на фронт
+    audio_content = base64.b64encode(response.audio_content).decode("utf-8")
+    return audio_content
+
 @app.route('/authenticate', methods=['POST'])
 def authenticate():
     seller_name = request.json.get("seller_name", "").strip()
@@ -522,36 +536,6 @@ def internal_error(error):
     if 'seller_name' in session:
         generate_report(session)  # Зберегти звіт навіть при помилці
     return jsonify({"error": "Внутрішня помилка сервера"}), 500
-
-def synthesize_speech(text, output_path="static/audio/output.mp3"):
-    try:
-        client = texttospeech.TextToSpeechClient()
-
-        input_text = texttospeech.SynthesisInput(text=text)
-
-        voice = texttospeech.VoiceSelectionParams(
-            language_code="uk-UA",
-            ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
-        )
-
-        audio_config = texttospeech.AudioConfig(
-            audio_encoding=texttospeech.AudioEncoding.MP3
-        )
-
-        response = client.synthesize_speech(
-            input=input_text,
-            voice=voice,
-            audio_config=audio_config
-        )
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, "wb") as out:
-            out.write(response.audio_content)
-            print(f"[TTS] Аудіо збережено: {output_path}")
-        return output_path
-    except Exception as e:
-        print(f"[TTS ERROR] {e}")
-        return None
 
 def init_conversation():
     # Очистити всі попередні дані сесії
@@ -881,8 +865,6 @@ def chat():
             )
             answer = response.choices[0].message["content"].strip()
 
-            audio_file = synthesize_speech(answer)
-
             session["history"].append({"role": "assistant", "content": answer})
             session['conversation_log'].append({
                 'role': 'assistant',
@@ -890,9 +872,11 @@ def chat():
                 'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
 
+            audio_base64 = synthesize_speech(answer)
+
             return jsonify({
                 "reply": answer,
-                "audio_url": audio_file,
+                "audio_base64": audio_base64, 
                 "chat_ended": False,
                 "stage": 1,
                 "question_progress": session["question_count"],

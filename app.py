@@ -506,7 +506,7 @@ SITUATIONS = [
         "requirements": "компактний, щоб не заважав, до 4 соток",
         "avatar": "id31.png",
         "behavior": "пенсіонерка, займається розсадою",
-        "correct_models": ["5H"],
+        "correct_models": ["5-H"],
         "wrong_models": ["16S", "12S"],
         "hints": [
             "Треба для теплиці",
@@ -522,7 +522,7 @@ SITUATIONS = [
         "avatar": "id32.png",
         "behavior": "фермер із досвідом",
         "correct_models": ["16S"],
-        "wrong_models": ["5H", "12S"],
+        "wrong_models": ["5-H", "12S"],
         "hints": [
             "Обробляю щодня",
             "Має бути витривалий",
@@ -640,7 +640,7 @@ TOOL_MODELS = [
     "DNIPRO-M-150S",
     "30L",
     "DTC-200BCDUAL",
-    "5H",
+    "5-H",
     "12S",
     "16S"
 ]
@@ -1325,6 +1325,18 @@ def chat():
                 session["objection_round"] += 1
                 session.modified = True
 
+                session['conversation_log'].append({
+                    'role': 'user',
+                    'message': seller_reply,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+
+                session['conversation_log'].append({
+                    'role': 'assistant',
+                    'message': reply,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+
                 return jsonify({
                     "reply": reply,
                     "chat_ended": False,
@@ -1398,6 +1410,18 @@ def chat():
                     reply = "Клієнт незадоволений консультацією."  # fallback
 
                 print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/5 балів)")
+
+                session['conversation_log'].append({
+                    'role': 'user',
+                    'message': seller_reply,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+
+                session['conversation_log'].append({
+                    'role': 'assistant',
+                    'message': reply,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
 
                 model_score = session.get("model_score", 0)
                 questions_score = sum(q["score"] for q in session.get("question_scores", []))

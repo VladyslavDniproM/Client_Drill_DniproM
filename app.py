@@ -412,7 +412,7 @@ SITUATIONS = [
     },
         {
         "id": 25,
-        "description": "треба обрізати фруктові дерева в саду на дачі",
+        "description": "потрібен інструмент, щоб обрізати фруктові дерева в саду на дачі",
         "requirements": "легка та зручна пилка для періодичних робіт",
         "avatar": "id25.png",
         "behavior": "пенсіонер, який сам доглядає сад",
@@ -427,7 +427,7 @@ SITUATIONS = [
     },
     {
         "id": 26,
-        "description": "розпилювання товстих дерев для дров у приватному будинку",
+        "description": "потрібна пила для розпилювання товстих дерев для дров у приватному будинку",
         "requirements": "потужна пила, яка справиться з твердими породами",
         "avatar": "id26.png",
         "behavior": "молодий чоловік, живе в селі",
@@ -442,7 +442,7 @@ SITUATIONS = [
     },
     {
         "id": 27,
-        "description": "треба пилу для бригади будівельників на новобудові",
+        "description": "потрібна для бригади будівельників на новобудові",
         "requirements": "надійна, витривала, не бензинова",
         "avatar": "id27.png",
         "behavior": "прораб будівництва",
@@ -457,7 +457,7 @@ SITUATIONS = [
     },
     {
         "id": 28,
-        "description": "шукаю тример для дачі, 15 соток — багато бур’яну",
+        "description": "потрібен тример для дачі, 15 соток — багато бур’яну",
         "requirements": "потужний, щоб не глох і не згорав",
         "avatar": "id28.png",
         "behavior": "дачник середнього віку",
@@ -472,7 +472,7 @@ SITUATIONS = [
     },
     {
         "id": 29,
-        "description": "треба легкий тример для мами — 5 соток біля будинку",
+        "description": "потрібен легкий тример для мами — 5 соток біля будинку",
         "requirements": "максимально простий і легкий",
         "avatar": "id29.png",
         "behavior": "донька підбирає інструмент для літньої мами",
@@ -487,7 +487,7 @@ SITUATIONS = [
     },
     {
         "id": 30,
-        "description": "для сільради треба щось акумуляторне — не хочемо бензину",
+        "description": "потрібна для сільради пилка, щось акумуляторне — не хочемо бензину",
         "requirements": "професійний тример на акумуляторах",
         "avatar": "id30.png",
         "behavior": "представник громади, купує через тендер",
@@ -517,7 +517,7 @@ SITUATIONS = [
     },
     {
         "id": 32,
-        "description": "шукаю обприскувач для фермерського господарства — 9 соток",
+        "description": "потрібен обприскувач для фермерського господарства — 9 соток",
         "requirements": "великий об’єм, працювати без зупинки кілька годин",
         "avatar": "id32.png",
         "behavior": "фермер із досвідом",
@@ -547,7 +547,7 @@ SITUATIONS = [
     },
     {
         "id": 34,
-        "description": "хочу пилку для приватного дому — щось універсальне",
+        "description": "потрібна пилка для приватного дому — щось універсальне",
         "requirements": "середня потужність, без складного обслуговування",
         "avatar": "id34.png",
         "behavior": "чоловік, не фахівець, але має інструменти",
@@ -562,7 +562,7 @@ SITUATIONS = [
     },
     {
         "id": 35,
-        "description": "косіння навколо приватного будинку з газоном та деревами",
+        "description": "потрібен інструмент для косіння навколо приватного будинку з газоном та деревами",
         "requirements": "маневрений і акуратний тример",
         "avatar": "id35.png",
         "behavior": "власник будинку з ландшафтом",
@@ -577,7 +577,7 @@ SITUATIONS = [
     },
     {
         "id": 36,
-        "description": "тримери потрібні для прибирання території шкільного двору",
+        "description": "потрібен тример для прибирання території шкільного двору",
         "requirements": "довговічні, не важкі, бажано з гарантією",
         "avatar": "id36.png",
         "behavior": "представник навчального закладу",
@@ -1062,6 +1062,12 @@ def chat():
         user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
         matched_models = [m for m in session["available_models"] if user_model in m.upper()]
 
+        session['conversation_log'].append({
+            'role': 'user' if is_user else 'assistant',
+            'message': message,
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+
         if not matched_models:
             session["model_score"] = 0
             session["wrong_model_attempts"] += 1
@@ -1140,6 +1146,13 @@ def chat():
 
     # --- Stage 3: Уточнюючі питання ---
     elif session["stage"] == 3:
+
+        session['conversation_log'].append({
+            'role': 'user' if is_user else 'assistant',
+            'message': message,
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+
         if 'generated_questions' not in session:
             return jsonify({
                 "reply": "Питання не знайдені. Давайте почнемо спочатку.",
@@ -1267,6 +1280,15 @@ def chat():
         seller_reply = user_input
         session["seller_replies"].append(seller_reply)
         current_round = session.get("objection_round", 1)
+
+        session["objection_score"] = objection_score  # Зберегти оцінку
+        session["total_score"] = total_score 
+
+        session['conversation_log'].append({
+            'role': 'user' if is_user else 'assistant',
+            'message': message,
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
 
         if current_round <= 2:
             try:

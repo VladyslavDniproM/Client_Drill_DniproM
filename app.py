@@ -1,16 +1,15 @@
+import openai
+from flask import Flask, render_template, request, jsonify, session
+from dotenv import load_dotenv
+from datetime import datetime
 import os
+import random
 import re
 import zlib
-import json
 import base64
-import random
 import smtplib
-from datetime import datetime
-from flask import Flask, render_template, request, jsonify, session
-from flask_session import Session
 from email.mime.text import MIMEText
-from dotenv import load_dotenv
-import openai
+from flask_session import Session
 
 load_dotenv()
 
@@ -665,6 +664,7 @@ def send_email_report(subject, body, to_email):
     msg['Subject'] = subject
     msg['From'] = os.getenv('EMAIL_ADDRESS')
     msg['To'] = to_email
+
     try:
         with smtplib.SMTP(os.getenv('EMAIL_HOST'), int(os.getenv('EMAIL_PORT'))) as server:
             server.starttls()
@@ -679,27 +679,35 @@ def authenticate():
     seller_name = request.json.get("seller_name", "").strip()
     if not seller_name:
         return jsonify({"error": "Будь ласка, введіть ваше ПІБ"}), 400
+    
     session['seller_name'] = seller_name
     session.modified = True
     return jsonify({"success": True, "message": f"Вітаємо, {seller_name}! Тепер ви можете розпочати діалог."})
 
 def get_situation_from_session():
-    base64_data = session.get('compressed_situation', '')
-    if not base64_data:
-        return None
-    try:
-        compressed = base64.b64decode(base64_data)
-        decompressed = zlib.decompress(compressed)
-        return json.loads(decompressed.decode('utf-8'))
-    except Exception as e:
-        print(f"Помилка при розпаковці ситуації: {e}")
-        return None
+    # Отримуємо стиснуту ситуацію з сесії
+    compressed_situation_base64 = session.get('compressed_situation', '')
+    if compressed_situation_base64:
+        # Розкодовуємо з base64
+        compressed_situation = base64.b64decode(compressed_situation_base64)
+        
+        # Розпаковуємо дані
+        decompressed_data_bytes = zlib.decompress(compressed_situation)
+        decompressed_data_str = decompressed_data_bytes.decode('utf-8')
+        
+        # Заміна eval на JSON
+        try:
+            situation = json.loads(decompressed_data_str)  # Безпечніше розбирати через JSON
+            return situation
+        except ValueError as e:
+            print(f"Помилка при розборі даних: {e}")
+            return None
+    return None
 
 @app.errorhandler(500)
 def internal_error(error):
     if 'seller_name' in session:
-        from some_module import generate_report  # Передбачено, що є в іншому файлі
-        generate_report(session)
+        generate_report(session)  # Зберегти звіт навіть при помилці
     return jsonify({"error": "Внутрішня помилка сервера"}), 500
 
 def init_conversation():
@@ -799,7 +807,11 @@ def evaluate_question(question, situation_description):
 def match_model(user_input, available_models):
     user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
     matched_models = [m for m in available_models if user_model in m.upper()]
-    return matched_models[0] if matched_models else None
+    
+    if not matched_models:
+        return None  # Модель не знайдена
+    
+    return matched_models[0]
 
 @app.route('/')
 def home():
@@ -822,7 +834,7 @@ def start_chat():
         "avatar": session["situation"].get("avatar", "clientpes.png")
     })
 
-@app.route('/restart-chat', methods=['POST'])
+@app.route("/restart-chat", methods=["POST"])
 def restart_chat():
     keys_to_clear = [
         "history", "stage", "question_count", "model", "chat_active",
@@ -830,9 +842,7 @@ def restart_chat():
         "wrong_model_attempts", "user_answers", "off_topic_count",
         "objection_round", "generated_questions", "current_question_index",
         "current_situation_id", "situation", "last_seller_reply",
-        "current_objection", "hint_shown", "question_scores", "model_score",
-        "total_score", "seller_replies", "bonus_added", "objection_score",
-        "conversation_log", "compressed_situation"
+        "current_objection", "hint_shown", "question_scores", "model_score", "total_score", "seller_replies"
     ]
     for key in keys_to_clear:
         session.pop(key, None)
@@ -892,7 +902,7 @@ def generate_report(session_data):
 
 @app.after_request
 def allow_iframe(response):
-    response.headers['Content-Security-Policy'] = "frame-ancestors https://ako.dnipro-m.ua"
+    response.headers['X-Frame-Options'] = 'https://ako.dnipro-m.ua/'
     return response
 
 @app.route("/chat", methods=["POST"])
@@ -1052,12 +1062,6 @@ def chat():
         user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
         matched_models = [m for m in session["available_models"] if user_model in m.upper()]
 
-        session['conversation_log'].append({
-            'role': 'user',
-            'message': message,
-            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
-
         if not matched_models:
             session["model_score"] = 0
             session["wrong_model_attempts"] += 1
@@ -1136,13 +1140,6 @@ def chat():
 
     # --- Stage 3: Уточнюючі питання ---
     elif session["stage"] == 3:
-
-        session['conversation_log'].append({
-            'role': 'user',
-            'message': message,
-            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
-
         if 'generated_questions' not in session:
             return jsonify({
                 "reply": "Питання не знайдені. Давайте почнемо спочатку.",
@@ -1270,15 +1267,6 @@ def chat():
         seller_reply = user_input
         session["seller_replies"].append(seller_reply)
         current_round = session.get("objection_round", 1)
-
-        session["objection_score"] = objection_score  # Зберегти оцінку
-        session["total_score"] = total_score 
-
-        session['conversation_log'].append({
-            'role': 'user',
-            'message': message,
-            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
 
         if current_round <= 2:
             try:

@@ -770,10 +770,10 @@ system_prompt = f"""
     "Добрий день, мені потрібен інструмент."
     """
 
-    return [
-        {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": f"Добрий день, мені потрібен {session['situation']['description']}"}
-    ]
+        return [
+            {"role": "system", "content": system_prompt},
+            {"role": "assistant", "content": f"Добрий день, мені потрібен {session['situation']['description']}"}
+        ]
 
 def evaluate_question(question, situation_description):
     prompt = f"""

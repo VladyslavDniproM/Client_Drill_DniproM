@@ -300,7 +300,7 @@ SITUATIONS = [
     },
     {
         "id": 18,
-        "description": "найпотужніший перфоратор для спецзавдань",
+        "description": "перфоратор для спецзавдань",
         "requirements": "перфоратор для найскладніших професійних задач",
         "avatar": "id2.png",
         "behavior": "клієнт-комунальник",
@@ -316,7 +316,7 @@ SITUATIONS = [
     },
     {
         "id": 19,
-        "description": "потрібен компактний інвертор для роботи в тісних умовах",
+        "description": "компактний інвертор для роботи в тісних умовах",
         "requirements": "малий та легкий зварювальний апарат для періодичного використання",
         "avatar": "id11.png",
         "behavior": "клієнт-ремонтник",
@@ -332,7 +332,7 @@ SITUATIONS = [
     },
     {
         "id": 20,
-        "description": "потрібен універсальний інвертор для різних видів зварювання",
+        "description": "універсальний інвертор для різних видів зварювання",
         "requirements": "апарат з TIG-LIFT та зручним функціоналом",
         "avatar": "id16.png",
         "behavior": "клієнт-майстер на виробництві",
@@ -348,7 +348,7 @@ SITUATIONS = [
     },
     {
         "id": 21,
-        "description": "потрібен надійний інвертор для роботи при низькій напрузі",
+        "description": "надійний інвертор для роботи при низькій напрузі",
         "requirements": "апарат, який працює від 140 В і має хороший захист",
         "avatar": "id17.png",
         "behavior": "клієнт-електрик у сільській місцевості",
@@ -364,7 +364,7 @@ SITUATIONS = [
     },
     {
         "id": 22,
-        "description": "потрібен професійний інвертор для важких завдань",
+        "description": "професійний інвертор для важких завдань",
         "requirements": "апарат для тривалої роботи з товстими металами",
         "avatar": "id18.png",
         "behavior": "клієнт-зварник на будівництві",
@@ -380,7 +380,7 @@ SITUATIONS = [
     },
     {
         "id": 23,
-        "description": "потрібен довговічний інвертор з гарантією",
+        "description": "довговічний інвертор з гарантією",
         "requirements": "надійний апарат без зайвих функцій",
         "avatar": "id19.png",
         "behavior": "клієнт-бригадир будівельної компанії",
@@ -396,7 +396,7 @@ SITUATIONS = [
     },
     {
         "id": 24,
-        "description": "потрібен найпотужніший інвертор для важких металів",
+        "description": "найпотужніший інвертор для важких металів",
         "requirements": "апарат для зварювання товстих конструкцій (10+ мм)",
         "avatar": "id20.png",
         "behavior": "клієнт-інженер на металургійному підприємстві",
@@ -412,7 +412,7 @@ SITUATIONS = [
     },
         {
         "id": 25,
-        "description": "потрібен інструмент, щоб обрізати фруктові дерева в саду на дачі",
+        "description": "інструмент, щоб обрізати фруктові дерева в саду на дачі",
         "requirements": "легка та зручна пилка для періодичних робіт",
         "avatar": "id25.png",
         "behavior": "пенсіонер, який сам доглядає сад",
@@ -427,7 +427,7 @@ SITUATIONS = [
     },
     {
         "id": 26,
-        "description": "потрібна пила для розпилювання товстих дерев для дров у приватному будинку",
+        "description": "пила для розпилювання товстих дерев для дров у приватному будинку",
         "requirements": "потужна пила, яка справиться з твердими породами",
         "avatar": "id26.png",
         "behavior": "молодий чоловік, живе в селі",
@@ -442,7 +442,7 @@ SITUATIONS = [
     },
     {
         "id": 27,
-        "description": "потрібна для бригади будівельників на новобудові",
+        "description": "інструмент для бригади будівельників на новобудові",
         "requirements": "надійна, витривала, не бензинова",
         "avatar": "id27.png",
         "behavior": "прораб будівництва",
@@ -457,7 +457,7 @@ SITUATIONS = [
     },
     {
         "id": 28,
-        "description": "потрібен тример для дачі, 15 соток — багато бур’яну",
+        "description": "тример для дачі, 15 соток — багато бур’яну",
         "requirements": "потужний, щоб не глох і не згорав",
         "avatar": "id28.png",
         "behavior": "дачник середнього віку",
@@ -472,7 +472,7 @@ SITUATIONS = [
     },
     {
         "id": 29,
-        "description": "потрібен легкий тример для мами — 5 соток біля будинку",
+        "description": "легкий тример для мами — 5 соток біля будинку",
         "requirements": "максимально простий і легкий",
         "avatar": "id29.png",
         "behavior": "донька підбирає інструмент для літньої мами",
@@ -487,7 +487,7 @@ SITUATIONS = [
     },
     {
         "id": 30,
-        "description": "потрібна для сільради пилка, щось акумуляторне — не хочемо бензину",
+        "description": "для сільради пилка, щось акумуляторне — не хочемо бензину",
         "requirements": "професійний тример на акумуляторах",
         "avatar": "id30.png",
         "behavior": "представник громади, купує через тендер",
@@ -502,7 +502,7 @@ SITUATIONS = [
     },
     {
         "id": 31,
-        "description": "потрібен невеликий акумуляторний обприскувач для теплиці",
+        "description": "евеликий акумуляторний обприскувач для теплиці",
         "requirements": "компактний, щоб не заважав, до 4 соток",
         "avatar": "id31.png",
         "behavior": "пенсіонерка, займається розсадою",
@@ -517,12 +517,12 @@ SITUATIONS = [
     },
     {
         "id": 32,
-        "description": "потрібен обприскувач для фермерського господарства — 9 соток",
+        "description": "обприскувач для фермерського господарства — 9 соток",
         "requirements": "великий об’єм, працювати без зупинки кілька годин",
         "avatar": "id32.png",
         "behavior": "фермер із досвідом",
         "correct_models": ["16S"],
-        "wrong_models": ["5H", "CS-12"],
+        "wrong_models": ["5H", "12S"],
         "hints": [
             "Обробляю щодня",
             "Має бути витривалий",
@@ -532,7 +532,7 @@ SITUATIONS = [
     },
         {
         "id": 33,
-        "description": "потрібна пила для монтажників — різати дошки на висоті",
+        "description": "пила для монтажників — різати дошки на висоті",
         "requirements": "легка, мобільна, не бензинова",
         "avatar": "id33.png",
         "behavior": "монтажник, працює в квартирних ремонтах",
@@ -547,7 +547,7 @@ SITUATIONS = [
     },
     {
         "id": 34,
-        "description": "потрібна пилка для приватного дому — щось універсальне",
+        "description": "пилка для приватного дому — щось універсальне",
         "requirements": "середня потужність, без складного обслуговування",
         "avatar": "id34.png",
         "behavior": "чоловік, не фахівець, але має інструменти",
@@ -562,7 +562,7 @@ SITUATIONS = [
     },
     {
         "id": 35,
-        "description": "потрібен інструмент для косіння навколо приватного будинку з газоном та деревами",
+        "description": "інструмент для косіння навколо приватного будинку з газоном та деревами",
         "requirements": "маневрений і акуратний тример",
         "avatar": "id35.png",
         "behavior": "власник будинку з ландшафтом",
@@ -577,7 +577,7 @@ SITUATIONS = [
     },
     {
         "id": 36,
-        "description": "потрібен тример для прибирання території шкільного двору",
+        "description": "тример для прибирання території шкільного двору",
         "requirements": "довговічні, не важкі, бажано з гарантією",
         "avatar": "id36.png",
         "behavior": "представник навчального закладу",
@@ -745,18 +745,21 @@ def init_conversation():
     session['irrelevant_answers'] = 0
     session.modified = True
 
-    system_prompt = f"""
+system_prompt = f"""
     Ти — віртуальний **клієнт магазину**, який **прийшов купити інструмент**.  
     Твоя **єдина мета** — **отримати потрібну інформацію для покупки** згідно твоєї ситуації.
     Не висвітлюй ситуацію повністю. Користувач ставить питання – ти **відповідаєш по одному реченню**. 
     Ти **не є консультантом**, **не допомагаєш** користувачу, **не пропонуєш моделі**, **не ставиш зустрічних запитань**.
-    Ти не є консультантом. Ти клієнт, який хоче дізнатися все необхідне про інструмент, щоби прийняти рішення про покупку.  
+    Ти клієнт, який хоче дізнатися все необхідне про інструмент, щоби прийняти рішення про покупку.  
     Ти уточнюєш деталі, висловлюєш свої вимоги.
     **Ніколи не грай роль продавця**.
 
     Твоя ситуація: {selected_situation['description']}
     Твої потреби: {selected_situation['requirements']}
     **Поведінка**: {selected_situation.get('behavior')}
+
+    Підказки, які ти можеш використати під час діалогу, щоб звучати реалістично:
+    - {chr(10).join(f"- {hint}" for hint in selected_situation.get("hints", []))}
 
     {UNACCEPTABLE_BEHAVIOR_PROMPT}
 
@@ -766,6 +769,7 @@ def init_conversation():
     Починай розмову нейтрально:  
     "Добрий день, мені потрібен інструмент."
     """
+
     return [
         {"role": "system", "content": system_prompt},
         {"role": "assistant", "content": f"Добрий день, мені потрібен {session['situation']['description']}"}
@@ -1124,6 +1128,17 @@ def chat():
             first_question = questions[0] if questions else "Яке перше ваше питання про цю модель?"
             session["history"].append({"role": "assistant", "content": first_question})
 
+            session['conversation_log'].append({
+                'role': 'user',
+                'message': user_input,
+                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+            session['conversation_log'].append({
+                'role': 'assistant',
+                'message': f"Добре, {user_model} виглядає непогано. А таке питання:\n\n{first_question}",
+                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+
             session.modified = True
 
             return jsonify({
@@ -1151,6 +1166,12 @@ def chat():
         current_question = session['generated_questions'][index]
 
         session["history"].append({"role": "user", "content": user_input})
+
+        session['conversation_log'].append({
+            'role': 'user',
+            'message': user_input,
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
 
         # Оцінка відповіді
         gpt_prompt = f"""
@@ -1219,6 +1240,12 @@ def chat():
                 session["history"].append({"role": "assistant", "content": next_question})
                 session.modified = True
 
+                session['conversation_log'].append({
+                    'role': 'assistant',
+                    'message': next_question,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+
                 return jsonify({
                     "reply": next_question,
                     "chat_ended": False
@@ -1267,6 +1294,12 @@ def chat():
         seller_reply = user_input
         session["seller_replies"].append(seller_reply)
         current_round = session.get("objection_round", 1)
+
+        session['conversation_log'].append({
+            'role': 'user',
+            'message': seller_reply,
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
 
         if current_round <= 2:
             try:

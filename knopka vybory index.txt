@@ -529,30 +529,24 @@ h1 {
   display: none;
 }
 
-#musicToggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 20px;
-            z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        #musicToggle:hover {
-            background-color: #45a049;
-        }
-        #musicToggle.muted {
-            background-color: #f44336;
-        }
-        #musicToggle.muted:hover {
-            background-color: #d32f2f;
-        }
+.category-btn {
+  padding: 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.category-btn:hover {
+  background-color: #45a049;
+}
+
+#category-buttons {
+  margin-top: 20px;
+}
 
 /* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
 @media (max-width: 900px) {
@@ -747,14 +741,6 @@ h1 {
 </style>
 </head>
 <body>
-
-    <audio id="bgMusic" loop>
-        <source src="{{ url_for('static', filename='videoplayback.m4a') }}" type="audio/mpeg">
-        Ваш браузер не підтримує аудіо елемент.
-    </audio>
-
-    <button id="musicToggle">♪</button>
-
 <div class="top-panel">
   <div class="progress-hint" id="progressHint">Зарахованих питань: 0 / 5</div>
   <div class="progress-container" id="progressContainer">
@@ -864,6 +850,21 @@ h1 {
             </ul>
             <button id="accept-rules-btn">Я ознайомився і готовий</button>
         </div>
+    </div>
+
+    <div id="category-modal" class="modal">
+      <div class="modal-content">
+        <h2>Оберіть категорію інструментів</h2>
+        <div id="category-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button class="category-btn" data-category="1-4">Шуруповерти</button>
+          <button class="category-btn" data-category="5-9">КШМ (Болгарки)</button>
+          <button class="category-btn" data-category="10-18">Перфоратори</button>
+          <button class="category-btn" data-category="19-24">Інвертори</button>
+          <button class="category-btn" data-category="25-27">Ланцюгові пили</button>
+          <button class="category-btn" data-category="28-30">Тримери</button>
+          <button class="category-btn" data-category="31-32">Обприскувачі</button>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -979,34 +980,39 @@ h1 {
         let modelHintShown = false;
 
         // Оновіть функцію updateProgressBar
-       function updateProgressBar(progress, maxQuestions = 5) {
-          const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
-          questionProgressBar.style.width = `${percent}%`;
+        function updateProgressBar(progress, maxQuestions = 5) {
+            const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
+            questionProgressBar.style.width = `${percent}%`;
 
-          if (progress < maxQuestions) {
-              progressHint.textContent = `Запитань поставлено: ${progress} / ${maxQuestions}`;
-              progressHint.style.opacity = "1";
-              document.getElementById("progressContainer").style.opacity = "1";
-              progressHint.style.display = "block";
-              document.getElementById("progressContainer").style.display = "block";
+            if (progress < maxQuestions) {
+                progressHint.textContent = `Запитань поставлено: ${progress} / ${maxQuestions}`;
+                progressHint.style.opacity = "1";
+                document.getElementById("progressContainer").style.opacity = "1";
+                progressHint.style.display = "block";
+                document.getElementById("progressContainer").style.display = "block";
 
-              if (progress >= 3 && !modelHintShown) { // Перевірка, щоб кнопка з'являлась після третього питання і залишалась
-                  document.getElementById("choose-model-btn").style.display = "inline-block";
-                  showModelHint();
-                  modelHintShown = true; // Позначаємо, що пораду вже показали
-              }
-          } else {
-              progressHint.textContent = "Максимальна кількість питань!";
-              setTimeout(() => {
-                  progressHint.style.opacity = "0";
-                  document.getElementById("progressContainer").style.opacity = "0";
-              }, 1500);
-              setTimeout(() => {
-                  progressHint.style.display = "none";
-                  document.getElementById("progressContainer").style.display = "none";
-              }, 2000);
-          }
-      }
+                // Зміни тут - видалено умову else, яка ховала кнопку
+                if (progress >= 3 && !modelHintShown) {
+                    document.getElementById("choose-model-btn").style.display = "inline-block";
+                    showModelHint();
+                    modelHintShown = true;
+                }
+                // Додано цей рядок, щоб кнопка залишалась видимою
+                if (progress >= 3) {
+                    document.getElementById("choose-model-btn").style.display = "inline-block";
+                }
+            } else {
+                progressHint.textContent = "Максимальна кількість питань!";
+                setTimeout(() => {
+                    progressHint.style.opacity = "0";
+                    document.getElementById("progressContainer").style.opacity = "0";
+                }, 1500);
+                setTimeout(() => {
+                    progressHint.style.display = "none";
+                    document.getElementById("progressContainer").style.display = "none";
+                }, 2000);
+            }
+        }
 
         function showModelButtons(models, promptText = "Оберіть модель:", attemptsLeft = 1) {
           const modelData = {
@@ -1518,7 +1524,7 @@ h1 {
             sendButton.style.display = "inline-block";
         }
 
-async function sendModelChoice(model) {
+        async function sendModelChoice(model) {
         hideModelButtons();
         document.getElementById("choose-model-btn").style.display = "none";
         showTypingIndicator();
@@ -1599,45 +1605,79 @@ function updateStageIndicator(currentStage) {
   }
 
   // Показуємо модальне вікно для введення ПІБ при завантаженні
-  document.addEventListener('DOMContentLoaded', () => {
-      const authModal = document.getElementById('auth-modal');
-      const rulesModal = document.getElementById('rules-modal');
-      
-      // Приховуємо вікно правил спочатку
-      rulesModal.style.display = 'none';
-      
-      // Показуємо вікно автентифікації
-      authModal.style.display = 'flex';
-      
-      // Обробник для кнопки "Продовжити"
-      document.getElementById('submit-name-btn').addEventListener('click', async () => {
-          const nameInput = document.getElementById('seller-name-input');
-          const name = nameInput.value.trim();
-          
-          if (!name) {
-              alert("Будь ласка, введіть ваше ПІБ");
-              return;
-          }
-          
-          // Блокуємо інтерфейс під час відправки
-          nameInput.disabled = true;
-          document.getElementById('submit-name-btn').disabled = true;
-          
-          // Відправляємо ПІБ на сервер
-          const result = await authenticateSeller(name);
-          
-          if (result.error) {
-              alert("Помилка: " + result.error);
-              nameInput.disabled = false;
-              document.getElementById('submit-name-btn').disabled = false;
-          } else {
-              // Зберігаємо ПІБ і переходимо до правил
-              sellerName = name;
-              authModal.style.display = 'none';
-              rulesModal.style.display = 'flex';
-          }
-      });
-  });
+document.addEventListener('DOMContentLoaded', () => {
+    const authModal = document.getElementById('auth-modal');
+    const rulesModal = document.getElementById('rules-modal');
+    const categoryModal = document.getElementById('category-modal');
+    
+    // Приховуємо вікно правил спочатку
+    rulesModal.style.display = 'none';
+    categoryModal.style.display = 'none';
+    
+    // Показуємо вікно автентифікації
+    authModal.style.display = 'flex';
+    
+    // Обробник для кнопки "Продовжити"
+    document.getElementById('submit-name-btn').addEventListener('click', async () => {
+        const nameInput = document.getElementById('seller-name-input');
+        const name = nameInput.value.trim();
+        
+        if (!name) {
+            alert("Будь ласка, введіть ваше ПІБ");
+            return;
+        }
+        
+        // Блокуємо інтерфейс під час відправки
+        nameInput.disabled = true;
+        document.getElementById('submit-name-btn').disabled = true;
+        
+        // Відправляємо ПІБ на сервер
+        const result = await authenticateSeller(name);
+        
+        if (result.error) {
+            alert("Помилка: " + result.error);
+            nameInput.disabled = false;
+            document.getElementById('submit-name-btn').disabled = false;
+        } else {
+            // Зберігаємо ПІБ і переходимо до правил
+            sellerName = name;
+            authModal.style.display = 'none';
+            rulesModal.style.display = 'flex';
+            categoryModal.style.display = 'flex';
+        }
+    });
+
+    // Обробник кнопок категорій
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const categoryRange = this.getAttribute('data-category');
+            sessionStorage.setItem('selectedCategory', categoryRange);
+            const [startId, endId] = categoryRange.split('-').map(Number);
+            
+            // Закриваємо модальне вікно вибору категорії
+            categoryModal.style.display = 'none';
+            
+            // Фільтруємо ситуації за діапазоном ID
+            const filteredSituations = SITUATIONS.filter(situation => 
+                situation.id >= startId && situation.id <= endId
+            );
+            
+            // Якщо ситуації знайдені, вибираємо одну випадкову ситуацію
+            if (filteredSituations.length > 0) {
+                const randomIndex = Math.floor(Math.random() * filteredSituations.length);
+                const selectedSituation = filteredSituations[randomIndex]; // Вибір випадкової ситуації
+                session['situation'] = selectedSituation;
+                session['current_situation_id'] = selectedSituation['id'];
+            }
+            
+            // Показуємо модальне вікно з правилами
+            rulesModal.style.display = 'flex';
+            
+            // Вивести на екран вибрану ситуацію для тестування
+            console.log(`Вибрана ситуація: ${session['situation'].description}`);
+        });
+    });
+});
 
    async function sendMessage() {
     const message = userInput.value.trim();
@@ -1812,54 +1852,6 @@ function updateStageIndicator(currentStage) {
           addMessage("Помилка при завантаженні моделей. Спробуйте ще раз.", false);
       }
   });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const audio = document.getElementById('bgMusic');
-            const toggleBtn = document.getElementById('musicToggle');
-            
-            // Встановлюємо гучність
-            audio.volume = 0.3;
-            
-            // Стан музики (за замовчуванням вимкнено)
-            let isMusicPlaying = false;
-            
-            // Функція для перемикання музики
-            function toggleMusic() {
-                if (isMusicPlaying) {
-                    audio.pause();
-                    toggleBtn.classList.add('muted');
-                    toggleBtn.textContent = '🔇';
-                } else {
-                    audio.play()
-                        .then(() => {
-                            isMusicPlaying = true;
-                            toggleBtn.classList.remove('muted');
-                            toggleBtn.textContent = '♪';
-                        })
-                        .catch(e => {
-                            console.log("Помилка відтворення:", e);
-                            // Якщо автовідтворення заблоковано, показуємо повідомлення
-                            toggleBtn.textContent = '▶';
-                        });
-                }
-                isMusicPlaying = !isMusicPlaying;
-            }
-            
-            // Обробник кліку для кнопки
-            toggleBtn.addEventListener('click', toggleMusic);
-            
-            // Додатковий обробник для першого кліку на сторінці
-            function handleFirstInteraction() {
-                if (!isMusicPlaying) {
-                    toggleMusic();
-                }
-                document.removeEventListener('click', handleFirstInteraction);
-            }
-            
-            // Дозволяємо запустити музику після будь-якого кліку на сторінці
-            document.addEventListener('click', handleFirstInteraction);
-        });
-
     </script>
 </body>
 </html>

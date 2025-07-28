@@ -529,31 +529,6 @@ h1 {
   display: none;
 }
 
-#musicToggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 20px;
-            z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        #musicToggle:hover {
-            background-color: #45a049;
-        }
-        #musicToggle.muted {
-            background-color: #f44336;
-        }
-        #musicToggle.muted:hover {
-            background-color: #d32f2f;
-        }
-
 /* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
 @media (max-width: 900px) {
     html, body {
@@ -747,14 +722,6 @@ h1 {
 </style>
 </head>
 <body>
-
-    <audio id="bgMusic" loop>
-        <source src="{{ url_for('static', filename='videoplayback.m4a') }}" type="audio/mpeg">
-        Ваш браузер не підтримує аудіо елемент.
-    </audio>
-
-    <button id="musicToggle">♪</button>
-
 <div class="top-panel">
   <div class="progress-hint" id="progressHint">Зарахованих питань: 0 / 5</div>
   <div class="progress-container" id="progressContainer">
@@ -1812,54 +1779,6 @@ function updateStageIndicator(currentStage) {
           addMessage("Помилка при завантаженні моделей. Спробуйте ще раз.", false);
       }
   });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const audio = document.getElementById('bgMusic');
-            const toggleBtn = document.getElementById('musicToggle');
-            
-            // Встановлюємо гучність
-            audio.volume = 0.3;
-            
-            // Стан музики (за замовчуванням вимкнено)
-            let isMusicPlaying = false;
-            
-            // Функція для перемикання музики
-            function toggleMusic() {
-                if (isMusicPlaying) {
-                    audio.pause();
-                    toggleBtn.classList.add('muted');
-                    toggleBtn.textContent = '🔇';
-                } else {
-                    audio.play()
-                        .then(() => {
-                            isMusicPlaying = true;
-                            toggleBtn.classList.remove('muted');
-                            toggleBtn.textContent = '♪';
-                        })
-                        .catch(e => {
-                            console.log("Помилка відтворення:", e);
-                            // Якщо автовідтворення заблоковано, показуємо повідомлення
-                            toggleBtn.textContent = '▶';
-                        });
-                }
-                isMusicPlaying = !isMusicPlaying;
-            }
-            
-            // Обробник кліку для кнопки
-            toggleBtn.addEventListener('click', toggleMusic);
-            
-            // Додатковий обробник для першого кліку на сторінці
-            function handleFirstInteraction() {
-                if (!isMusicPlaying) {
-                    toggleMusic();
-                }
-                document.removeEventListener('click', handleFirstInteraction);
-            }
-            
-            // Дозволяємо запустити музику після будь-якого кліку на сторінці
-            document.addEventListener('click', handleFirstInteraction);
-        });
-
     </script>
 </body>
 </html>

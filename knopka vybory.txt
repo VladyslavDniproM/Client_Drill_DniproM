@@ -825,14 +825,50 @@ def home():
 
 @app.route('/start_chat')
 def start_chat():
+    # Отримуємо категорію з параметрів запиту або сесії
+    category_range = request.args.get('category', session.get('selected_category', ''))
+    
+    if category_range:
+        try:
+            # Парсимо діапазон ID (наприклад, "1-4")
+            start_id, end_id = map(int, category_range.split('-'))
+            
+            # Фільтруємо ситуації за діапазоном ID
+            filtered_situations = [s for s in SITUATIONS if start_id <= s['id'] <= end_id]
+            
+            if filtered_situations:
+                # Вибираємо випадкову ситуацію з фільтрованого списку
+                selected_situation = random.choice(filtered_situations)
+                session['situation'] = selected_situation
+                session['current_situation_id'] = selected_situation["id"]
+                session['selected_category'] = category_range  # Зберігаємо обрану категорію
+            else:
+                # Якщо не знайдено ситуацій для цього діапазону, вибираємо будь-яку
+                selected_situation = random.choice(SITUATIONS)
+                session['situation'] = selected_situation
+                session['current_situation_id'] = selected_situation["id"]
+        except ValueError:
+            # Якщо неможливо парсити категорію, вибираємо випадкову ситуацію
+            selected_situation = random.choice(SITUATIONS)
+            session['situation'] = selected_situation
+            session['current_situation_id'] = selected_situation["id"]
+    else:
+        # Якщо категорія не вибрана - вибираємо будь-яку ситуацію
+        selected_situation = random.choice(SITUATIONS)
+        session['situation'] = selected_situation
+        session['current_situation_id'] = selected_situation["id"]
+
+    # Ініціалізуємо історію чату
     session['history'] = init_conversation()
-    # Якщо треба, скинь інші параметри
+
+    # Скидаємо інші параметри чату
     session["stage"] = 1
     session["question_count"] = 0
     session["model"] = None
     session["chat_active"] = True
     session["unique_questions"] = []
 
+    # Відповідь клієнту
     return jsonify({
         "reply": session['history'][1]['content'],
         "avatar": session["situation"].get("avatar", "clientpes.png")
@@ -874,7 +910,7 @@ def show_models():
 def generate_report(session_data):
     seller_name = session_data.get('seller_name') or 'Невідомий продавець'
     total_score = session_data.get('total_score', 0)
-    max_score = 30
+    max_score = 30  # або інше значення з вашого коду
     
     report_lines = [
         f"Звіт про діалог продавця: {seller_name}",
@@ -1410,7 +1446,7 @@ def chat():
                     objection_score = 0
                     reply = "Клієнт незадоволений консультацією."  # fallback
 
-                session['objection_score'] = objection_score
+                session_data['objection_score'] = objection_score
 
                 print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/5 балів)")
 

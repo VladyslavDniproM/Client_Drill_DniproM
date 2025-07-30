@@ -646,6 +646,17 @@ TOOL_MODELS = [
     "16S"
 ]
 
+CATEGORY_SITUATION_IDS = {
+    "screwdrivers": list(range(1, 5)),
+    "grinders": list(range(5, 10)),
+    "hammers": list(range(10, 19)),
+    "inverters": list(range(19, 25)),
+    "saws": list(range(25, 28)),
+    "trimmers": list(range(28, 31)),
+    "sprayers": list(range(31, 33)),
+    "exam": list(range(1, 37))
+}
+
 UNACCEPTABLE_BEHAVIOR_PROMPT = """
 Якщо користувач пише матюки та слова, які є недопустими при спілкуванні з клієнтами, 
 ти маєш право завершити діалог. Приклад відповіді:
@@ -678,12 +689,14 @@ def send_email_report(subject, body, to_email):
 @app.route('/authenticate', methods=['POST'])
 def authenticate():
     seller_name = request.json.get("seller_name", "").strip()
+    selected_category = request.json.get("category", "")
     if not seller_name:
         return jsonify({"error": "Будь ласка, введіть ваше ПІБ"}), 400
-    
+
     session['seller_name'] = seller_name
+    session['category'] = selected_category
     session.modified = True
-    return jsonify({"success": True, "message": f"Вітаємо, {seller_name}! Тепер ви можете розпочати діалог."})
+    return jsonify({"success": True, "message": f"Вітаємо, {seller_name}!"})
 
 def get_situation_from_session():
     # Отримуємо стиснуту ситуацію з сесії
@@ -712,10 +725,20 @@ def internal_error(error):
     return jsonify({"error": "Внутрішня помилка сервера"}), 500
 
 def init_conversation():
-    # Очистити всі попередні дані сесії
-    session.clear()
-    
-    selected_situation = random.choice(SITUATIONS)
+    saved_category = session.get('category', 'exam')  # зберігаємо до очистки
+    session.clear()  # чистимо сесію
+    session['category'] = saved_category  # відновлюємо категорію
+
+    # отримуємо список ID по категорії
+    category = session.get('category', 'exam')
+    allowed_ids = CATEGORY_SITUATION_IDS.get(category, list(range(1, 37)))
+    filtered_situations = [s for s in SITUATIONS if s['id'] in allowed_ids]
+    selected_situation = random.choice(filtered_situations)
+
+    # debug print після обчислень
+    print("[DEBUG] Обрана категорія:", category)
+    print("[DEBUG] Доступні ID:", [s["id"] for s in filtered_situations])
+
     session['situation'] = selected_situation
     
     # Компресуємо дані ситуації
@@ -875,10 +898,12 @@ def generate_report(session_data):
     seller_name = session_data.get('seller_name') or 'Невідомий продавець'
     total_score = session_data.get('total_score', 0)
     max_score = 30
+    selected_category = session_data.get('category', 'Не вказано')
     
     report_lines = [
         f"Звіт про діалог продавця: {seller_name}",
         f"Дата: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        f"Обрана категорія: {selected_category}",
         f"Оцінка: {total_score}/{max_score}",
         "\nДіалог:",
     ]
@@ -1440,11 +1465,11 @@ def chat():
                 print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/30")
 
                 if total_score >= max_score * 0.8:
-                    summary_label = "🟢 Чудова консультація"
+                    summary_label = "🟢 Чудова консультація."
                 elif total_score >= max_score * 0.6:
-                    summary_label = "🟡 Задовільна консультація"
+                    summary_label = "🟡 Задовільна консультація."
                 else:
-                    summary_label = "🔴 Незадовільна консультація"
+                    summary_label = "🔴 Незадовільна консультація."
 
                 full_reply = f"{reply}\n\n📊 Результат: {summary_label}"
 

@@ -711,11 +711,26 @@ def internal_error(error):
         generate_report(session)  # Зберегти звіт навіть при помилці
     return jsonify({"error": "Внутрішня помилка сервера"}), 500
 
-def init_conversation():
-    # Очистити всі попередні дані сесії
+def init_conversation(category=None):
     session.clear()
+
+    if category:
+        category_id_ranges = {
+            "шуруповерти": range(1, 4),
+            "кшм": range(5, 9),
+            "перфоратори": range(10, 18),
+            "інвертори": range(19, 24),
+            "пили": range(25, 27),
+            "тримери": range(28, 30),
+            "обприскувачі": range(31, 32),
+            "екзамен": range(1, 36)
+        }
+        ids = category_id_ranges.get(category.lower(), range(1, 36))
+        filtered = [s for s in SITUATIONS if s["id"] in ids]
+    else:
+        filtered = SITUATIONS
     
-    selected_situation = random.choice(SITUATIONS)
+    selected_situation = random.choice(filtered)
     session['situation'] = selected_situation
     
     # Компресуємо дані ситуації
@@ -825,50 +840,15 @@ def home():
 
 @app.route('/start_chat')
 def start_chat():
-    # Отримуємо категорію з параметрів запиту або сесії
-    category_range = request.args.get('category', session.get('selected_category', ''))
-    
-    if category_range:
-        try:
-            # Парсимо діапазон ID (наприклад, "1-4")
-            start_id, end_id = map(int, category_range.split('-'))
-            
-            # Фільтруємо ситуації за діапазоном ID
-            filtered_situations = [s for s in SITUATIONS if start_id <= s['id'] <= end_id]
-            
-            if filtered_situations:
-                # Вибираємо випадкову ситуацію з фільтрованого списку
-                selected_situation = random.choice(filtered_situations)
-                session['situation'] = selected_situation
-                session['current_situation_id'] = selected_situation["id"]
-                session['selected_category'] = category_range  # Зберігаємо обрану категорію
-            else:
-                # Якщо не знайдено ситуацій для цього діапазону, вибираємо будь-яку
-                selected_situation = random.choice(SITUATIONS)
-                session['situation'] = selected_situation
-                session['current_situation_id'] = selected_situation["id"]
-        except ValueError:
-            # Якщо неможливо парсити категорію, вибираємо випадкову ситуацію
-            selected_situation = random.choice(SITUATIONS)
-            session['situation'] = selected_situation
-            session['current_situation_id'] = selected_situation["id"]
-    else:
-        # Якщо категорія не вибрана - вибираємо будь-яку ситуацію
-        selected_situation = random.choice(SITUATIONS)
-        session['situation'] = selected_situation
-        session['current_situation_id'] = selected_situation["id"]
-
-    # Ініціалізуємо історію чату
-    session['history'] = init_conversation()
-
-    # Скидаємо інші параметри чату
+    category = request.args.get("category")
+    session['history'] = init_conversation(category)
+    # Якщо треба, скинь інші параметри
     session["stage"] = 1
     session["question_count"] = 0
     session["model"] = None
     session["chat_active"] = True
     session["unique_questions"] = []
 
-    # Відповідь клієнту
     return jsonify({
         "reply": session['history'][1]['content'],
         "avatar": session["situation"].get("avatar", "clientpes.png")
@@ -910,7 +890,7 @@ def show_models():
 def generate_report(session_data):
     seller_name = session_data.get('seller_name') or 'Невідомий продавець'
     total_score = session_data.get('total_score', 0)
-    max_score = 30  # або інше значення з вашого коду
+    max_score = 30
     
     report_lines = [
         f"Звіт про діалог продавця: {seller_name}",
@@ -1446,7 +1426,7 @@ def chat():
                     objection_score = 0
                     reply = "Клієнт незадоволений консультацією."  # fallback
 
-                session_data['objection_score'] = objection_score
+                session['objection_score'] = objection_score
 
                 print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/5 балів)")
 

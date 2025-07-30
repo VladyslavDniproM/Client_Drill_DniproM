@@ -722,7 +722,6 @@ h1 {
 </style>
 </head>
 <body>
-
 <div class="top-panel">
   <div class="progress-hint" id="progressHint">Зарахованих питань: 0 / 5</div>
   <div class="progress-container" id="progressContainer">
@@ -776,17 +775,40 @@ h1 {
 
     <div id="auth-modal" class="modal">
       <div class="modal-content">
-          <h2>Введіть ваші дані</h2>
-          <p>Будь ласка, вкажіть ваше ПІБ для початку роботи:</p>
-          <input 
-              type="text" 
-              id="seller-name-input" 
-              placeholder="ПІБ (наприклад, Іванов Іван Іванович)" 
-              style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;"
-          >
-          <button id="submit-name-btn" style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Продовжити</button>
+        <h2>Введіть ваші дані</h2>
+        <p>1. Оберіть категорію інструменту:</p>
+        <select 
+            id="tool-category" 
+            style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;"
+        >
+          <option value="">-- Оберіть категорію --</option>
+          <option value="screwdrivers">Шуруповерти</option>
+          <option value="grinders">КШМ (болгарки)</option>
+          <option value="hammers">Перфоратори</option>
+          <option value="inverters">Інвертори</option>
+          <option value="saws">Ланцюгові пили</option>
+          <option value="trimmers">Тримери</option>
+          <option value="sprayers">Обприскувачі</option>
+          <option value="exam">Екзамен (усі ситуації)</option>
+        </select>
+
+        <p>2. Вкажіть ваше ПІБ для початку консультації:</p>
+        <input 
+            type="text" 
+            id="seller-name-input" 
+            placeholder="ПІБ (наприклад, Іванов Іван Іванович)" 
+            style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;"
+        >
+        
+        <button 
+            id="submit-name-btn" 
+            style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;"
+        >
+          Продовжити
+        </button>
       </div>
-  </div>
+    </div>
+
 
     <!-- Контейнер для вибору моделей (залишився, але не показуємо) -->
     <div id="models-container" style="display:none;">
@@ -1550,62 +1572,77 @@ function updateStageIndicator(currentStage) {
 
    let sellerName = '';
 
-    async function authenticateSeller(name) {
-      try {
-          const response = await fetch("/authenticate", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ seller_name: name })
-          });
+async function authenticateSeller(name) {
+    try {
+        const category = document.getElementById("tool-category").value;
 
-          const data = await response.json();
-          return data;
-      } catch (error) {
-          console.error("Помилка автентифікації:", error);
-          return { error: "Помилка з'єднання" };
-      }
-  }
+        const response = await fetch("/authenticate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                seller_name: name,
+                category: category
+            })
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Помилка автентифікації:", error);
+        return { error: "Помилка з'єднання" };
+    }
+}
 
   // Показуємо модальне вікно для введення ПІБ при завантаженні
   document.addEventListener('DOMContentLoaded', () => {
-      const authModal = document.getElementById('auth-modal');
-      const rulesModal = document.getElementById('rules-modal');
-      
-      // Приховуємо вікно правил спочатку
-      rulesModal.style.display = 'none';
-      
-      // Показуємо вікно автентифікації
-      authModal.style.display = 'flex';
-      
-      // Обробник для кнопки "Продовжити"
-      document.getElementById('submit-name-btn').addEventListener('click', async () => {
-          const nameInput = document.getElementById('seller-name-input');
-          const name = nameInput.value.trim();
-          
-          if (!name) {
-              alert("Будь ласка, введіть ваше ПІБ");
-              return;
-          }
-          
-          // Блокуємо інтерфейс під час відправки
-          nameInput.disabled = true;
-          document.getElementById('submit-name-btn').disabled = true;
-          
-          // Відправляємо ПІБ на сервер
-          const result = await authenticateSeller(name);
-          
-          if (result.error) {
-              alert("Помилка: " + result.error);
-              nameInput.disabled = false;
-              document.getElementById('submit-name-btn').disabled = false;
-          } else {
-              // Зберігаємо ПІБ і переходимо до правил
-              sellerName = name;
-              authModal.style.display = 'none';
-              rulesModal.style.display = 'flex';
-          }
-      });
-  });
+    const authModal = document.getElementById('auth-modal');
+    const rulesModal = document.getElementById('rules-modal');
+    const nameInput = document.getElementById('seller-name-input');
+    const categoryInput = document.getElementById('tool-category');
+    const submitButton = document.getElementById('submit-name-btn');
+
+    // Приховуємо вікно правил спочатку
+    rulesModal.style.display = 'none';
+
+    // Показуємо вікно автентифікації
+    authModal.style.display = 'flex';
+
+    // Обробник для кнопки "Продовжити"
+    submitButton.addEventListener('click', async () => {
+        const name = nameInput.value.trim();
+        const category = categoryInput.value;
+
+        if (!category) {
+            alert("Будь ласка, оберіть категорію інструменту.");
+            categoryInput.focus();
+            return;
+        }
+
+        if (!name) {
+            alert("Будь ласка, введіть ваше ПІБ.");
+            nameInput.focus();
+            return;
+        }
+
+        // Блокуємо інтерфейс під час відправки
+        nameInput.disabled = true;
+        categoryInput.disabled = true;
+        submitButton.disabled = true;
+
+        const result = await authenticateSeller(name);
+
+        if (result.error) {
+            alert("Помилка: " + result.error);
+            nameInput.disabled = false;
+            categoryInput.disabled = false;
+            submitButton.disabled = false;
+        } else {
+            sellerName = name;
+            authModal.style.display = 'none';
+            rulesModal.style.display = 'flex';
+        }
+    });
+});
 
    async function sendMessage() {
     const message = userInput.value.trim();

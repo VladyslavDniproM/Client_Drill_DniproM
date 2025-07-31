@@ -412,169 +412,6 @@ h1 {
   color: #ff6600;
 }
 
-  @keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes modalFadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-
-  @keyframes contentScaleIn {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-
-  /* Основні стилі */
-  .model-detail-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    animation: modalFadeIn 0.3s ease-out forwards;
-  }
-
-  .model-detail-modal.closing {
-    animation: modalFadeOut 0.3s ease-out forwards;
-  }
-  
-  .model-detail-content {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    width: 90vw;
-    max-width: 400px; /* Фіксована ширина */
-    max-height: 90vh; /* Максимальна висота */
-    padding: 2vh 2vw;
-    position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    transform: scale(0.95);
-    opacity: 0;
-    animation: contentScaleIn 0.3s ease-out 0.1s forwards; /* Вимкнення прокрутки */
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .model-detail-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    overflow: hidden; /* Запобігаємо виходу контенту */
-  }
-  
-  .model-detail-image {
-    width: 50vmin; /* Комбінація vw і vh */
-    height: 50vmin;
-    max-width: 300px;
-    max-height: 300px;
-    object-fit: contain; 
-    padding: 0; /* Прибираємо відступи */
-    margin: 10px 0; /* Відступи зверху та знизу */
-  }
-  
-  .model-detail-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-    text-align: center;
-    margin: 0;
-    padding: 0 10px 8px;
-    border-bottom: 2px solid #ff6f00;
-    width: 100%;
-  }
-  
-  .model-detail-specs {
-    width: 100%;
-    padding: 0 10px;
-    margin: 5px 0;
-    flex-grow: 1;
-    overflow: hidden; /* Запобігаємо прокрутці */
-  }
-  
-  .model-detail-specs ul {
-    padding-left: 20px;
-    margin: 0;
-  }
-  
-  .model-detail-specs li {
-    margin-bottom: 8px;
-    line-height: 1.4;
-    padding: 4px 0;
-    font-size: 15px;
-  }
-
-  .model-detail-specs li:last-child {
-    margin-bottom: 0;
-  }
-
-  .model-detail-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-    z-index: 1;
-  }
-
-  /* Адаптація для мобільних */
-  @media (max-width: 500px) {
-    .model-detail-content {
-      width: 90%;
-      padding: 1.5vh 1.5vw;
-    }
-    
-    .model-detail-image {
-      width: 25vmin;
-      height: 25vmin;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.15); /* Менша тінь на мобільних */
-    }
-    
-    .model-detail-title {
-        font-size: calc(16px + 0.5vw);
-
-    }
-    
-    .model-detail-specs li {
-      font-size: calc(14px + 0.3vw);
-    }
-  }
-
-  @media (max-width: 300px) {
-    .model-detail-specs li {
-      font-size: calc(12px + 0.3vw);
-    }
-  }
-
-  /* Стилі для кнопки "Детальніше" */
-  .detail-view-btn {
-    background: #ff3c00;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-    font-size: 14px;
-    transition: all 0.3s;
-    width: auto;
-    align-self: center;
-  }
-  
-  .detail-view-btn:hover {
-    background: #ffc400;
-    transform: scale(1.05);
-  }
-
 /* === PROGRESS === */
 .progress-hint {
   color: #ffffff;
@@ -1010,9 +847,6 @@ h1 {
             <h2>Правила комунікації з ботом</h2>
             <ul>
                 <li>Вам необхідно проконсультувати клієнта згідно трьох етапів.</li>
-                <li>Для початку розмови - привітайтесь та поставте три початкових питання.</li>
-                <li>Після трьох запитань Вам відкриється можливість вибору інструменту.</li>
-                <li>Не пишіть модель інструменту вручну - натискайте на кнопку «Оберіть модель»</li>
                 <li>Назви етапів відображаються вгорі для відслідковування</li>
                 <li>Комунікація з ботом по часу - необмежена.</li>
                 <li>Тренер буде переглядати Ваші відповіді: спілкуйтесь адекватно</li>
@@ -1021,21 +855,6 @@ h1 {
             <button id="accept-rules-btn">Я ознайомився і готовий</button>
         </div>
     </div>
-
-<div id="modelDetailModal" class="model-detail-modal">
-  <div class="model-detail-content">
-    <span class="model-detail-close">&times;</span>
-    <div class="model-detail-main">
-      <img id="detailModelImage" class="model-detail-image" src="" alt="Модель">
-      <h2 id="detailModelTitle" class="model-detail-title"></h2>
-      <div class="model-detail-specs">
-        <ul id="detailModelSpecs">
-          <!-- Специфікації будуть додані динамічно -->
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
 
     <script>
         const chatContainer = document.getElementById("chat-container");
@@ -1633,111 +1452,55 @@ h1 {
               }
           };
 
-models.forEach((model) => {
-        const data = modelData[model];
-        if (!data) return;
+            modelsButtons.innerHTML = "";
 
-        const button = document.createElement("button");
-        button.className = "model-button";
+            models.forEach((model) => {
+                const data = modelData[model];
+                if (!data) return;
 
-        // Фото моделі
-        const img = document.createElement("img");
-        img.src = data.image;
-        img.alt = model;
-        img.style.width = "100px";
-        img.style.display = "block";
-        img.style.margin = "0 auto 10px";
-        button.appendChild(img);
+                const button = document.createElement("button");
+                button.className = "model-button";
 
-        // Назва моделі
-        const title = document.createElement("div");
-        title.textContent = model;
-        title.style.fontWeight = "bold";
-        title.style.textAlign = "center";
-        button.appendChild(title);
+                // Фото моделі
+                const img = document.createElement("img");
+                img.src = data.image;
+                img.alt = model;
+                img.style.width = "100px";
+                img.style.display = "block";
+                img.style.margin = "0 auto 10px";
+                button.appendChild(img);
 
-        // Кнопка "Детальніше"
-        const detailBtn = document.createElement("button");
-        detailBtn.className = "detail-view-btn";
-        detailBtn.textContent = "Детальніше";
-        detailBtn.onclick = (e) => {
-            e.stopPropagation(); // Запобігаємо спливанню події до батьківської кнопки
-            showModelDetail(model, data);
-        };
-        button.appendChild(detailBtn);
+                // Назва моделі
+                const title = document.createElement("div");
+                title.textContent = model;
+                title.style.fontWeight = "bold";
+                title.style.textAlign = "center";
+                button.appendChild(title);
 
-        // Обробник кліку на всю кнопку
-        button.onclick = () => {
-            addMessage(`Обираю модель: ${model}`, true);
-            sendModelChoice(model);
-        };
+                // Характеристики
+                const ul = document.createElement("ul");
+                ul.style.paddingLeft = "20px";
+                ul.style.marginTop = "8px";
+                data.specs.forEach((spec) => {
+                    const li = document.createElement("li");
+                    li.textContent = spec;
+                    ul.appendChild(li);
+                });
+                button.appendChild(ul);
 
-        modelsButtons.appendChild(button);
-    });
+                // Обробник кліку
+                button.onclick = () => {
+                    addMessage(`Обираю модель: ${model}`, true);
+                    sendModelChoice(model);
+                };
 
-    modelOverlay.style.display = "flex";
-    userInput.style.display = "none";
-    sendButton.style.display = "none";
-}
+                modelsButtons.appendChild(button);
+            });
 
-function showModelDetail(model, data) {
-    const modal = document.getElementById("modelDetailModal");
-    const image = document.getElementById("detailModelImage");
-    const title = document.getElementById("detailModelTitle");
-    const specsList = document.getElementById("detailModelSpecs");
-    
-    // Заповнюємо дані
-    image.src = data.image;
-    image.alt = model;
-    title.textContent = model;
-    
-    // Очищаємо попередні специфікації
-    specsList.innerHTML = "";
-    
-    // Додаємо всі характеристики
-    data.specs.forEach(spec => {
-        const li = document.createElement("li");
-        li.textContent = spec;
-        specsList.appendChild(li);
-    });
-    
-    // Показуємо модальне вікно з анімацією
-    modal.style.display = "flex";
-    modal.classList.remove("closing");
-    
-    // Додамо анімацію для зображення
-    image.style.opacity = "0";
-    image.style.transform = "translateY(10px)";
-    setTimeout(() => {
-      image.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
-      image.style.opacity = "1";
-      image.style.transform = "translateY(0)";
-    }, 100);
-  }
-
-  function closeModelDetail() {
-    const modal = document.getElementById("modelDetailModal");
-    modal.classList.add("closing");
-    
-    // Зачекаємо завершення анімації перед приховуванням
-    setTimeout(() => {
-      modal.style.display = "none";
-    }, 300);
-  }
-
-  // Додамо плавний hover-ефект для кнопки "Детальніше"
-  document.querySelectorAll('.detail-view-btn').forEach(btn => {
-    btn.addEventListener('mouseenter', () => {
-      btn.style.transform = "scale(1.05)";
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.transform = "scale(1)";
-    });
-  });
-
-function closeModelDetail() {
-    document.getElementById("modelDetailModal").style.display = "none";
-}
+            modelOverlay.style.display = "flex";
+            userInput.style.display = "none";
+            sendButton.style.display = "none";
+        }
 
         function hideModelButtons() {
             modelOverlay.style.display = "none";
@@ -2017,14 +1780,6 @@ async function authenticateSeller(name) {
         console.error("Помилка при старті чату:", err);
         addMessage("Помилка при старті чату. Спробуйте ще раз.", false);
       }
-    });
-
-    document.querySelector(".model-detail-close").addEventListener("click", closeModelDetail);
-
-    document.getElementById("modelDetailModal").addEventListener("click", function(e) {
-        if (e.target === this) {
-            closeModelDetail();
-        }
     });
 
     window.addEventListener('DOMContentLoaded', () => {

@@ -1680,8 +1680,16 @@ models.forEach((model) => {
     sendButton.style.display = "none";
 }
 
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
 function showModelDetail(model, data) {
     const modal = document.getElementById("modelDetailModal");
+      if (isIOS) {
+        // Спеціальна логіка для iOS
+        modal.style.animation = 'none';
+        modal.offsetHeight; /* Trigger reflow */
+        modal.style.animation = null; 
+      }
     const image = document.getElementById("detailModelImage");
     const title = document.getElementById("detailModelTitle");
     const specsList = document.getElementById("detailModelSpecs");

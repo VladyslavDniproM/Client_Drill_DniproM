@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Тест «Віртуальний клієнт»</title>
-    <link rel="icon" type="image/png" href="/static/ikonka.png">
+    <link rel="icon" type="image/png" href="/static/main/ikonka.png">
     <style>
 /* === RESET === */
 *, *::before, *::after {
@@ -19,12 +19,12 @@ html, body {
 
 /* === BASE === */
 body {
-background-image: url("/static/fon.jpg");
+background-image: url("/static/main/fon.jpg");
   background-image: linear-gradient(
         rgba(0, 0, 0, 0.250), 
         rgba(0, 0, 0, 0.800)
       ),
-      url("/static/fon.jpg");
+      url("/static/main/fon.jpg");
   background-size: cover;         /* або contain — залежно від бажаного ефекту */
   background-repeat: no-repeat;
   background-position: center;
@@ -695,12 +695,12 @@ h1 {
 /* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
 @media (max-width: 900px) {
     html, body {
-    background-image: url("/static/fon.jpg");
+    background-image: url("/static/main/fon.jpg");
     background-image: linear-gradient(
         rgba(0, 0, 0, 0.5), 
         rgba(0, 0, 0, 0.5)
       ),
-      url("/static/fon.jpg");
+      url("/static/main/fon.jpg");
     background-size: cover;         /* або contain — залежно від бажаного ефекту */
     background-repeat: no-repeat;
     background-position: center;
@@ -1182,7 +1182,7 @@ h1 {
         function showModelButtons(models, promptText = "Оберіть модель:", attemptsLeft = 1) {
           const modelData = {
               "CD-218Q": {
-                  image: "/static/218Q.png",
+                  image: "/static/instruments/218Q.png",
                   specs: [
                       "24 Нм",
                       "Швидкоз'ємний патрон",
@@ -1191,7 +1191,7 @@ h1 {
                   ],
               },
               "CD-12QX": {
-                  image: "/static/CD12QX.png",
+                  image: "/static/instruments/CD12QX.png",
                   specs: [
                       "25 Нм",
                       "Повний комплект",
@@ -1200,7 +1200,7 @@ h1 {
                   ],
               },
               "CD-201HBC": {
-                  image: "/static/201HBC.png",
+                  image: "/static/instruments/201HBC.png",
                   specs: [
                       "45 Нм",
                       "Безщітковий двигун",
@@ -1209,7 +1209,7 @@ h1 {
                   ],
               },
               "CD-200BCULTRA": {
-                  image: "/static/200BCULTRA.png",
+                  image: "/static/instruments/200BCULTRA.png",
                   specs: [
                       "60 Нм",
                       "Металевий патрон",
@@ -1218,7 +1218,7 @@ h1 {
                   ],
               },
               "CD-200BCCOMPACT": {
-                  image: "/static/CD-200BCCOMPACT.png",
+                  image: "/static/instruments/CD-200BCCOMPACT.png",
                   specs: [
                       "40 Нм",
                       "Металевий патрон",
@@ -1227,7 +1227,7 @@ h1 {
                   ],
               },
               "CD-12CX": {
-                  image: "/static/CD12CX.png",
+                  image: "/static/instruments/CD12CX.png",
                   specs: [
                       "30 Нм",
                       "Компактний та недорогий",
@@ -1236,7 +1236,7 @@ h1 {
                   ],
               },
               "CD-12BC": {
-                  image: "/static/CD-12BC.png",
+                  image: "/static/instruments/CD-12BC.png",
                   specs: [
                       "40 Нм",
                       "Металевий патрон",
@@ -1245,7 +1245,7 @@ h1 {
                   ],
               },
               "GS-140SE": {
-                  image: "/static/gs140se.png",
+                  image: "/static/instruments/gs140se.png",
                   specs: [
                       "1400 Вт",
                       "125 мм діаметр диску",
@@ -1254,7 +1254,7 @@ h1 {
                   ],
               },
               "GL-160SE": {
-                  image: "/static/gl160se.png",
+                  image: "/static/instruments/gl160se.png",
                   specs: [
                       "1600 Вт",
                       "150 мм діаметр диску",
@@ -1263,7 +1263,7 @@ h1 {
                   ],
               },
               "GS-98": {
-                  image: "/static/gs98.png",
+                  image: "/static/instruments/gs98.png",
                   specs: [
                       "980 Вт",
                       "125 мм діаметр диску",
@@ -1272,7 +1272,7 @@ h1 {
                   ],
               },
               "GS-100S": {
-                  image: "/static/gs100s.png",
+                  image: "/static/instruments/gs100s.png",
                   specs: [
                       "1000 Вт",
                       "125 мм діаметр диску",
@@ -1281,7 +1281,7 @@ h1 {
                   ],
               },
               "GL-145S": {
-                  image: "/static/GL145S.png",
+                  image: "/static/instruments/GL145S.png",
                   specs: [
                       "1450 Вт",
                       "125 мм діаметр диску",
@@ -1290,7 +1290,7 @@ h1 {
                   ],
               },
               "GS-120S": {
-                  image: "/static/GS120S.png",
+                  image: "/static/instruments/GS120S.png",
                   specs: [
                       "1200 Вт",
                       "125 мм діаметр диску",
@@ -1299,7 +1299,7 @@ h1 {
                   ],
               },
               "GL-240": {
-                  image: "/static/GL240.png",
+                  image: "/static/instruments/GL240.png",
                   specs: [
                       "2400 Вт",
                       "230 мм діаметр диску",
@@ -1308,7 +1308,7 @@ h1 {
                   ],
               },
               "CG-12BC": {
-                  image: "/static/cg12bc.png",
+                  image: "/static/instruments/cg12bc.png",
                   specs: [
                       "76 мм діаметр диску",
                       "12V болгарка",
@@ -1317,7 +1317,7 @@ h1 {
                   ],
               },
               "GL-125S": {
-                  image: "/static/gl125s.png",
+                  image: "/static/instruments/gl125s.png",
                   specs: [
                       "125 мм діаметр диску",
                       "1250 Вт",
@@ -1326,7 +1326,7 @@ h1 {
                   ],
               },
               "DGA-201": {
-                  image: "/static/dga201.png",
+                  image: "/static/instruments/dga201.png",
                   specs: [
                       "125 мм діаметр диску",
                       "20V модель КШМ",
@@ -1335,7 +1335,7 @@ h1 {
                   ],
               },
               "DHR-200": {
-                  image: "/static/DHR200.png",
+                  image: "/static/instruments/DHR200.png",
                   specs: [
                       "20V перфоратор",
                       "1.5 Дж сила удару",
@@ -1344,7 +1344,7 @@ h1 {
                   ],
               },
               "DHR-201BC": {
-                  image: "/static/DHR201BC.png",
+                  image: "/static/instruments/DHR201BC.png",
                   specs: [
                       "20V перфоратор",
                       "1.7 Дж сила удару",
@@ -1353,7 +1353,7 @@ h1 {
                   ],
               },
               "DHR-202BC": {
-                  image: "/static/DHR202BC.png",
+                  image: "/static/instruments/DHR202BC.png",
                   specs: [
                       "20V перфоратор",
                       "2.5 Дж сила удару",
@@ -1362,7 +1362,7 @@ h1 {
                   ],
               },
               "RH-100": {
-                  image: "/static/RH100.png",
+                  image: "/static/instruments/RH100.png",
                   specs: [
                       "Прямий перфоратор",
                       "2.6 Дж сила удару",
@@ -1371,7 +1371,7 @@ h1 {
                   ],
               },
               "RH-12Q": {
-                  image: "/static/RH12Q.png",
+                  image: "/static/instruments/RH12Q.png",
                   specs: [
                       "Прямий перфоратор",
                       "2.8 Дж сила удару",
@@ -1380,7 +1380,7 @@ h1 {
                   ],
               },
               "RH-16": {
-                  image: "/static/RH16.png",
+                  image: "/static/instruments/RH16.png",
                   specs: [
                       "Найсильніший прямий перфоратор",
                       "3.4 Дж сила удару",
@@ -1389,7 +1389,7 @@ h1 {
                   ],
               },
               "BH-14S": {
-                  image: "/static/BH14S.png",
+                  image: "/static/instruments/BH14S.png",
                   specs: [
                       "Універсальний бочковий перфоратор",
                       "4 Дж сила удару",
@@ -1398,7 +1398,7 @@ h1 {
                   ],
               },
               "BH-20": {
-                  image: "/static/BH20.png",
+                  image: "/static/instruments/BH20.png",
                   specs: [
                       "Бочковий перфоратор",
                       "5.5 Дж сила удару",
@@ -1407,7 +1407,7 @@ h1 {
                   ],
               },
               "BH-30": {
-                  image: "/static/BH30.png",
+                  image: "/static/instruments/BH30.png",
                   specs: [
                       "Найбільший бочковий перфоратор",
                       "9 Дж сила удару",
@@ -1416,7 +1416,7 @@ h1 {
                   ],
               },
               "SAB-14DMINI": {
-                  image: "/static/SAB14DMINI.png",
+                  image: "/static/instruments/SAB14DMINI.png",
                   specs: [
                       "Найменший зварювальний інвертор",
                       "Має функцію HOT START",
@@ -1425,7 +1425,7 @@ h1 {
                   ],
               },
                 "SAB-15DX": {
-                  image: "/static/SAB15DX.png",
+                  image: "/static/instruments/SAB15DX.png",
                   specs: [
                       "Універсальний інвертор",
                       "Має усі функції для зручності зварювання",
@@ -1434,7 +1434,7 @@ h1 {
                   ],
               },
                 "M-16PW": {
-                  image: "/static/M16PW.png",
+                  image: "/static/instruments/M16PW.png",
                   specs: [
                       "Найбільш захищений інвертор",
                       "Може працювати від 140 Вольт напруги",
@@ -1443,7 +1443,7 @@ h1 {
                   ],
               },
                 "SAB-17DX": {
-                  image: "/static/SAB17DX.png",
+                  image: "/static/instruments/SAB17DX.png",
                   specs: [
                       "Професійний інвертор",
                       "Має усі функції для зручності зварювання",
@@ -1452,7 +1452,7 @@ h1 {
                   ],
               },
                 "M-18D": {
-                  image: "/static/M18D.png",
+                  image: "/static/instruments/M18D.png",
                   specs: [
                       "Надійний інвертор",
                       "5 років гарантії на інструмент",
@@ -1461,7 +1461,7 @@ h1 {
                   ],
               },
                 "M-20D": {
-                  image: "/static/M20D.png",
+                  image: "/static/instruments/M20D.png",
                   specs: [
                       "Найпотужніший інвертор",
                       "Широкий дисплей із зручним керуванням",
@@ -1470,7 +1470,7 @@ h1 {
                   ],
               },
                   "DSG-25H": {
-                  image: "/static/25H.png",
+                  image: "/static/instruments/25H.png",
                   specs: [
                       "Найменша бензопила",
                       "Підійде для розпилу до 25 см деревини",
@@ -1479,7 +1479,7 @@ h1 {
                   ],
               },
                   "NSG-45H": {
-                  image: "/static/45H.png",
+                  image: "/static/instruments/45H.png",
                   specs: [
                       "Найпопулярніша бензопила",
                       "Підійде для розпилу до 40 см деревини",
@@ -1488,7 +1488,7 @@ h1 {
                   ],
               },
                   "NSG-52H": {
-                  image: "/static/52H.png",
+                  image: "/static/instruments/52H.png",
                   specs: [
                       "Покращена бензопила",
                       "Підійде для розпилу до 45 см деревини",
@@ -1497,7 +1497,7 @@ h1 {
                   ],
               },
                   "NSG-62H": {
-                  image: "/static/62H.png",
+                  image: "/static/instruments/62H.png",
                   specs: [
                       "Найбільша бензопила",
                       "Підійде для розпилу до 45 см деревини",
@@ -1506,7 +1506,7 @@ h1 {
                   ],
               },
                   "DSE-15T": {
-                  image: "/static/15T.png",
+                  image: "/static/instruments/15T.png",
                   specs: [
                       "Найменша електропила",
                       "Підійде для розпилу до 30 см деревини",
@@ -1515,7 +1515,7 @@ h1 {
                   ],
               },
                   "DSE-22S": {
-                  image: "/static/22S.png",
+                  image: "/static/instruments/22S.png",
                   specs: [
                       "Середня електропила",
                       "Підійде для розпилу до 35 см деревини",
@@ -1524,7 +1524,7 @@ h1 {
                   ],
               },
                   "DSE-24DS": {
-                  image: "/static/24DS.png",
+                  image: "/static/instruments/24DS.png",
                   specs: [
                       "Найпотужніша електропила",
                       "Підійде для розпилу до 35 см деревини",
@@ -1533,7 +1533,7 @@ h1 {
                   ],
               },
                   "DCS-201BCDUAL": {
-                  image: "/static/201BCDUAL.png",
+                  image: "/static/instruments/201BCDUAL.png",
                   specs: [
                       "Професійна 40V акумуляторна пила",
                       "Підійде для розпилу до 35 см деревини",
@@ -1542,7 +1542,7 @@ h1 {
                   ],
               },
                   "CS-12": {
-                  image: "/static/CS12.png",
+                  image: "/static/instruments/CS12.png",
                   specs: [
                       "Найменша 12V пила-гілкоріз",
                       "Працює з гілками до 10 мм в діаметрі",
@@ -1551,7 +1551,7 @@ h1 {
                   ],
               },
                   "DNIPRO-M-43": {
-                  image: "/static/M43.png",
+                  image: "/static/instruments/M43.png",
                   specs: [
                       "Найпопулярніша мотокоса",
                       "Ідеальний для 15 соток",
@@ -1560,7 +1560,7 @@ h1 {
                   ],
               },
                   "33M": {
-                  image: "/static/33M.png",
+                  image: "/static/instruments/33M.png",
                   specs: [
                       "Мультиінструмент",
                       "Ідеальний для 5-10 соток",
@@ -1569,7 +1569,7 @@ h1 {
                   ],
               },
                   "DNIPRO-M-110": {
-                  image: "/static/110.png",
+                  image: "/static/instruments/110.png",
                   specs: [
                       "Зручна та легка",
                       "Ідеальний для 5 соток",
@@ -1578,7 +1578,7 @@ h1 {
                   ],
               },
                   "DNIPRO-M-150S": {
-                  image: "/static/150S.png",
+                  image: "/static/instruments/150S.png",
                   specs: [
                       "Зручна та легка",
                       "Ідеальний для 5 соток",
@@ -1587,7 +1587,7 @@ h1 {
                   ],
               },
                   "30L": {
-                  image: "/static/30L.png",
+                  image: "/static/instruments/30L.png",
                   specs: [
                       "Найлегший тример, 300 Вт",
                       "Ідеальний для 2 соток",
@@ -1596,7 +1596,7 @@ h1 {
                   ],
               },
                   "DTC-200BCDUAL": {
-                  image: "/static/200BCDUAL.png",
+                  image: "/static/instruments/200BCDUAL.png",
                   specs: [
                       "Професійний 40V акумуляторний тример",
                       "Підійде для косіння до 5 соток",
@@ -1604,8 +1604,17 @@ h1 {
                       "Працює від двох акумуляторів",
                   ],
               },
+                  "DTC-201": {
+                  image: "/static/instruments/DTC201.png",
+                  specs: [
+                      "Максимально мобільний тример",
+                      "Підійде для косіння до 2 соток",
+                      "Телескопічна та поворотна штанга",
+                      "Працює струною та пластиковими ножами",
+                  ],
+              },
                   "5-H": {
-                  image: "/static/5H.png",
+                  image: "/static/instruments/5H.png",
                   specs: [
                       "Зручний 5 л обприскувач",
                       "Літій-іонний акумулятор",
@@ -1614,7 +1623,7 @@ h1 {
                   ],
               },
                   "12S": {
-                  image: "/static/12S.png",
+                  image: "/static/instruments/12S.png",
                   specs: [
                       "Середній 12 л обприскувач",
                       "Свинцево-кислотний акумулятор",
@@ -1623,7 +1632,7 @@ h1 {
                   ],
               },
                   "16S": {
-                  image: "/static/16S.png",
+                  image: "/static/instruments/16S.png",
                   specs: [
                       "Найбільший 16 л обприскувач",
                       "Свинцево-кислотний акумулятор",
@@ -1680,8 +1689,16 @@ models.forEach((model) => {
     sendButton.style.display = "none";
 }
 
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
 function showModelDetail(model, data) {
     const modal = document.getElementById("modelDetailModal");
+      if (isIOS) {
+        // Спеціальна логіка для iOS
+        modal.style.animation = 'none';
+        modal.offsetHeight; /* Trigger reflow */
+        modal.style.animation = null; 
+      }
     const image = document.getElementById("detailModelImage");
     const title = document.getElementById("detailModelTitle");
     const specsList = document.getElementById("detailModelSpecs");
@@ -2007,7 +2024,7 @@ async function authenticateSeller(name) {
       const clientAvatar = document.getElementById("client-avatar");
 
       if (data.avatar) {
-        clientAvatar.src = `/static/${data.avatar}`;
+        clientAvatar.src = `/static/avatars/${data.avatar}`;
       }
       clientCharacter.style.display = "block";
       {

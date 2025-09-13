@@ -2140,15 +2140,20 @@ async function sendMessage() {
 
 let mediaRecorder;
 let audioChunks = [];
+let mimeType = "audio/webm";
 
-const recordBtn = document.getElementById("record-btn");
-const recordingIndicator = document.getElementById("recording-indicator");
+// Для Safari → використовуємо mp4/m4a
+if (MediaRecorder.isTypeSupported("audio/mp4")) {
+  mimeType = "audio/mp4";
+} else if (MediaRecorder.isTypeSupported("audio/m4a")) {
+  mimeType = "audio/m4a";
+}
 
 recordBtn.addEventListener("click", async () => {
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder = new MediaRecorder(stream, { mimeType });
 
       mediaRecorder.ondataavailable = event => {
         audioChunks.push(event.data);
@@ -2158,11 +2163,13 @@ recordBtn.addEventListener("click", async () => {
         recordingIndicator.style.display = "none";
         mediaRecorder.stream.getTracks().forEach(track => track.stop());
 
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        // Використовуємо правильний тип і розширення
+        const audioBlob = new Blob(audioChunks, { type: mimeType });
         audioChunks = [];
 
+        const ext = mimeType.includes("mp4") ? "mp4" : "webm";
         const formData = new FormData();
-        formData.append("file", audioBlob, "voice.webm");
+        formData.append("file", audioBlob, `voice.${ext}`);
 
         try {
           const response = await fetch("/speech-to-text", {
@@ -2170,24 +2177,17 @@ recordBtn.addEventListener("click", async () => {
             body: formData
           });
 
-          if (!response.ok) {
-            addMessage("❌ Помилка сервера розпізнавання", false);
-            return;
-          }
-
           const data = await response.json();
-          if (data.error) {
-            addMessage("❌ " + data.error, false);
-          } else if (data.text) {
-            userInput.value = data.text;   // тільки вставляємо у поле
-            sendMessage();                 // і відправляємо (без дублювання addMessage)
+          if (data.text) {
+            userInput.value = data.text;
+            sendMessage();
           } else {
-            addMessage("❌ Відповідь без тексту", false);
+            addMessage("❌ Помилка розпізнавання", false);
           }
         } catch (err) {
           console.error("STT fetch error:", err);
           addMessage("❌ Помилка відправки голосу", false);
-              }
+        }
       };
 
       mediaRecorder.start();

@@ -2086,8 +2086,16 @@ def speech_to_text():
     audio_file = request.files["file"]
 
     try:
-        # зберігаємо як webm
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as tmp:
+        # Визначаємо розширення по імені файлу
+        ext = ".webm"
+        filename = audio_file.filename.lower()
+        if filename.endswith(".m4a") or filename.endswith(".mp4"):
+            ext = ".mp4"
+        elif filename.endswith(".wav"):
+            ext = ".wav"
+
+        # Тимчасово зберігаємо у правильному форматі
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
             audio_file.save(tmp.name)
             with open(tmp.name, "rb") as f:
                 transcript = client.audio.transcriptions.create(
@@ -2099,6 +2107,7 @@ def speech_to_text():
 
         text = transcript.text.strip()
         return jsonify({"text": text})
+
     except Exception as e:
         print(f"[STT ERROR] {str(e)}")
         return jsonify({"error": "Помилка розпізнавання"}), 500

@@ -2149,7 +2149,7 @@ recordBtn.addEventListener("click", async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Визначаємо підтримуваний формат
+      // ✅ Визначаємо підтримуваний формат
       let mimeType = "audio/webm";
       if (MediaRecorder.isTypeSupported("audio/mp4")) {
         mimeType = "audio/mp4";
@@ -2157,6 +2157,7 @@ recordBtn.addEventListener("click", async () => {
         mimeType = "audio/m4a";
       }
 
+      // ✅ Передаємо mimeType у MediaRecorder
       mediaRecorder = new MediaRecorder(stream, { mimeType });
 
       mediaRecorder.ondataavailable = event => {
@@ -2167,6 +2168,7 @@ recordBtn.addEventListener("click", async () => {
         recordingIndicator.style.display = "none";
         mediaRecorder.stream.getTracks().forEach(track => track.stop());
 
+        // ✅ Використовуємо правильний MIME і розширення
         const audioBlob = new Blob(audioChunks, { type: mimeType });
         audioChunks = [];
 
@@ -2212,6 +2214,7 @@ recordBtn.addEventListener("click", async () => {
     recordBtn.textContent = "🎤";
   }
 });
+
 
     // Стартове повідомлення при завантаженні
     document.getElementById('accept-rules-btn').addEventListener('click', async () => {

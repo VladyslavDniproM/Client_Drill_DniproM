@@ -1859,6 +1859,7 @@ async function sendModelChoice(model) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message: `Обираю модель: ${model}`, seller_name: sellerName }),
+            credentials: "include"
         });
 
         const data = await response.json();
@@ -1943,7 +1944,8 @@ async function authenticateSeller(name) {
             body: JSON.stringify({
                 seller_name: name,
                 category: category
-            })
+            }),
+            credentials: "include"
         });
 
         const data = await response.json();
@@ -2050,7 +2052,8 @@ async function sendMessage() {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ message, seller_name: sellerName })
+            body: JSON.stringify({ message, seller_name: sellerName }),
+            credentials: "include"
         });
 
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);

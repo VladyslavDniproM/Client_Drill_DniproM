@@ -2104,8 +2104,7 @@ def speech_to_text():
             with open(tmp.name, "rb") as f:
                 transcript = client.audio.transcriptions.create(
                     model="gpt-4o-mini-transcribe",
-                    file=f,
-                    prompt="Користувач говорить лише українською мовою"
+                    file=f
                 )
         os.unlink(tmp.name)
 

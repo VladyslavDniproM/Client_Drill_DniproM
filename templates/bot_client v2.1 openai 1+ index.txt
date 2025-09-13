@@ -200,27 +200,6 @@ h1 {
   cursor: not-allowed;
 }
 
-#record-btn {
-  background-color: #ff3c00;
-  color: white;
-  border: none;
-  padding: 0 clamp(10px, 3vw, 20px);
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: clamp(14px, 3vw, 16px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  min-width: 60px;
-  height: 44px;
-}
-
-.record-btn:hover {
-  background-color: #ffd900;
-}
-.record-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
 /* === STAGE INDICATOR === */
 .stage-indicator-single {
   display: flex;
@@ -238,12 +217,6 @@ h1 {
   font-size: 14px;
   color: white;
   transition: all 0.3s ease;
-}
-
-.recording-indicator {
-  color: red;
-  font-weight: bold;
-  margin-top: 10px;
 }
 
 .stage-indicator-single .stage {
@@ -851,12 +824,6 @@ h1 {
     font-size: 14px;
   }
 
-  #record-btn {
-    width: 100%;
-    height: 42px;
-    font-size: 14px;
-  }
-
   #client-character img {
     max-height: 280px;
   }
@@ -938,10 +905,6 @@ h1 {
     font-size: 15px;
   }
 
-  #record-btn {
-    font-size: 15px;
-  }
-
   .stage-indicator-single {
     font-size: 13px;
   }
@@ -981,13 +944,8 @@ h1 {
             autocomplete="off"
         />
         <button id="send-button">Надіслати</button>
-        <button id="record-btn">🎤</button>
       </div>
     </div>
-
-        <div id="recording-indicator" class="recording-indicator" style="display:none;">
-          🎙 Йде запис...
-        </div>
 
     <div id="client-character" style="
       display: none;
@@ -1755,7 +1713,6 @@ models.forEach((model) => {
 
         userInput.disabled = true;
         sendButton.disabled = true;
-        recordBtn.disabled = true;
         userInput.placeholder = "Оберіть модель зі списку..."; // Додатковий індикатор
 
         modelsButtons.appendChild(button);
@@ -1850,7 +1807,6 @@ async function sendModelChoice(model) {
 
     userInput.disabled = false;
     sendButton.disabled = false;
-    recordBtn.disabled = false; 
     userInput.placeholder = "Напишіть ваше повідомлення..."; // Повертаємо стандартний текст
     userInput.focus(); // Опціонально - фокусуємось на полі вводу
 
@@ -2020,8 +1976,6 @@ function playVoice(text) {
   .catch(err => console.error("TTS error:", err));
 }
 
-let isCooldown = false;
-
 async function sendMessage() {
     const message = userInput.value.trim();
     if (!sellerName) {
@@ -2036,16 +1990,6 @@ async function sendMessage() {
     showTypingIndicator();
     statusElement.textContent = "Клієнт набирає відповідь...";
 
-    isCooldown = true;
-    userInput.disabled = true;
-    sendButton.disabled = true;
-    setTimeout(() => {
-        isCooldown = false;
-        userInput.disabled = false;
-        sendButton.disabled = false;
-        statusElement.textContent = "";
-    }, 4000);
-
     try {
         const response = await fetch('/chat', {
             method: 'POST',
@@ -2054,6 +1998,7 @@ async function sendMessage() {
         });
 
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
         const data = await response.json();
 
         // Обробка відповіді
@@ -2134,71 +2079,6 @@ async function sendMessage() {
         hideTypingIndicator();
     }
 }
-
-let mediaRecorder;
-let audioChunks = [];
-
-const recordBtn = document.getElementById("record-btn");
-const recordingIndicator = document.getElementById("recording-indicator");
-
-recordBtn.addEventListener("click", async () => {
-  if (!mediaRecorder || mediaRecorder.state === "inactive") {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-
-      mediaRecorder.ondataavailable = event => {
-        audioChunks.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        recordingIndicator.style.display = "none";
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
-
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-        audioChunks = [];
-
-        const formData = new FormData();
-        formData.append("file", audioBlob, "voice.webm");
-
-        try {
-          const response = await fetch("/speech-to-text", {
-            method: "POST",
-            body: formData
-          });
-
-          if (!response.ok) {
-            addMessage("❌ Помилка сервера розпізнавання", false);
-            return;
-          }
-
-          const data = await response.json();
-          if (data.error) {
-            addMessage("❌ " + data.error, false);
-          } else if (data.text) {
-            userInput.value = data.text;   // тільки вставляємо у поле
-            sendMessage();                 // і відправляємо (без дублювання addMessage)
-          } else {
-            addMessage("❌ Відповідь без тексту", false);
-          }
-        } catch (err) {
-          console.error("STT fetch error:", err);
-          addMessage("❌ Помилка відправки голосу", false);
-              }
-      };
-
-      mediaRecorder.start();
-      recordBtn.textContent = "⏹ Зупинити";
-      recordingIndicator.style.display = "block";
-    } catch (err) {
-      console.error("Mic error:", err);
-      addMessage("❌ Немає доступу до мікрофона", false);
-    }
-  } else {
-    mediaRecorder.stop();
-    recordBtn.textContent = "🎤";
-  }
-});
 
     // Стартове повідомлення при завантаженні
     document.getElementById('accept-rules-btn').addEventListener('click', async () => {

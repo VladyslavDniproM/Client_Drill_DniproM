@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 from flask import Flask, render_template, request, jsonify, session
 from dotenv import load_dotenv
 from datetime import datetime
@@ -8,6 +8,7 @@ import re
 import zlib
 import base64
 import smtplib
+import tempfile
 from email.mime.text import MIMEText
 from flask_session import Session
 
@@ -16,15 +17,16 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", os.urandom(24))
 
-app.config['SESSION_TYPE'] = 'filesystem'  # Зберігання сесії у файловій системі
-app.config['SESSION_PERMANENT'] = False  # Якщо False, сесія завершується, коли користувач закриває браузер
-app.config['SESSION_USE_SIGNER'] = True  # Використовуємо підпис для сесій
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Шлях для зберігання сесій
-app.config['SESSION_FILE_THRESHOLD'] = 100  # Макс. кількість файлів сесій
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+app.config['SESSION_FILE_THRESHOLD'] = 100
 
 Session(app)
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI()
+
 MODEL_ENGINE = "gpt-3.5-turbo"
 
 SITUATIONS = [
@@ -1226,6 +1228,11 @@ CATEGORY_OBJECTIONS = {
     ]
 }
 
+FEMALE_VOICES = ["nova", "shimmer", "fable", "verse", "coral"]
+MALE_VOICES = ["alloy", "ash", "ballad", "echo", "onyx", "sage"]
+
+FEMALE_IDS = {3, 8, 20, 34, 35, 46, 47, 49, 58, 59, 61}
+
 def is_question(message):
     return "?" in message or message.strip().lower().startswith((
         "прац", "як", "чому", "чи", "який", "яка", "яке", "роб",
@@ -1303,6 +1310,10 @@ def init_conversation():
     print("[DEBUG] Доступні ID:", [s["id"] for s in filtered_situations])
 
     session['situation'] = selected_situation
+    session['current_situation_id'] = selected_situation["id"]
+
+    session['voice'] = assign_voice_for_situation(selected_situation["id"])
+    print("[DEBUG] Голос для цієї ситуації:", session['voice'])
     
     # Компресуємо дані ситуації
     situation_str = str(selected_situation)  # Перетворюємо в рядок
@@ -1398,17 +1409,16 @@ def evaluate_question(question, situation_description):
 """
     
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=2,
         )
-        score = response.choices[0].message["content"].strip()
-        # Додатковий парсинг для безпеки
+        score = response.choices[0].message.content.strip()
         if score.isdigit():
-            return min(max(int(score), 0), 2)  # Гарантуємо діапазон 0-2
-        return 0  # Якщо відповідь не цифра
+            return min(max(int(score), 0), 2)
+        return 0
     except Exception as e:
         print(f"Помилка при оцінці питання: {str(e)}")
         return 0
@@ -1479,7 +1489,7 @@ def show_models():
 def generate_report(session_data):
     seller_name = session_data.get('seller_name') or 'Невідомий продавець'
     total_score = session_data.get('total_score', 0)
-    max_score = 30
+    max_score = 40
     selected_category = session_data.get('category', 'Не вказано')
     
     report_lines = [
@@ -1633,13 +1643,13 @@ def chat():
         })
 
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=session["history"][-20:],
                 temperature=0.5,
                 max_tokens=150
             )
-            answer = response.choices[0].message["content"].strip()
+            answer = response.choices[0].message.content.strip()
 
             session["history"].append({"role": "assistant", "content": answer})
             session['conversation_log'].append({
@@ -1674,7 +1684,7 @@ def chat():
                 "reply": "Ця модель не підходить для моїх потреб. Давайте продовжимо.",
                 "chat_ended": False,
                 "stage": 3,
-                "model_chosen": False  # Додайте цей прапорець
+                "model_chosen": False
             })
 
         user_model = matched_models[0].upper()
@@ -1690,8 +1700,8 @@ def chat():
 
         # Оцінка моделі
         if user_model in correct_models:
-            session["model_score"] = 4
-            print(f"[SCORE] Правильна модель: +4 бали")
+            session["model_score"] = 10  # Максимум 10 балів за правильний вибір
+            print(f"[SCORE] Правильна модель: +10 балів")
         else:
             session["model_score"] = 0
             print(f"[SCORE] Неправильна модель: 0 балів")
@@ -1708,19 +1718,19 @@ def chat():
 
         # Генерація уточнюючих питань
         prompt = f"""Ти клієнт, який обрав інструмент {user_model} для {session['situation']['description']}.\n
-        Згенеруй 5 питань про **характеристики**, **зовнішню будову**, **функції цього інструменту** , рекомендації по роботі та додаткові витратні матеріали до інструменту."""
+        Згенеруй 5 питань про **характеристики**, **зовнішню будову**, **функції цього інструменту** , рекомендації по роботі та додаткові витратні матеріали до інструменту. Питання має бути в одне речення."""
 
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "Ти — клієнт, який має задати уточнюючі запитання про модель інструмента."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.6,
-                max_tokens=400
+                max_tokens=150
             )
-            content = response.choices[0].message.get("content", "")
+            content = response.choices[0].message.content or ""
             questions = [line.strip(" 1234567890.-") for line in content.split('\n') if line.strip()]
             session["generated_questions"] = questions
             
@@ -1751,7 +1761,6 @@ def chat():
                 "reply": "Вибачте, сталася помилка при генерації питань. Спробуйте ще раз.",
                 "chat_ended": False
             })
-
 
     # --- Stage 3: Уточнюючі питання ---
     elif session["stage"] == 3:
@@ -1788,7 +1797,7 @@ def chat():
 Відповідай лише цифрою: 0, 1 або 2.
 """
         try:
-            evaluation = openai.ChatCompletion.create(
+            evaluation = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "Ти оцінюєш відповідь на запитання. Відповідай лише числом: 0, 1 або 2."},
@@ -1797,7 +1806,11 @@ def chat():
                 temperature=0,
                 max_tokens=10
             )
-            score = int(evaluation.choices[0].message["content"].strip() or 0)
+            score_text = evaluation.choices[0].message.content.strip()
+            try:
+                score = int(score_text)
+            except ValueError:
+                score = 0
             print(f"[SCORE] Відповідь на питання {session['current_question_index']+1}: {score}/2 балів")
 
             # Зберігаємо відповідь
@@ -1828,8 +1841,8 @@ def chat():
 
             # Продовжуємо діалог
             raw_score = sum(a["score"] for a in session["user_answers"].values())
-            current_answers_score = min(raw_score, 6)  # максимум 6 балів
-            max_answers_score = 3 * 2  # 3 питання по 2 бали
+            max_answers_score = len(session["generated_questions"]) * 2
+            current_answers_score = min(raw_score, max_answers_score)
             print(f"[SCORE] Загальний бал за відповіді: {current_answers_score}/{max_answers_score}")
 
             session['current_question_index'] += 1
@@ -1889,6 +1902,7 @@ def chat():
         session["seller_replies"].append(seller_reply)
         current_round = session.get("objection_round", 1)
 
+        # Додаємо репліку продавця до логу ТІЛЬКИ ОДИН РАЗ
         session['conversation_log'].append({
             'role': 'user',
             'message': seller_reply,
@@ -1905,27 +1919,29 @@ def chat():
     {history}
 
     Відповідай як реалістичний клієнт. Реагуй природно на останню репліку продавця: "{seller_reply}".
-    Підтримуй контекст заперечення. Будь конкретним, відповідай одним-двома реченнями, але не повторюйся."""
+    Підтримуй контекст заперечення. Твоя відповідь повинна складатися рівно з одного речення (5–15 слів). Не повторюйся."""
                 
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "Ти — клієнт у діалозі з продавцем. Відповідай чесно, логічно і згідно з контекстом заперечення."},
+                        {"role": "system", "content": "Ти — клієнт у діалозі з продавцем. Відповідай чесно, логічно і згідно з контекстом заперечення. Твоя відповідь повинна складатися рівно з одного речення (5–15 слів). Не повторюйся."},
                         {"role": "user", "content": gpt_prompt}
                     ],
                     temperature=0.6,
-                    max_tokens=200
+                    max_tokens=50
                 )
-                reply = response.choices[0].message["content"].strip()
+                reply = response.choices[0].message.content
                 session["objection_round"] += 1
                 session.modified = True
 
-                session['conversation_log'].append({
-                    'role': 'user',
-                    'message': seller_reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
+                # ВИДАЛИТИ цей блок - репліка вже додана вище
+                # session['conversation_log'].append({
+                #     'role': 'user',
+                #     'message': seller_reply,
+                #     'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                # })
 
+                # Додаємо відповідь клієнта (GPT)
                 session['conversation_log'].append({
                     'role': 'assistant',
                     'message': reply,
@@ -1976,7 +1992,7 @@ def chat():
 
     Відповідай одним словом: "переконливо", "частково переконливо" або "непереконливо". Не додавай пояснень.
     """
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "Ти — експерт з оцінки комунікацій. Будь об'єктивним."},
@@ -1985,7 +2001,7 @@ def chat():
                     temperature=0.3,
                     max_tokens=50
                 )
-                raw_rating = response.choices[0].message["content"].strip().lower()
+                raw_rating = response.choices[0].message.content.strip().lower()
 
                 # Витягнути перше зі слів: переконливо, частково переконливо, непереконливо
                 match = re.search(r"(переконливо|частково переконливо|непереконливо)", raw_rating)
@@ -2008,12 +2024,7 @@ def chat():
 
                 print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/5 балів)")
 
-                session['conversation_log'].append({
-                    'role': 'user',
-                    'message': seller_reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-
+                # Додаємо фінальну відповідь системи
                 session['conversation_log'].append({
                     'role': 'assistant',
                     'message': reply,
@@ -2023,19 +2034,20 @@ def chat():
                 model_score = session.get("model_score", 0)
                 questions_score = sum(q["score"] for q in session.get("question_scores", []))
                 answers_score = sum(a["score"] for a in session.get("user_answers", {}).values())
+                objection_score = session.get('objection_score', 0)
                 total_score = model_score + questions_score + answers_score + objection_score
-                max_score = 10 + 4 + 6 + 10
+                max_score = 10 + 10 + 10 + 10
 
                 print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
-                print(f"[SCORE] За модель: {model_score}/4")
+                print(f"[SCORE] За модель: {model_score}/10")
                 print(f"[SCORE] За питання: {questions_score}/10")
-                print(f"[SCORE] За відповіді: {answers_score}/6")
+                print(f"[SCORE] За відповіді: {answers_score}/10")
                 print(f"[SCORE] За заперечення: {objection_score}/10")
-                print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/30")
+                print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/40")
 
-                if total_score >= max_score * 0.8:
+                if total_score >= 32:
                     summary_label = "🟢 Чудова консультація."
-                elif total_score >= max_score * 0.6:
+                elif total_score >= 24:
                     summary_label = "🟡 Задовільна консультація."
                 else:
                     summary_label = "🔴 Незадовільна консультація."
@@ -2047,7 +2059,6 @@ def chat():
                 report_content = generate_report(dict(session))
                 report_filename = f"report_{session.get('seller_name', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
                 
-                # Створення папки reports, якщо її немає
                 os.makedirs('reports', exist_ok=True)
                 
                 send_email_report(
@@ -2078,6 +2089,71 @@ def chat():
         "chat_ended": True,
         "show_restart_button": True
     })
+
+@app.route("/speech-to-text", methods=["POST"])
+def speech_to_text():
+    if "file" not in request.files:
+        return jsonify({"error": "Файл не надісланий"}), 400
+
+    audio_file = request.files["file"]
+
+    try:
+        # зберігаємо як webm
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as tmp:
+            audio_file.save(tmp.name)
+            with open(tmp.name, "rb") as f:
+                transcript = client.audio.transcriptions.create(
+                    model="gpt-4o-mini-transcribe",
+                    file=f,
+                    prompt="Користувач говорить лише українською мовою"
+                )
+        os.unlink(tmp.name)
+
+        text = transcript.text.strip()
+        return jsonify({"text": text})
+    except Exception as e:
+        print(f"[STT ERROR] {str(e)}")
+        return jsonify({"error": "Помилка розпізнавання"}), 500
+    
+def assign_voice_for_situation(situation_id):
+    """Визначаємо голос для ситуації один раз"""
+    if situation_id in FEMALE_IDS:
+        return random.choice(FEMALE_VOICES)
+    else:
+        return random.choice(MALE_VOICES)
+
+@app.route("/speak", methods=["POST"])
+def speak():
+    text = request.json.get("text", "").strip()
+    if not text:
+        return jsonify({"error": "Порожній текст"}), 400
+    
+    category = session.get("category", None)
+    if category != "exam":   # ← тут вкажи категорію, де озвучка дозволена
+        return jsonify({"error": "Озвучка недоступна для цієї категорії"}), 403
+
+    # Використовуємо вже визначений голос
+    voice = session.get("voice", "alloy")
+
+    try:
+        response = client.audio.speech.create(
+            model="gpt-4o-mini-tts",
+            voice=voice,
+            input=text
+        )
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+            tmp.write(response.read())
+            tmp_path = tmp.name
+        with open(tmp_path, "rb") as f:
+            audio_data = f.read()
+        os.unlink(tmp_path)
+        return audio_data, 200, {
+            "Content-Type": "audio/mpeg",
+            "Content-Disposition": f"inline; filename={voice}.mp3"
+        }
+    except Exception as e:
+        print(f"[TTS ERROR] {str(e)}")
+        return jsonify({"error": "Помилка генерації аудіо"}), 500
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

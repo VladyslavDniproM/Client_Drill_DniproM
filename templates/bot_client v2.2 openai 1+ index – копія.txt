@@ -170,6 +170,15 @@ h1 {
   resize: vertical;
   pointer-events: auto;
 }
+#user-input:disabled::placeholder {
+    color: #999; /* Сірий колір, що добре видно на білому фоні */
+    opacity: 1; /* Фіксує прозорість (за замовчуванням у деяких браузерах вона знижується) */
+}
+
+#user-input:disabled {
+    background-color: #f5f5f5; /* Світло-сірий фон для вимкненого поля */
+    border-color: #ddd; /* Межа для контрасту */
+}
 #send-button {
   background-color: #ff6f00;
   color: white;
@@ -191,6 +200,27 @@ h1 {
   cursor: not-allowed;
 }
 
+#record-btn {
+  background-color: #ff3c00;
+  color: white;
+  border: none;
+  padding: 0 clamp(10px, 3vw, 20px);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: clamp(14px, 3vw, 16px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  min-width: 60px;
+  height: 44px;
+}
+
+.record-btn:hover {
+  background-color: #ffd900;
+}
+.record-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
 /* === STAGE INDICATOR === */
 .stage-indicator-single {
   display: flex;
@@ -208,6 +238,12 @@ h1 {
   font-size: 14px;
   color: white;
   transition: all 0.3s ease;
+}
+
+.recording-indicator {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
 .stage-indicator-single .stage {
@@ -654,28 +690,9 @@ h1 {
 }
 
 /* Додаткові стилі для підказки */
-#model-hint-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5); /* напівпрозорий фон */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
 #model-hint-modal .modal-content {
-  background: #4CAF50; /* Зелений фон */
-  color: white;
-  padding: 24px;
-  border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
+  background: #4CAF50; /* Зелений колір для підказки */
   text-align: center;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 
 #client-character {
@@ -709,6 +726,25 @@ h1 {
 
 #model-hint-modal.hidden {
   display: none;
+}
+
+.recording-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    z-index: 1000;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 }
 
 /* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
@@ -815,6 +851,12 @@ h1 {
     font-size: 14px;
   }
 
+  #record-btn {
+    width: 100%;
+    height: 42px;
+    font-size: 14px;
+  }
+
   #client-character img {
     max-height: 280px;
   }
@@ -896,6 +938,10 @@ h1 {
     font-size: 15px;
   }
 
+  #record-btn {
+    font-size: 15px;
+  }
+
   .stage-indicator-single {
     font-size: 13px;
   }
@@ -905,7 +951,7 @@ h1 {
 </head>
 <body>
 <div class="top-panel">
-  <div class="progress-hint" id="progressHint">Бажаємо успіхів у спілкуванні з ботом!</div>
+  <div class="progress-hint" id="progressHint">Бажаємо успіхів у консультації клієнта!</div>
   <div class="progress-container" id="progressContainer">
     <div class="progress-bar" id="questionProgressBar"></div>
   </div>
@@ -935,8 +981,13 @@ h1 {
             autocomplete="off"
         />
         <button id="send-button">Надіслати</button>
+        <button id="record-btn">🎤</button>
       </div>
     </div>
+
+        <div id="recording-indicator" class="recording-indicator" style="display:none;">
+          🎙 Йде запис...
+        </div>
 
     <div id="client-character" style="
       display: none;
@@ -1019,7 +1070,7 @@ h1 {
     <div id="model-hint-modal" class="modal hidden">
       <div class="modal-content">
         <h2>Порада</h2>
-        <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Для цього натисніть на кнопку: Оберіть модель. Але не спішіть: якщо не впевнені, поставте клієнтові ще декілька запитань.</p>
+        <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Для цього натисніть на кнопку: Оберіть модель. Але не спішіть: якщо не впевнені у виборі, поставте клієнтові ще декілька запитань.</p>
         <button id="close-hint-btn">Зрозуміло</button>
       </div>
     </div>
@@ -1072,7 +1123,6 @@ h1 {
         const modelOverlay = document.getElementById("modelOverlay");
         const modelLeftArrow = document.getElementById("modelLeftArrow");
         const modelRightArrow = document.getElementById("modelRightArrow");
-        const voiceButton = document.getElementById("voice-button");
 
         // Події
         sendButton.addEventListener("click", sendMessage);
@@ -1155,11 +1205,6 @@ h1 {
         function showModelHint() {
           const hintModal = document.getElementById("model-hint-modal");
           hintModal.classList.remove("hidden");
-
-          // Автоматично сховати через 10 секунд
-          setTimeout(() => {
-            hideModelHint();
-          }, 10000);
         }
 
         function hideModelHint() {
@@ -1167,48 +1212,46 @@ h1 {
           hintModal.classList.add("hidden");
         }
 
-
         // Обробник для кнопки закриття
         document.getElementById("close-hint-btn").addEventListener("click", hideModelHint);
 
+        document.getElementById("close-model-overlay").addEventListener("click", hideModelButtons);
+
+        let modelHintShown = false;
+
         // Оновіть функцію updateProgressBar
-        function updateProgressBar(progress, maxQuestions = 3) {
-            const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
-            questionProgressBar.style.width = `${percent}%`;
+       function updateProgressBar(progress, maxQuestions = 5) {
+          const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
+          questionProgressBar.style.width = `${percent}%`;
 
-            if (progress < maxQuestions) {
-                progressHint.textContent = `До відкриття кнопки вибору моделей ${progress} / ${maxQuestions}`;
-                progressHint.style.opacity = "1";
-                document.getElementById("progressContainer").style.opacity = "1";
-                progressHint.style.display = "block";
-                document.getElementById("progressContainer").style.display = "block";
+          if (progress < maxQuestions) {
+              progressHint.textContent = `Прогрес виявлення потреби`;
+              progressHint.style.opacity = "1";
+              document.getElementById("progressContainer").style.opacity = "1";
+              progressHint.style.display = "block";
+              document.getElementById("progressContainer").style.display = "block";
 
-                if (progress >= 3 && !modelHintShown) {
-                    document.getElementById("choose-model-btn").style.display = "inline-block";
-                    showModelHint();
-                    modelHintShown = true;
-                }
-            } else {
-                hideProgressBar();
-            }
-        }
-
-        // Нова функція для приховування прогрес-бару
-        function hideProgressBar() {
-            progressHint.style.opacity = "0";
-            document.getElementById("progressContainer").style.opacity = "0";
-            setTimeout(() => {
-                progressHint.style.display = "none";
-                document.getElementById("progressContainer").style.display = "none";
-            }, 500); // Швидше зникнення
-        }
-
-        // Додати обробник події для кнопки вибору моделей
-        document.getElementById("choose-model-btn").addEventListener("click", function() {
-            hideProgressBar();
-        });
+              if (progress >= 3 && !modelHintShown) { // Перевірка, щоб кнопка з'являлась після третього питання і залишалась
+                  document.getElementById("choose-model-btn").style.display = "inline-block";
+                  showModelHint();
+                  modelHintShown = true; // Позначаємо, що пораду вже показали
+              }
+          } else {
+              progressHint.textContent = "Максимальна кількість питань!";
+              setTimeout(() => {
+                  progressHint.style.opacity = "0";
+                  document.getElementById("progressContainer").style.opacity = "0";
+              }, 1500);
+              setTimeout(() => {
+                  progressHint.style.display = "none";
+                  document.getElementById("progressContainer").style.display = "none";
+              }, 2000);
+          }
+      }
 
         function showModelButtons(models, promptText = "Оберіть модель:", attemptsLeft = 1) {
+          modelsButtons.innerHTML = "";
+
           const modelData = {
               "CD-218Q": {
                   image: "/static/instruments/218Q.png",
@@ -1710,6 +1753,11 @@ models.forEach((model) => {
             sendModelChoice(model);
         };
 
+        userInput.disabled = true;
+        sendButton.disabled = true;
+        recordBtn.disabled = true;
+        userInput.placeholder = "Оберіть модель зі списку..."; // Додатковий індикатор
+
         modelsButtons.appendChild(button);
     });
 
@@ -1789,57 +1837,87 @@ function closeModelDetail() {
             modelOverlay.style.display = "none";
             userInput.style.display = "block";
             sendButton.style.display = "inline-block";
+            modelsButtons.innerHTML = "";
         }
 
 async function sendModelChoice(model) {
-        hideModelButtons();
-        document.getElementById("choose-model-btn").style.display = "none";
-        showTypingIndicator();
-        
-        try {
-            const response = await fetch("/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: model, seller_name: sellerName }),
-            });
+    hideModelButtons();
+    document.getElementById("choose-model-btn").style.display = "none";
+    showTypingIndicator();
 
-            const data = await response.json();
-            
-            // Додаємо повідомлення тільки якщо це не перехід на stage 3
-            if (!data.stage || data.stage !== 3) {
-                addMessage(data.reply, false);
-            }
+    document.getElementById("progressHint").style.display = "none";
+    document.getElementById("progressContainer").style.display = "none";
 
-            if (data.stage === 3) {
-                // Обробляємо перехід на stage 3
-                if (data.model_chosen === false) {
-                    addMessage("На жаль, ця модель не підходить.", false);
-                }
-                addMessage(data.reply, false);
-            }
+    userInput.disabled = false;
+    sendButton.disabled = false;
+    recordBtn.disabled = false; 
+    userInput.placeholder = "Напишіть ваше повідомлення..."; // Повертаємо стандартний текст
+    userInput.focus(); // Опціонально - фокусуємось на полі вводу
 
-            if (data.show_models && data.models?.length) {
-                showModelButtons(data.models, "Оберіть модель:", data.attempts_left || 1);
-            } else if (data.chat_ended) {
-                disableChat();
-                if (data.show_restart_button) {
-                    restartButton.style.display = "inline-block";
-                }
-            }
-        } catch (error) {
-            console.error("Помилка:", error);
-            addMessage("Помилка зв'язку. Спробуйте ще раз.", false);
-        } finally {
-            hideTypingIndicator();
+    try {
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: `Обираю модель: ${model}`, seller_name: sellerName }),
+        });
+
+        const data = await response.json();
+
+        // Оновлюємо stage, якщо сервер його повернув
+        if (data.stage !== undefined) {
+            updateStageIndicator(data.stage);
         }
+
+        // Додаємо повідомлення тільки якщо це не перехід на stage 3
+        if (!data.stage || data.stage !== 3) {
+            addMessage(data.reply, false);
+            playVoice(data.reply);
+        }
+
+        // Обробка переходу на stage 3
+        if (data.stage === 3) {
+            if (data.model_chosen === false) {
+                addMessage("На жаль, ця модель не підходить.", false);
+            }
+            addMessage(data.reply, false);
+            playVoice(data.reply);
+        }
+
+        // Показ моделей або завершення чату
+        if (data.show_models && data.models?.length) {
+            showModelButtons(data.models, "Оберіть модель:", data.attempts_left || 1);
+            modelsButtons.innerHTML = ""
+        } else if (data.chat_ended) {
+            disableChat();
+            if (data.show_restart_button) {
+                restartButton.style.display = "inline-block";
+            }
+        }
+
+    } catch (error) {
+        console.error("Помилка:", error);
+        addMessage("Помилка зв'язку. Спробуйте ще раз.", false);
+    } finally {
+        hideTypingIndicator();
     }
+}
+
+function createModelButton(model) {
+    const button = document.createElement("button");
+    button.innerText = model;
+    button.onclick = () => {
+        addMessage(`Обираю модель: ${model}`, true);
+        sendModelChoice(model);
+    };
+    return button;
+}
 
 function updateStageIndicator(currentStage) {
   const stageNames = {
     1: "Етап: Виявлення потреби",
-    2: "Етап: Презентація товару",
-    3: "Етап: Робота із запереченнями",
-    4: "Етап: Аргументація заперечення"
+    2: "Етап: Вибір моделі",
+    3: "Етап: Презентація інструменту",
+    4: "Етап: Робота із запереченнями"
   };
 
   const stageLabel = document.getElementById('stage-label');
@@ -1927,31 +2005,55 @@ async function authenticateSeller(name) {
     });
 });
 
-   async function sendMessage() {
+function playVoice(text) {
+  fetch("/speak", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  })
+  .then(res => res.blob())
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.play();
+  })
+  .catch(err => console.error("TTS error:", err));
+}
+
+let isCooldown = false;
+
+async function sendMessage() {
     const message = userInput.value.trim();
     if (!sellerName) {
         alert("Будь ласка, спочатку введіть ваші дані");
         return;
     }
 
-    if (!message) { // ← Перевірка на порожній рядок
-        return; // Просто нічого не робимо
-    }
+    if (!message) return; // Перевірка на порожній рядок
 
     addMessage(message, true); // Повідомлення продавця
     userInput.value = '';
     showTypingIndicator();
     statusElement.textContent = "Клієнт набирає відповідь...";
 
+    isCooldown = true;
+    userInput.disabled = true;
+    sendButton.disabled = true;
+    setTimeout(() => {
+        isCooldown = false;
+        userInput.disabled = false;
+        sendButton.disabled = false;
+        statusElement.textContent = "";
+    }, 4000);
+
     try {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({message, seller_name: sellerName})
+            body: JSON.stringify({ message, seller_name: sellerName })
         });
 
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
         const data = await response.json();
 
         // Обробка відповіді
@@ -1973,22 +2075,22 @@ async function authenticateSeller(name) {
 
         // --- Нова логіка для етапу 3 (технічні питання) ---
         if (data.stage === 3) {
-                // Просто додаємо одне питання — не розділяємо
             addMessage(data.reply, false);
             statusElement.textContent = "Клієнт уточнює деталі про модель...";
             userInput.focus();
+            playVoice(data.reply);   // ✅ тільки після отримання data
 
             // Додаємо питання по одному з затримкою
             questions.forEach((question, index) => {
                 setTimeout(() => {
                     addMessage(question, false);
-                    // Прокручуємо чат до останнього повідомлення
                     chatContainer.scrollTop = chatContainer.scrollHeight;
-                }, index * 1000); // Затримка 1 сек між питаннями
+                }, index * 1000);
             });
         } else {
             // Для інших етапів - стандартна обробка
             addMessage(data.reply, false);
+            playVoice(data.reply);   // ✅ тільки після отримання data
         }
 
         // Обробка етапу вибору моделі
@@ -2004,18 +2106,15 @@ async function authenticateSeller(name) {
             updateStageIndicator(data.stage);
         }
 
-        // Оновлення статусу для етапу 3
         if (data.stage === 3) {
             statusElement.textContent = "Клієнт уточнює деталі про модель...";
             userInput.focus();
         }
 
-        // Оновлення прогресу
         if (data.question_progress !== undefined) {
             updateProgressBar(data.question_progress, 5);
         }
 
-        // Завершення діалогу
         if (data.chat_ended) {
             disableChat();
             if (data.model_chosen) {
@@ -2036,6 +2135,71 @@ async function authenticateSeller(name) {
     }
 }
 
+let mediaRecorder;
+let audioChunks = [];
+
+const recordBtn = document.getElementById("record-btn");
+const recordingIndicator = document.getElementById("recording-indicator");
+
+recordBtn.addEventListener("click", async () => {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        recordingIndicator.style.display = "none";
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        audioChunks = [];
+
+        const formData = new FormData();
+        formData.append("file", audioBlob, "voice.webm");
+
+        try {
+          const response = await fetch("/speech-to-text", {
+            method: "POST",
+            body: formData
+          });
+
+          if (!response.ok) {
+            addMessage("❌ Помилка сервера розпізнавання", false);
+            return;
+          }
+
+          const data = await response.json();
+          if (data.error) {
+            addMessage("❌ " + data.error, false);
+          } else if (data.text) {
+            userInput.value = data.text;   // тільки вставляємо у поле
+            sendMessage();                 // і відправляємо (без дублювання addMessage)
+          } else {
+            addMessage("❌ Відповідь без тексту", false);
+          }
+        } catch (err) {
+          console.error("STT fetch error:", err);
+          addMessage("❌ Помилка відправки голосу", false);
+              }
+      };
+
+      mediaRecorder.start();
+      recordBtn.textContent = "⏹ Зупинити";
+      recordingIndicator.style.display = "block";
+    } catch (err) {
+      console.error("Mic error:", err);
+      addMessage("❌ Немає доступу до мікрофона", false);
+    }
+  } else {
+    mediaRecorder.stop();
+    recordBtn.textContent = "🎤";
+  }
+});
+
     // Стартове повідомлення при завантаженні
     document.getElementById('accept-rules-btn').addEventListener('click', async () => {
       const rulesModal = document.getElementById('rules-modal');
@@ -2047,7 +2211,8 @@ async function authenticateSeller(name) {
         const data = await response.json();
 
         if (data.reply) {
-          addMessage(data.reply, false);       // додаємо перше повідомлення
+          addMessage(data.reply, false);
+          playVoice(data.reply);     // додаємо перше повідомлення
           unblockChat();                       // розблоковуємо поле вводу
           userInput.focus();
           showStageIndicator();                // показуємо індикатор етапів
@@ -2069,28 +2234,13 @@ async function authenticateSeller(name) {
       }
     });
 
-    document.querySelector(".model-detail-close").addEventListener("click", function() {
-        closeModelDetail();
-        // Не приховуємо кнопку "Оберіть модель" тут
-    });
+    document.querySelector(".model-detail-close").addEventListener("click", closeModelDetail);
 
     document.getElementById("modelDetailModal").addEventListener("click", function(e) {
         if (e.target === this) {
             closeModelDetail();
         }
     });
-
-    window.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-    const chatContainer = document.querySelector('.chat-container');
-    
-    const firstMessage = document.createproElement('div');
-    firstMessage.classList.add('message', 'user-message');
-    firstMessage.textContent = 'Добрий день! Вітаємо Вас в магазині Dnipro-M!';
-    
-    chatContainer.appendChild(firstMessage);
-    } , 1000);
-  });
 
       document.addEventListener('DOMContentLoaded', function() {
         const closeHintBtn = document.getElementById("close-hint-btn");
@@ -2101,20 +2251,25 @@ async function authenticateSeller(name) {
         }
     });
 
-    document.getElementById("choose-model-btn").addEventListener("click", async () => {
-      try {
-          const response = await fetch("/show_models", { method: "POST" });
-          const data = await response.json();
+document.getElementById("choose-model-btn").addEventListener("click", async () => {
+    try {
+        const response = await fetch("/show_models", { method: "POST" });
+        const data = await response.json();
 
-          if (data.models && data.models.length) {
-              showModelButtons(data.models);
-              updateStageIndicator(2); // якщо треба змінити етап
-              document.getElementById("choose-model-btn").classList.add("hidden");
-          }
-      } catch (err) {
-          addMessage("Помилка при завантаженні моделей. Спробуйте ще раз.", false);
-      }
-  });
+        if (data.models && data.models.length) {
+            showModelButtons(data.models);
+            document.getElementById("choose-model-btn").classList.add("hidden");
+        }
+    } catch (err) {
+        addMessage("Помилка при завантаженні моделей. Спробуйте ще раз.", false);
+    }
+});
+
+    document.getElementById("close-model-overlay").addEventListener("click", () => {
+        hideModelButtons(); // ❌ не викликаємо sendModelChoice()
+        document.getElementById("choose-model-btn").classList.remove("hidden"); // повертаємо кнопку
+    });
+
     </script>
 </body>
 </html>

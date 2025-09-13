@@ -22,6 +22,8 @@ app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
 app.config['SESSION_FILE_THRESHOLD'] = 100
+app.config['SESSION_COOKIE_SAMESITE'] = "None"
+app.config['SESSION_COOKIE_SECURE'] = True
 
 Session(app)
 
@@ -1934,20 +1936,6 @@ def chat():
                 session["objection_round"] += 1
                 session.modified = True
 
-                # ВИДАЛИТИ цей блок - репліка вже додана вище
-                # session['conversation_log'].append({
-                #     'role': 'user',
-                #     'message': seller_reply,
-                #     'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                # })
-
-                # Додаємо відповідь клієнта (GPT)
-                session['conversation_log'].append({
-                    'role': 'assistant',
-                    'message': reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-
                 return jsonify({
                     "reply": reply,
                     "chat_ended": False,
@@ -2104,7 +2092,8 @@ def speech_to_text():
             with open(tmp.name, "rb") as f:
                 transcript = client.audio.transcriptions.create(
                     model="gpt-4o-mini-transcribe",
-                    file=f
+                    file=f,
+                    prompt="Користувач говорить лише українською мовою"
                 )
         os.unlink(tmp.name)
 

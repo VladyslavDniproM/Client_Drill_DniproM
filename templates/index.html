@@ -2140,19 +2140,23 @@ async function sendMessage() {
 
 let mediaRecorder;
 let audioChunks = [];
-let mimeType = "audio/webm";
 
-// Для Safari → використовуємо mp4/m4a
-if (MediaRecorder.isTypeSupported("audio/mp4")) {
-  mimeType = "audio/mp4";
-} else if (MediaRecorder.isTypeSupported("audio/m4a")) {
-  mimeType = "audio/m4a";
-}
+const recordBtn = document.getElementById("record-btn");
+const recordingIndicator = document.getElementById("recording-indicator");
 
 recordBtn.addEventListener("click", async () => {
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Визначаємо підтримуваний формат
+      let mimeType = "audio/webm";
+      if (MediaRecorder.isTypeSupported("audio/mp4")) {
+        mimeType = "audio/mp4";
+      } else if (MediaRecorder.isTypeSupported("audio/m4a")) {
+        mimeType = "audio/m4a";
+      }
+
       mediaRecorder = new MediaRecorder(stream, { mimeType });
 
       mediaRecorder.ondataavailable = event => {
@@ -2163,7 +2167,6 @@ recordBtn.addEventListener("click", async () => {
         recordingIndicator.style.display = "none";
         mediaRecorder.stream.getTracks().forEach(track => track.stop());
 
-        // Використовуємо правильний тип і розширення
         const audioBlob = new Blob(audioChunks, { type: mimeType });
         audioChunks = [];
 
@@ -2177,12 +2180,19 @@ recordBtn.addEventListener("click", async () => {
             body: formData
           });
 
+          if (!response.ok) {
+            addMessage("❌ Помилка сервера розпізнавання", false);
+            return;
+          }
+
           const data = await response.json();
-          if (data.text) {
+          if (data.error) {
+            addMessage("❌ " + data.error, false);
+          } else if (data.text) {
             userInput.value = data.text;
             sendMessage();
           } else {
-            addMessage("❌ Помилка розпізнавання", false);
+            addMessage("❌ Відповідь без тексту", false);
           }
         } catch (err) {
           console.error("STT fetch error:", err);

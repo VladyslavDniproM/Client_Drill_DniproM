@@ -2259,7 +2259,7 @@ def show_models():
 def generate_report(session_data):
     seller_name = session_data.get('seller_name') or 'Невідомий продавець'
     total_score = session_data.get('total_score', 0)
-    max_score = 30
+    max_score = 40
     selected_category = session_data.get('category', 'Не вказано')
     
     report_lines = [
@@ -2283,8 +2283,8 @@ def generate_report(session_data):
     # Додати результати оцінювання
     report_lines.extend([
         "\nРезультати:",
-        f"- Оцінка за модель: {session_data.get('model_score', 0)}/6",
-        f"- Оцінка за питання: {sum(q['score'] for q in session_data.get('question_scores', []))}/8",
+        f"- Оцінка за модель: {session_data.get('model_score', 0)}/4",
+        f"- Оцінка за питання: {sum(q['score'] for q in session_data.get('question_scores', []))}/10",
         f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/6",
         f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/10"
     ])
@@ -2376,7 +2376,7 @@ def chat():
         # Бонус
         perfect_questions = sum(1 for q in session["question_scores"] if q["score"] == 2)
         if perfect_questions >= 3 and "bonus_added" not in session:
-            session["total_score"] = min(session.get("total_score", 0) + 2, 8)
+            session["total_score"] = min(session.get("total_score", 0) + 2, 10)
             session["bonus_added"] = True
             print(f"[SCORE] Бонус +2 бали за 3 коректних запитання")
         
@@ -2402,8 +2402,8 @@ def chat():
             })
         
         current_questions_score = sum(q["score"] for q in session["question_scores"])
-        current_questions_score = min(current_questions_score, 8)
-        print(f"[SCORE] Загальний бал за питання: {current_questions_score}/8")
+        current_questions_score = min(current_questions_score, 10)
+        print(f"[SCORE] Загальний бал за питання: {current_questions_score}/10")
         
         session["history"].append({"role": "user", "content": user_input})
         session['conversation_log'].append({
@@ -2470,14 +2470,14 @@ def chat():
 
         # Оцінка моделі
         if user_model in correct_models:
-            session["model_score"] = 6  # Максимум 10 балів за правильний вибір
-            print(f"[SCORE] Правильна модель: +6 балів")
+            session["model_score"] = 10  # Максимум 10 балів за правильний вибір
+            print(f"[SCORE] Правильна модель: +10 балів")
         else:
             session["model_score"] = 0
             print(f"[SCORE] Неправильна модель: 0 балів")
 
             # Оновлений вивід для переходу на stage 3
-            print(f"[SCORE] Поточний бал за модель: {session['model_score']}/6")
+            print(f"[SCORE] Поточний бал за модель: {session['model_score']}/4")
             print(f"[SCORE] Загальний бал: {session.get('total_score', 0) + session['model_score']}")
 
         # Переходь на stage 3 після оцінки моделі
@@ -2704,18 +2704,6 @@ def chat():
                 session["objection_round"] += 1
                 session.modified = True
 
-                session['conversation_log'].append({
-                    'role': 'user',
-                    'message': seller_reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-
-                session['conversation_log'].append({
-                    'role': 'assistant',
-                    'message': reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-
                 return jsonify({
                     "reply": reply,
                     "chat_ended": False,
@@ -2804,18 +2792,18 @@ def chat():
                 answers_score = sum(a["score"] for a in session.get("user_answers", {}).values())
                 objection_score = session.get('objection_score', 0)
                 total_score = model_score + questions_score + answers_score + objection_score
-                max_score = 8 + 6 + 6 + 10
+                max_score = 10 + 10 + 10 + 10
 
                 print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
-                print(f"[SCORE] За модель: {model_score}/6")
-                print(f"[SCORE] За питання: {questions_score}/8")
-                print(f"[SCORE] За відповіді: {answers_score}/6")
+                print(f"[SCORE] За модель: {model_score}/10")
+                print(f"[SCORE] За питання: {questions_score}/10")
+                print(f"[SCORE] За відповіді: {answers_score}/10")
                 print(f"[SCORE] За заперечення: {objection_score}/10")
-                print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/30")
+                print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/40")
 
-                if total_score >= 25:
+                if total_score >= 32:
                     summary_label = "🟢 Чудова консультація."
-                elif total_score >= 20:
+                elif total_score >= 24:
                     summary_label = "🟡 Задовільна консультація."
                 else:
                     summary_label = "🔴 Незадовільна консультація."

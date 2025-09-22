@@ -1195,10 +1195,8 @@ h1 {
         function disableChat() {
             userInput.disabled = true;
             sendButton.disabled = true;
-            recordBtn.disabled = true;
             hideModelButtons();
             statusElement.textContent = "Діалог завершено";
-            userInput.placeholder = "Діалог завершено";
         }
 
         function showStageIndicator() {
@@ -2457,14 +2455,12 @@ async function sendMessage() {
     isCooldown = true;
     userInput.disabled = true;
     sendButton.disabled = true;
-    if (!data.chat_ended) {
-        setTimeout(() => {
-            isCooldown = false;
-            userInput.disabled = false;
-            sendButton.disabled = false;
-            statusElement.textContent = "";
-        }, 4000);
-    }
+    setTimeout(() => {
+        isCooldown = false;
+        userInput.disabled = false;
+        sendButton.disabled = false;
+        statusElement.textContent = "";
+    }, 4000);
 
     try {
         const response = await fetch('/chat', {

@@ -2710,12 +2710,7 @@ def chat():
                 session["objection_round"] += 1
                 session.modified = True
 
-                session['conversation_log'].append({
-                    'role': 'user',
-                    'message': seller_reply,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-
+                # Додаємо відповідь клієнта до логу
                 session['conversation_log'].append({
                     'role': 'assistant',
                     'message': reply,
@@ -2783,34 +2778,31 @@ def chat():
                 
                 if rating == "переконливо":
                     objection_score = 10
-                    reply = "Клієнта проконсультовано."
+                    reply = "Дякую, тепер мені все зрозуміло. Я беру цей інструмент."
                 elif rating == "частково переконливо":
                     objection_score = 5
-                    reply = "Клієнта проконсультовано."
-                elif rating == "непереконливо":
-                    objection_score = 0
-                    reply = "Клієнт незадоволений консультацією."
+                    reply = "Гаразд, спробую. Надіюсь, інструмент буде якісним."
                 else:
                     objection_score = 0
-                    reply = "Клієнт незадоволений консультацією."  # fallback
+                    reply = "Дякую, але я ще подумаю. Можливо, повернусь пізніше."
 
                 session['objection_score'] = objection_score
 
-                print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/5 балів)")
+                print(f"[SCORE] Оцінка аргументів: {rating} ({objection_score}/10 балів)")
 
-                # Додаємо фінальну відповідь системи
+                # Додаємо фінальну відповідь клієнта
                 session['conversation_log'].append({
                     'role': 'assistant',
                     'message': reply,
                     'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 })
 
+                # Розрахунок фінального балу
                 model_score = session.get("model_score", 0)
-                questions_score = sum(q["score"] for q in session.get("question_scores", []))
-                answers_score = sum(a["score"] for a in session.get("user_answers", {}).values())
+                questions_score = min(sum(q["score"] for q in session.get("question_scores", [])), 8)
+                answers_score = min(sum(a["score"] for a in session.get("user_answers", {}).values()), 6)
                 objection_score = session.get('objection_score', 0)
                 total_score = model_score + questions_score + answers_score + objection_score
-                max_score = 8 + 6 + 6 + 10
 
                 print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
                 print(f"[SCORE] За модель: {model_score}/6")
@@ -2826,14 +2818,11 @@ def chat():
                 else:
                     summary_label = "🔴 Незадовільна консультація."
 
-                full_reply = f"{reply}\n\n📊 Результат: {summary_label}"
+                full_reply = f"{reply}\n\n📊 {summary_label} Ваш результат: {total_score}/30 балів"
 
                 # Збереження звіту
                 session["total_score"] = total_score
                 report_content = generate_report(dict(session))
-                report_filename = f"report_{session.get('seller_name', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-                
-                os.makedirs('reports', exist_ok=True)
                 
                 send_email_report(
                     subject=f"Звіт про діалог — {session.get('seller_name', 'Продавець')}",
@@ -2841,28 +2830,32 @@ def chat():
                     to_email="voloshchenko2014@gmail.com"
                 )
 
+                # Очищаємо сесію
                 session.clear()
                 session.modified = True
 
                 return jsonify({
-                    "reply": f"{full_reply}\n\nЗвіт збережено для вашого тренера.",
+                    "reply": full_reply,
                     "chat_ended": True,
                     "show_restart_button": True,
-                    "report_filename": report_filename
+                    "final_score": total_score
                 })
             
             except Exception as e:
                 print(f"Помилка при оцінюванні: {str(e)}")
                 return jsonify({
-                    "reply": "Вибачте, не вдалося обробити відповідь. Давайте спробуємо ще раз?",
+                    "reply": "Вибачте, не вдалося обробити відповідь. Спробуйте ще раз.",
                     "chat_ended": False
                 })
-
-    return jsonify({
-        "reply": "Виникла непередбачена помилка. Спробуйте ще раз.",
-        "chat_ended": True,
-        "show_restart_button": True
-    })
+        
+        else:
+            # Обробка випадку, коли current_round > 3 (запасний варіант)
+            session.clear()
+            return jsonify({
+                "reply": "Діалог завершено. Почніть нову сесію.",
+                "chat_ended": True,
+                "show_restart_button": True
+            })
 
 @app.route("/speech-to-text", methods=["POST"])
 def speech_to_text():

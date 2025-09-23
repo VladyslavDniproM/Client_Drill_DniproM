@@ -563,7 +563,7 @@ def chat():
                 print(f"[SCORE] За заперечення: {objection_score}/10")
                 print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/30")
 
-                if total_score >= 24:
+                if total_score >= 25:
                     summary_label = "🟢 Чудова консультація."
                 elif total_score >= 20:
                     summary_label = "🟡 Задовільна консультація."
@@ -572,19 +572,23 @@ def chat():
 
                 full_reply = f"{reply}\n\n📊 Результат: {summary_label}"
 
-                # Збереження звіту
                 session["total_score"] = total_score
-                report_content = generate_report(dict(session))
+
+                # ✅ робимо копію даних сесії перед очисткою
+                session_copy = dict(session)
+
+                report_content = generate_report(session_copy)
                 report_filename = f"report_{session.get('seller_name', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-                
+
                 os.makedirs('reports', exist_ok=True)
-                
+
                 send_email_report(
                     subject=f"Звіт про діалог — {session.get('seller_name', 'Продавець')}",
                     body=report_content,
                     to_email="voloshchenko2014@gmail.com"
                 )
 
+                # тільки після цього очищаємо сесію
                 session.clear()
                 session.modified = True
 
@@ -594,7 +598,7 @@ def chat():
                     "show_restart_button": True,
                     "report_filename": report_filename
                 })
-            
+
             except Exception as e:
                 print(f"Помилка при оцінюванні: {str(e)}")
                 return jsonify({

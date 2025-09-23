@@ -1152,6 +1152,7 @@ h1 {
         function unblockChat() {
             userInput.disabled = false;
             sendButton.disabled = false;
+            recordBtn.disabled = false;
         }
 
         acceptBtn.addEventListener("click", () => {
@@ -1195,6 +1196,7 @@ h1 {
         function disableChat() {
             userInput.disabled = true;
             sendButton.disabled = true;
+            recordBtn.disabled = true;
             hideModelButtons();
             statusElement.textContent = "Діалог завершено";
         }
@@ -2437,6 +2439,7 @@ function playVoice(text) {
 }
 
 let isCooldown = false;
+let chatEnded = false;
 
 async function sendMessage() {
     const message = userInput.value.trim();
@@ -2455,11 +2458,15 @@ async function sendMessage() {
     isCooldown = true;
     userInput.disabled = true;
     sendButton.disabled = true;
+
+    // ✅ тепер перевіряємо глобальний прапорець
     setTimeout(() => {
-        isCooldown = false;
-        userInput.disabled = false;
-        sendButton.disabled = false;
-        statusElement.textContent = "";
+        if (!chatEnded) {
+            isCooldown = false;
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            statusElement.textContent = "";
+        }
     }, 4000);
 
     try {
@@ -2476,7 +2483,10 @@ async function sendMessage() {
         // Обробка відповіді
         if (data.error) {
             statusElement.textContent = "Помилка: " + data.error;
-            if (data.chat_ended) disableChat();
+            if (data.chat_ended) {
+                chatEnded = true;
+                disableChat();
+            }
             return;
         }
 
@@ -2490,12 +2500,12 @@ async function sendMessage() {
             document.getElementById("choose-model-btn").style.display = "none";
         }
 
-        // --- Нова логіка для етапу 3 (технічні питання) ---
+        // --- Логіка для етапу 3 (технічні питання) ---
         if (data.stage === 3) {
             addMessage(data.reply, false);
             statusElement.textContent = "Клієнт уточнює деталі про модель...";
             userInput.focus();
-            playVoice(data.reply);   // ✅ тільки після отримання data
+            playVoice(data.reply);
 
             // Додаємо питання по одному з затримкою
             questions.forEach((question, index) => {
@@ -2507,7 +2517,7 @@ async function sendMessage() {
         } else {
             // Для інших етапів - стандартна обробка
             addMessage(data.reply, false);
-            playVoice(data.reply);   // ✅ тільки після отримання data
+            playVoice(data.reply);
         }
 
         // Обробка етапу вибору моделі
@@ -2533,12 +2543,20 @@ async function sendMessage() {
         }
 
         if (data.chat_ended) {
+            chatEnded = true;   // ✅ позначаємо, що чат завершено
             disableChat();
+
+            if (data.show_restart_button) {
+                restartButton.style.display = "inline-block";
+            }
+
             if (data.model_chosen) {
                 setTimeout(() => {
                     addMessage("Дякую! Я беру цю модель.", false);
                 }, 1000);
             }
+
+            return; // 🛑 одразу вихід, щоб далі код не виконувався
         } else {
             statusElement.textContent = "";
         }

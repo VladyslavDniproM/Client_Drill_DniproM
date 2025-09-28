@@ -3,7 +3,7 @@ from datetime import datetime
 import random, re, os
 from config import client
 from services.session_service import init_conversation, get_situation_from_session
-from services.report_service import generate_report, send_email_report
+from services.report_service import generate_report, save_report_to_drive
 from services.openai_service import evaluate_question
 from data.situations import SITUATIONS
 from data.models import TOOL_MODELS
@@ -133,11 +133,11 @@ def chat():
         if session["misunderstood_count"] >= 3:
             session["chat_active"] = False
             report_content = generate_report(session)
-            send_email_report(
-                subject=f"Звіт про діалог — {session.get('seller_name', 'Продавець')}",
-                body=report_content,
-                to_email="voloshchenko2014@gmail.com"
-            )
+            success = save_report_to_drive(session)
+            if success:
+                print("[DRIVE] Звіт успішно збережено на Google Drive")
+            else:
+                print("[DRIVE] Помилка збереження звіту")
             return jsonify({
                 "reply": "Ви поставили декілька некоректних питань. Діалог завершено.",
                 "chat_ended": True,
@@ -348,11 +348,12 @@ def chat():
             if session['irrelevant_answers'] >= 2:
                 session['chat_active'] = False
                 report_content = generate_report(session)  # Зберегти звіт навіть при помилці
-                send_email_report(
-                    subject=f"Звіт про діалог — {session.get('seller_name', 'Продавець')}",
-                    body=report_content,
-                    to_email="voloshchenko2014@gmail.com"
-                )
+                success = save_report_to_drive(session)
+                if success:
+                    print("[DRIVE] Звіт успішно збережено на Google Drive")
+                else:
+                    print("[DRIVE] Помилка збереження звіту")
+                    
                 return jsonify({
                     "reply": "Вибачте, я не отримав потрібної інформації. Я, мабуть, піду в інший магазин.",
                     "chat_ended": True,
@@ -402,6 +403,12 @@ def chat():
 
                 final_reply = f"{feedback}\n\nХм... {session['current_objection']}"
                 session["history"].append({"role": "assistant", "content": final_reply})
+                session['conversation_log'].append({
+                    'role': 'assistant',
+                    'message': final_reply,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+                
                 session.modified = True
 
                 return jsonify({
@@ -582,11 +589,11 @@ def chat():
 
                 os.makedirs('reports', exist_ok=True)
 
-                send_email_report(
-                    subject=f"Звіт про діалог — {session.get('seller_name', 'Продавець')}",
-                    body=report_content,
-                    to_email="voloshchenko2014@gmail.com"
-                )
+                success = save_report_to_drive(session)
+                if success:
+                    print("[DRIVE] Звіт успішно збережено на Google Drive")
+                else:
+                    print("[DRIVE] Помилка збереження звіту")
 
                 # тільки після цього очищаємо сесію
                 session.clear()

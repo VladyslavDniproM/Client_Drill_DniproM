@@ -1,6 +1,11 @@
 from datetime import datetime
-import smtplib, os
-from email.mime.text import MIMEText
+import os
+import json
+import io
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from google.auth.transport.requests import Request
+from googleapiclient.http import MediaInMemoryUpload
 
 def generate_report(session_data):
     seller_name = session_data.get('seller_name') or 'Невідомий продавець'
@@ -43,17 +48,78 @@ def generate_report(session_data):
     
     return "\n".join(report_lines)
 
-def send_email_report(subject, body, to_email):
-    msg = MIMEText(body, 'plain', 'utf-8')
-    msg['Subject'] = subject
-    msg['From'] = os.getenv('EMAIL_ADDRESS')
-    msg['To'] = to_email
-
+def save_report_to_drive(session_data):
+    """Зберігає звіт у файл на Google Drive"""
     try:
-        with smtplib.SMTP(os.getenv('EMAIL_HOST'), int(os.getenv('EMAIL_PORT'))) as server:
-            server.starttls()
-            server.login(os.getenv('EMAIL_ADDRESS'), os.getenv('EMAIL_PASSWORD'))
-            server.send_message(msg)
-            print("[EMAIL] Звіт успішно відправлено.")
+        # Отримуємо credentials
+        if os.path.exists('token.json'):
+            creds = Credentials.from_authorized_user_file('token.json')
+        elif os.getenv('GMAIL_CREDENTIALS_JSON'):
+            creds_json = os.getenv('GMAIL_CREDENTIALS_JSON')
+            creds_dict = json.loads(creds_json)
+            creds = Credentials.from_authorized_user_info(creds_dict)
+        else:
+            print("[DRIVE ERROR] Не знайдено Google credentials")
+            return False
+        
+        # Оновлюємо токен якщо потрібно
+        if creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        
+        # Створюємо сервіс Drive
+        drive_service = build('drive', 'v3', credentials=creds)
+        
+        # Шукаємо папку для звітів
+        folder_name = "Sales Training Reports"
+        query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+        results = drive_service.files().list(q=query, spaces='drive').execute()
+        items = results.get('files', [])
+        
+        if not items:
+            print("[DRIVE ERROR] Папка для звітів не знайдена")
+            return False
+        
+        folder_id = items[0]['id']
+        
+        # Генеруємо звіт
+        report_content = generate_report(session_data)
+        seller_name = session_data.get('seller_name', 'Невідомий').replace('/', '-').replace('\\', '-')
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        
+        # Формуємо назву файлу
+        filename = f"Звіт_{seller_name}_{timestamp}.txt"
+        
+        # Метадані файлу
+        file_metadata = {
+            'name': filename,
+            'parents': [folder_id],
+            'mimeType': 'text/plain'
+        }
+        
+        # Створюємо файл з текстовим контентом
+        from googleapiclient.http import MediaInMemoryUpload
+        media = MediaInMemoryUpload(
+            report_content.encode('utf-8'),
+            mimetype='text/plain'
+        )
+        
+        # Створюємо файл
+        file = drive_service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+        
+        print(f"[DRIVE] Звіт успішно збережено на Google Drive: {filename}")
+        print(f"[DRIVE] ID файлу: {file.get('id')}")
+        return True
+        
     except Exception as e:
-        print(f"[EMAIL ERROR] Не вдалося надіслати лист: {str(e)}")
+        print(f"[DRIVE ERROR] Не вдалося зберегти звіт: {str(e)}")
+        return False
+
+# Застаріла функція для зворотньої сумісності
+def send_email_report(subject, body, to_email):
+    print("[INFO] Функція send_email_report застаріла. Використовується Google Drive")
+    # Тут можна використати session_data з body, якщо потрібно
+    return save_report_to_drive({"conversation_log": []})  # Мінімальні дані для збереження

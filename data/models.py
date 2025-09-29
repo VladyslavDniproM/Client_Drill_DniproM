@@ -86,7 +86,29 @@ TOOL_MODELS = [
     "FX-20",
     "CFL-36M",
     "DCL-360",
-    "IL-36"
+    "IL-36",
+    "ULTRA-150",
+    "ULTRA-SUPERLOCK-12",
+    "ULTRA-73",
+    "ULTRA-56",
+    "ULTRA-110",
+    "ULTRA-112",
+    "JS-65LX",
+    "JS-80LX",
+    "JS-100LX",
+    "DJS-200BCULTRA",
+    "PS-30S",
+    "PE-29S",
+    "PE-50S",
+    "PE-35RX",
+    "DSO-200BCULTRA",
+    "BS-100S",
+    "DSC-200BCULTRA",
+    "DSC-201BC",
+    "CS-235IN",
+    "CS-210",
+    "CS-185LX",
+    "CS-185M"
 ]
 
 CATEGORY_SITUATION_IDS = {
@@ -102,6 +124,10 @@ CATEGORY_SITUATION_IDS = {
     "impact": list(range(86, 96)),
     "showers": list(range(96, 104)),
     "lighters": list(range(104, 110)),
+    "instuments": list(range(110, 126)),
+    "jigsaw": list(range(126, 136)),
+    "woodgrinders": list(range(136, 156)),
+    "circularsaws": list(range(156, 176)),
     "exam": list(range(1, 65))
 }
 

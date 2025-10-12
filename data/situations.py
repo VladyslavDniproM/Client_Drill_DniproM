@@ -248,7 +248,7 @@ SITUATIONS = [
         "avatar": "id5.png",
         "behavior": "красивий клієнт",
         "correct_models": ["DHR-200", "DHR-202BC"],
-        "wrong_models": ["BH-30", "BH-20", "RH-16"],
+        "wrong_models": ["BH-30", "BH-20", "RH-16", "RH-100"],
         "hints": [
             "Шукаю перфоратор для нечастого домашнього використання",
             "Потрібно іноді просверлити отвір у стіні",
@@ -308,7 +308,7 @@ SITUATIONS = [
     {
         "id": 20,
         "description": "перфоратор.",
-        "requirements": "перфоратор з додатковими можливостями для різних задач",
+        "requirements": "перфоратор з можливістю свердління металу",
         "avatar": "id14.png",
         "behavior": "клієнт-слюсар",
         "correct_models": ["RH-12Q"],

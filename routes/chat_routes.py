@@ -238,7 +238,7 @@ def chat():
 
         # Генерація уточнюючих питань
         prompt = f"""Ти клієнт, який обрав інструмент {user_model} для {session['situation']['description']}.\n
-        Згенеруй 5 питань про **характеристики**, **зовнішню будову**, **призначення**, вартість інструменту. Питання має бути в одне речення."""
+        Згенеруй 5 питань про **призначення**, **характеристику**, **зовнішню будову**, вартість інструменту та про думку продавців щодо нього. Питання має бути в одне речення. Формулюй, наче жива людина."""
 
         try:
             response = client.chat.completions.create(
@@ -390,9 +390,9 @@ def chat():
                 answers_score = sum(a["score"] for a in session["user_answers"].values())
 
                 if answers_score >= 5:
-                    feedback = "Гарний інструмент."
+                    feedback = "Класно презентуєте."
                 elif answers_score >= 3:
-                    feedback = "Інструмент непоганий."
+                    feedback = "Окей, прикольно."
                 else:
                     feedback = "Зрозуміло."
 
@@ -562,7 +562,6 @@ def chat():
             })
 
                 model_score = session.get("model_score", 0)
-                # Додаємо обмеження для questions_score (макс. 8) та answers_score (макс. 6)
                 questions_score = min(sum(q["score"] for q in session.get("question_scores", [])), 8)
                 answers_score = min(sum(a["score"] for a in session.get("user_answers", {}).values()), 6)
                 objection_score = session.get('objection_score', 0)
@@ -586,23 +585,29 @@ def chat():
 
                 # Збереження звіту
                 session["total_score"] = total_score
-                report_content = generate_report(dict(session))
                 report_filename = f"report_{session.get('seller_name', 'unknown')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
                 
-                os.makedirs('reports', exist_ok=True)
-                
-                save_report_to_drive(session)
-                print("Файл створено на Google Drive:", drive_link)
+                # Зберігаємо звіт на Google Drive
+                drive_success = save_report_to_drive(session)
+                if drive_success:
+                    print("[DRIVE] Звіт успішно збережено на Google Drive")
+                else:
+                    print("[DRIVE] Помилка збереження звіту")
 
-                session.clear()
-                session.modified = True
-
-                return jsonify({
+                # ✅ СПОЧАТКУ формуємо відповідь, ПОТІМ очищаємо сесію
+                response_data = {
                     "reply": f"{full_reply}\n\nЗвіт збережено для вашого тренера.",
                     "chat_ended": True,
                     "show_restart_button": True,
                     "report_filename": report_filename
-                })
+                }
+
+                # ✅ Очищаємо сесію ПІСЛЯ формування відповіді
+                session.clear()
+                session.modified = True
+
+                # ✅ Повертаємо відповідь
+                return jsonify(response_data)
             
             except Exception as e:
                 print(f"Помилка при оцінюванні: {str(e)}")
@@ -610,12 +615,6 @@ def chat():
                     "reply": "Вибачте, не вдалося обробити відповідь. Давайте спробуємо ще раз?",
                     "chat_ended": False
                 })
-
-    return jsonify({
-        "reply": "Виникла непередбачена помилка. Спробуйте ще раз.",
-        "chat_ended": True,
-        "show_restart_button": True
-    })
 
 @chat_bp.route("/show_models", methods=["POST"])
 def show_models():

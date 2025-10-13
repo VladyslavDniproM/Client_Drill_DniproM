@@ -563,11 +563,11 @@ def chat():
             })
 
                 model_score = session.get("model_score", 0)
-                questions_score = sum(q["score"] for q in session.get("question_scores", []))
-                answers_score = sum(a["score"] for a in session.get("user_answers", {}).values())
+                # Додаємо обмеження для questions_score (макс. 8) та answers_score (макс. 6)
+                questions_score = min(sum(q["score"] for q in session.get("question_scores", [])), 8)
+                answers_score = min(sum(a["score"] for a in session.get("user_answers", {}).values()), 6)
                 objection_score = session.get('objection_score', 0)
                 total_score = model_score + questions_score + answers_score + objection_score
-                max_score = 8 + 6 + 6 + 10
 
                 print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
                 print(f"[SCORE] За модель: {model_score}/6")

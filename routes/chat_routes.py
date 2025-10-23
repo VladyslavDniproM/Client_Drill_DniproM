@@ -576,7 +576,7 @@ def chat():
 
                 if total_score >= 25:
                     summary_label = "🟢 Чудова консультація."
-                elif total_score >= 20:
+                elif total_score >= 18:
                     summary_label = "🟡 Задовільна консультація."
                 else:
                     summary_label = "🔴 Незадовільна консультація."

@@ -128,7 +128,7 @@ CATEGORY_SITUATION_IDS = {
     "jigsaw": list(range(126, 136)),
     "woodgrinders": list(range(136, 156)),
     "circularsaws": list(range(156, 176)),
-    "exam": list(range(1, 65))
+    "exam": list(range(1, 47))
 }
 
 FEMALE_VOICES = ["nova", "shimmer", "fable", "verse", "coral"]

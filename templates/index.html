@@ -647,6 +647,59 @@ h1 {
   transition: opacity 1s ease-out;
 }
 
+.selected-category {
+  background: #d0ff00 !important;
+  color: rgb(0, 0, 0) !important;
+}
+
+#category-selection-buttons button {
+  padding: 14px 12px;
+  border-radius: 14px;
+  border: 2px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.25s;
+  font-size: 14px;
+}
+
+#category-selection-buttons button:hover {
+  border-color: #ff6f00;
+}
+
+#category-selection-buttons button.selected-category {
+  background: #ff6f00;
+  color: white;
+  border-color: #ff6f00;
+}
+
+#mode-selection-modal button,
+#confirm-category-btn,
+#submit-name-btn,
+#back-to-category-select,
+#back-to-mode-select,
+#exam-mode-btn,
+#training-mode-btn {
+  border-radius: 12px;
+  padding: 12px 18px;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  cursor: pointer;
+  transition: 0.25s;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+#mode-selection-modal button:hover,
+#confirm-category-btn:hover,
+#submit-name-btn:hover {
+  background: #aeff00;
+}
+
+#back-to-category-select:hover {
+  background:#ff330f;
+}
+
 /* === MODAL === */
 .modal {
   position: fixed;
@@ -745,6 +798,15 @@ h1 {
     0% { opacity: 1; }
     50% { opacity: 0.5; }
     100% { opacity: 1; }
+}
+
+#category-selection-buttons {
+  max-height: 200px; /* можеш змінити під себе */
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-right: 4px; /* щоб не різало контент біля скролу */
 }
 
 /* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
@@ -1006,51 +1068,47 @@ h1 {
       ">
     </div>
 
-    <div id="auth-modal" class="modal">
-      <div class="modal-content">
-        <h2>Введіть ваші дані</h2>
-        <p>1. Оберіть категорію інструменту:</p>
-        <select 
-            id="tool-category" 
-            style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;"
-        >
-          <option value="">-- Оберіть категорію --</option>
-          <option value="screwdrivers">Шуруповерти</option>
-          <option value="grinders">КШМ (болгарки)</option>
-          <option value="hammers">Перфоратори</option>
-          <option value="inverters">Інвертори</option>
-          <option value="saws">Ланцюгові пили</option>
-          <option value="trimmers">Тримери</option>
-          <option value="sprayers">Обприскувачі</option>
-          <option value="busters">Пускові та зарядні пристрої</option>
-          <option value="compresor">Компресори</option>
-          <option value="impact">Гвинто- та гайковерти</option>
-          <option value="showers">Мийки високого тиску</option>
-          <option value="lighters">Акумуляторні ліхтарі</option>
-          <option value="instuments">Набори інструментів Ultra</option>
-          <option value="jigsaw">Лобзики</option>
-          <option value="woodgrinders">Шліфмашини</option>
-          <option value="circularsaws">Циркулярні пили</option>
-          <option value="exam">Екзамен (інструменти стажування)</option>
-        </select>
+<div id="mode-selection-modal" class="modal" style="display: flex;">
+  <div class="modal-content">
+    <h2>Оберіть режим</h2>
+    <p>У якому режимі хочете працювати?</p>
 
-        <p>2. Вкажіть ваше ПІБ для початку консультації:</p>
-        <input 
-            type="text" 
-            id="seller-name-input" 
-            placeholder="ПІБ (наприклад, Іванов Іван Іванович)" 
-            style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;"
-        >
-        
-        <button 
-            id="submit-name-btn" 
-            style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;"
-        >
-          Продовжити
-        </button>
-      </div>
+    <button id="training-mode-btn">Тренування</button>
+    <button id="exam-mode-btn">Екзамен</button>
+  </div>
+</div>
+
+<div id="category-selection-modal" class="modal">
+  <div class="modal-content">
+    <h2>Оберіть категорію інструменту</h2>
+    <p>Виберіть категорію, з якою будете працювати:</p>
+    
+    <div id="category-selection-buttons">
+      <!-- Кнопки категорій будуть додані динамічно -->
     </div>
+    
+    <button id="confirm-category-btn">Продовжити з обраною категорією</button>
+  </div>
+</div>
 
+<!-- Модальне вікно авторизації -->
+<div id="auth-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <h2>Введіть ваші дані</h2>
+    
+    <div id="selected-category-info">
+      <strong>Обрана категорія:</strong> <span id="selected-category-name">Не обрано</span>
+    </div>
+    
+    <p>Вкажіть ваше ПІБ для початку консультації:</p>
+    <input type="text" id="seller-name-input" placeholder="ПІБ (наприклад, Іванов Іван Іванович)">
+    
+    <button id="submit-name-btn">Почати консультацію</button>
+    
+    <button id="back-to-category-select">← Назад до вибору категорії</button>
+
+  </div>
+</div>
 
     <!-- Контейнер для вибору моделей (залишився, але не показуємо) -->
     <div id="models-container" style="display:none;">
@@ -1079,7 +1137,7 @@ h1 {
     <div id="model-hint-modal" class="modal hidden">
       <div class="modal-content">
         <h2>Порада</h2>
-        <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Для цього натисніть на кнопку: Оберіть модель. Але не спішіть: якщо не впевнені у виборі, поставте клієнтові ще декілька запитань.</p>
+        <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Для цього натисніть на кнопку: Оберіть модель. Але уважно: якщо Ви перейдете до вибору моделі, Ви вже не зможете ставити питання.</p>
         <button id="close-hint-btn">Зрозуміло</button>
       </div>
     </div>
@@ -2572,79 +2630,144 @@ function updateStageIndicator(currentStage) {
   stageLabel.classList.add('stage');
 }
 
-   let sellerName = '';
+let sellerName = '';
+let selectedCategory = '';
 
-async function authenticateSeller(name) {
-    try {
-        const category = document.getElementById("tool-category").value;
-
-        const response = await fetch("/authenticate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                seller_name: name,
-                category: category
-            }),
-            credentials: "include"
-        });
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Помилка автентифікації:", error);
-        return { error: "Помилка з'єднання" };
-    }
+async function authenticateSeller(name, category) {
+  try {
+    const response = await fetch("/authenticate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        seller_name: name,
+        category: category
+      }),
+      credentials: "include"
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Помилка автентифікації:", error);
+    return { error: "Помилка з'єднання" };
+  }
 }
 
-  // Показуємо модальне вікно для введення ПІБ при завантаженні
-  document.addEventListener('DOMContentLoaded', () => {
-    const authModal = document.getElementById('auth-modal');
-    const rulesModal = document.getElementById('rules-modal');
-    const nameInput = document.getElementById('seller-name-input');
-    const categoryInput = document.getElementById('tool-category');
-    const submitButton = document.getElementById('submit-name-btn');
+function initializeCategorySelection() {
+  const categoryButtonsContainer = document.getElementById('category-selection-buttons');
+  
+  const availableCategories = [
+    { value: "screwdrivers", name: "Шуруповерти" },
+    { value: "grinders", name: "КШМ (болгарки)" },
+    { value: "hammers", name: "Перфоратори" },
+    { value: "inverters", name: "Інвертори" },
+    { value: "saws", name: "Ланцюгові пили" },
+    { value: "trimmers", name: "Тримери" },
+    { value: "sprayers", name: "Обприскувачі" },
+    { value: "busters", name: "Пускові та зарядні" },
+    { value: "compresor", name: "Компресори" },
+    { value: "impact", name: "Гвинтоверти та гайковерти" },
+    { value: "showers", name: "Мийки високого тиску" },
+    { value: "lighters", name: "Акумуляторні ліхтарі" },
+    { value: "instuments", name: "Набори Ultra" },
+    { value: "jigsaw", name: "Лобзики" },
+    { value: "woodgrinders", name: "Шліфмашини" },
+    { value: "circularsaws", name: "Циркулярні пили" }
+  ];
+  
+  availableCategories.forEach(category => {
+    const button = document.createElement('button');
+    button.textContent = category.name;
+    button.dataset.value = category.value;
 
-    // Приховуємо вікно правил спочатку
-    rulesModal.style.display = 'none';
-
-    // Показуємо вікно автентифікації
-    authModal.style.display = 'flex';
-
-    // Обробник для кнопки "Продовжити"
-    submitButton.addEventListener('click', async () => {
-        const name = nameInput.value.trim();
-        const category = categoryInput.value;
-
-        if (!category) {
-            alert("Будь ласка, оберіть категорію інструменту.");
-            categoryInput.focus();
-            return;
-        }
-
-        if (!name) {
-            alert("Будь ласка, введіть ваше ПІБ.");
-            nameInput.focus();
-            return;
-        }
-
-        // Блокуємо інтерфейс під час відправки
-        nameInput.disabled = true;
-        categoryInput.disabled = true;
-        submitButton.disabled = true;
-
-        const result = await authenticateSeller(name);
-
-        if (result.error) {
-            alert("Помилка: " + result.error);
-            nameInput.disabled = false;
-            categoryInput.disabled = false;
-            submitButton.disabled = false;
-        } else {
-            sellerName = name;
-            authModal.style.display = 'none';
-            rulesModal.style.display = 'flex';
-        }
+    button.addEventListener('click', () => {
+      document.querySelectorAll('#category-selection-buttons button').forEach(btn => {
+        btn.classList.remove('selected-category');
+      });
+      button.classList.add('selected-category');
+      selectedCategory = category.value;
+      document.getElementById('confirm-category-btn').style.display = 'block';
     });
+
+    categoryButtonsContainer.appendChild(button);
+  });
+
+  document.getElementById('confirm-category-btn').addEventListener('click', () => {
+    if (selectedCategory) {
+      const categoryName = availableCategories.find(cat => cat.value === selectedCategory)?.name || selectedCategory;
+      document.getElementById('selected-category-name').textContent = categoryName;
+      document.getElementById('category-selection-modal').style.display = 'none';
+      document.getElementById('auth-modal').style.display = 'flex';
+      document.getElementById('seller-name-input').focus();
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modeModal = document.getElementById('mode-selection-modal');
+  const categoryModal = document.getElementById('category-selection-modal');
+  const authModal = document.getElementById('auth-modal');
+  const rulesModal = document.getElementById('rules-modal');
+  const nameInput = document.getElementById('seller-name-input');
+  const submitButton = document.getElementById('submit-name-btn');
+
+  rulesModal.style.display = 'none';
+  categoryModal.style.display = 'none';
+  authModal.style.display = 'none';
+
+  initializeCategorySelection();
+
+  document.getElementById('training-mode-btn').addEventListener('click', () => {
+    modeModal.style.display = 'none';
+    categoryModal.style.display = 'flex';
+  });
+
+  document.getElementById('exam-mode-btn').addEventListener('click', () => {
+    selectedCategory = "exam";
+    document.getElementById('selected-category-info').style.display = 'none';
+    modeModal.style.display = 'none';
+    authModal.style.display = 'flex';
+    nameInput.focus();
+  });
+
+  submitButton.addEventListener('click', async () => {
+    const name = nameInput.value.trim();
+
+    if (!name) {
+      alert("Будь ласка, введіть ваше ПІБ.");
+      nameInput.focus();
+      return;
+    }
+
+    nameInput.disabled = true;
+    submitButton.disabled = true;
+
+    const result = await authenticateSeller(name, selectedCategory);
+
+    if (result.error) {
+      alert("Помилка: " + result.error);
+      nameInput.disabled = false;
+      submitButton.disabled = false;
+    } else {
+      sellerName = name;
+      authModal.style.display = 'none';
+      rulesModal.style.display = 'flex';
+    }
+  });
+
+  // ✅ Ось тут ми додаємо кнопку "Назад"
+  document.getElementById('back-to-category-select').addEventListener('click', () => {
+    // Якщо ЕКЗАМЕН → назад до вибору режиму
+    if (selectedCategory === "exam") {
+      selectedCategory = '';
+      authModal.style.display = 'none';
+      document.getElementById('selected-category-info').style.display = 'block';
+      modeModal.style.display = 'flex';
+    } 
+    // Якщо ТРЕНУВАННЯ → назад до вибору категорій
+    else {
+      authModal.style.display = 'none';
+      categoryModal.style.display = 'flex';
+    }
+  });
 });
 
 function playVoice(text) {
@@ -2714,18 +2837,20 @@ async function sendMessage() {
             return;
         }
 
-        if (data.show_restart_button) {
-            restartButton.style.display = "inline-block";
-        } else {
-            restartButton.style.display = "none";
-        }
-
-        if (data.hide_choose_model_btn) {
-            document.getElementById("choose-model-btn").style.display = "none";
-        }
-
+        // --- НОВИЙ КОД: Обробка фінальної оцінки ---
+        if (data.evaluation) {
+            // Додаємо перше повідомлення (репліку клієнта)
+            addMessage(data.reply, false);
+            playVoice(data.reply);
+            
+            // Додаємо друге повідомлення (оцінку) з невеликою затримкою
+            setTimeout(() => {
+                addMessage(data.evaluation, false);
+                playVoice(data.evaluation);
+            }, 1000);
+        } 
         // --- Логіка для етапу 3 (технічні питання) ---
-        if (data.stage === 3) {
+        else if (data.stage === 3) {
             addMessage(data.reply, false);
             statusElement.textContent = "Клієнт уточнює деталі про модель...";
             userInput.focus();
@@ -2742,6 +2867,16 @@ async function sendMessage() {
             // Для інших етапів - стандартна обробка
             addMessage(data.reply, false);
             playVoice(data.reply);
+        }
+
+        if (data.show_restart_button) {
+            restartButton.style.display = "inline-block";
+        } else {
+            restartButton.style.display = "none";
+        }
+
+        if (data.hide_choose_model_btn) {
+            document.getElementById("choose-model-btn").style.display = "none";
         }
 
         // Обробка етапу вибору моделі

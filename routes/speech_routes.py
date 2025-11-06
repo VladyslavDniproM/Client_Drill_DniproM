@@ -1,3 +1,4 @@
+import random
 from flask import Blueprint, request, jsonify, session
 import os, tempfile
 from config import client
@@ -51,12 +52,25 @@ def speak():
     if category != "exam":   # ← тут залиш умовний фільтр (або прибери, якщо озвучка всюди дозволена)
         return jsonify({"error": "Озвучка недоступна для цієї категорії"}), 403
 
-    # Використовуємо вже визначений голос
-    voice = session.get("voice", "alloy")
+    # Отримуємо ID клієнта та визначаємо голос
+    client_id = session.get("current_situation_id")
+    
+    FEMALE_VOICES = ["nova", "shimmer", "fable", "verse", "coral"]
+    MALE_VOICES = ["alloy", "ash", "ballad", "echo", "onyx", "sage"]
+    FEMALE_IDS = {3, 8, 20, 34, 35, 46, 47, 49, 58, 59, 61}
+
+    # Визначаємо голос на основі ID клієнта
+    if client_id in FEMALE_IDS:
+        voice = random.choice(FEMALE_VOICES)
+    else:
+        voice = random.choice(MALE_VOICES)
+    
+    # Зберігаємо голос у сесії для подальшого використання
+    session["voice"] = voice
 
     try:
         response = client.audio.speech.create(
-            model="gpt-4o-mini-tts",
+            model="tts-1",
             voice=voice,
             input=text
         )

@@ -698,7 +698,7 @@ def chat():
                             {"role": "user", "content": stage3_prompt}
                         ],
                         temperature=0.3,
-                        max_tokens=400
+                        max_tokens=500
                     )
                     stage3_text = stage3_response.choices[0].message.content.strip()
                     
@@ -727,7 +727,7 @@ def chat():
     ФОРМАТ:
     АНАЛІЗ_ЗАПЕРЕЧЕННЯ: [детальний аналіз роботи з запереченням]
     ПОРАДИ_ЗАПЕРЕЧЕННЯ: [конкретні рекомендації]
-    ОЦІНКА: [ідеально/гарно/стандартно/сумнівно/погано]
+    ОЦІНКА: [ідеально/гарно/сумнівно/погано/жахливо]
     """
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -758,11 +758,11 @@ def chat():
                     objection_score = 7
                     client_final_reply = "Гаразд, беру. Пакуйте!"
                     evaluation_comment = "Гарна робота із запереченнями!"
-                elif rating == "стандартно":
+                elif rating == "сумнівно":
                     objection_score = 5
                     client_final_reply = "Ну що ж, давайте. Пакуйте."
                     evaluation_comment = "Посередня робота із запереченнями."
-                elif rating == "сумнівно":
+                elif rating == "погано":
                     objection_score = 2
                     client_final_reply = "Ой, ладно, пакуйте. Але я ще сумніваюся."
                     evaluation_comment = "Слабка робота із запереченнями."

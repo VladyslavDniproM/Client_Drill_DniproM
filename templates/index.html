@@ -5,8 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Тест «Віртуальний клієнт»</title>
     <link rel="icon" type="image/png" href="/static/main/ikonka.png">
+    
+    <!-- Підключення Manrope через Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
     <style>
 /* === RESET === */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ===== RESET & BASE ===== */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -17,29 +27,53 @@ html, body {
   overflow-x: hidden;
 }
 
-/* === BASE === */
 body {
-background-image: url("/static/main/fon.jpg");
-  background-image: linear-gradient(
-        rgba(0, 0, 0, 0.250), 
-        rgba(0, 0, 0, 0.800)
-      ),
-      url("/static/main/fon.jpg");
-  background-size: cover;         /* або contain — залежно від бажаного ефекту */
+  background-image:
+    linear-gradient(120deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.8)),
+    url("/static/main/fon.jpg");
+  background-size: 200% 200%, cover;
   background-repeat: no-repeat;
-  background-position: center;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-position: 0% 50%, center;
+  animation: moveGradient 15s ease-in-out infinite;
+
+  /* ОНОВЛЕНО: Додано Manrope */
+  font-family: 'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 20px;
   min-height: 100dvh;
+
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
+
   background-color: #ffffff;
   color: #000000;
   padding-top: 140px;
 }
 
+/* Анімація плавного руху градієнта */
+@keyframes moveGradient {
+  0% {
+    background-position: 0% 50%, center;
+  }
+  50% {
+    background-position: 100% 50%, center;
+  }
+  100% {
+    background-position: 0% 50%, center;
+  }
+}
+
+.background-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(0, 0, 0, 0.742);
+  z-index: -1;
+}
+
+/* ===== TOP PANEL ===== */
+/* ===== TOP PANEL ===== */
 .top-panel {
   position: fixed;
   top: 20px;
@@ -48,44 +82,94 @@ background-image: url("/static/main/fon.jpg");
   width: 750px;
   max-width: 1000px;
 
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  padding: 14px 20px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 500;
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+  font-size: 20px;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+  font-family: 'Manrope', sans-serif;
+}
+
+/* Контейнер етапів */
+#stage-indicator {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Один етап */
+.stage-item {
   display: flex;
   flex-direction: column;
-  align-items: center;         /* по центру по горизонталі */
-  justify-content: center;     /* по центру по вертикалі */
+  align-items: center;
+  width: 25%;
+}
 
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.3),
-    rgba(255, 255, 255, 0.05)
-  );
+/* Крапка */
+.stage-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #cfcfcf;
+  transition: 0.3s;
+}
+
+/* Активна */
+.stage-dot.active {
+  background: #ff6f00;
+  box-shadow: 0 0 8px rgba(255,100,0,0.8);
+}
+
+/* Пройдена */
+.stage-dot.completed {
+  background: #23b123;
+}
+
+/* Текст під крапкою */
+.stage-label {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+  white-space: normal;
+}
+/* ===== CHAT INTERFACE ===== */
+.chat-shell {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 750px;
+  max-width: 1000px;
+  height: 28vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-
-  padding: 16px 24px;
   border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  z-index: 500;
-  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  z-index: 999;
 }
 
-.background-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background-color: rgba(0, 0, 0, 0.742); /* або 0.2-0.5 */
-  z-index: -1;
-}
-
-/* === HEADER === */
-h1 {
-  color: #ffffff;
-  text-align: center;
-  padding: 5px;
-  font-size: clamp(18px, 4vw, 24px);
-  margin: 0.5em 0;
-}
-
-/* === CHAT CONTAINER === */
 .chat-container {
   background: transparent;
   backdrop-filter: none;
@@ -101,30 +185,22 @@ h1 {
   pointer-events: auto;
 }
 
-.chat-shell {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  width: 750px;
-  max-width: 1000px;
-  height: 28vh;
-  overflow: hidden;
-
-  display: flex;
-  flex-direction: column;
-
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  z-index: 999;
+.chat-blur-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  pointer-events: none;
+  background: transparent;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 5;
 }
 
-/* === MESSAGES === */
+/* ===== MESSAGES ===== */
 .message {
   margin-bottom: 15px;
   padding: 10px 15px;
@@ -134,16 +210,19 @@ h1 {
   animation: fadeIn 0.3s ease;
   word-wrap: break-word;
 }
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
+
 .bot-message {
   background-color: #e0e0e0;
   color: #333;
   align-self: flex-start;
   border-radius: 18px 18px 5px 18px;
 }
+
 .user-message {
   background-color: #ff6f00;
   color: white;
@@ -151,14 +230,15 @@ h1 {
   border-radius: 18px 18px 18px 5px;
 }
 
-/* === INPUT AREA === */
+/* ===== INPUT AREA ===== */
 .input-area {
   display: flex;
   gap: 10px;
   padding: 16px 20px;
   background: transparent;
-  border-top: 1px solid rgba(255, 255, 255, 0.2); /* тонка межа */
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 #user-input {
   flex-grow: 1;
   padding: 12px;
@@ -169,16 +249,20 @@ h1 {
   max-height: 120px;
   resize: vertical;
   pointer-events: auto;
-}
-#user-input:disabled::placeholder {
-    color: #999; /* Сірий колір, що добре видно на білому фоні */
-    opacity: 1; /* Фіксує прозорість (за замовчуванням у деяких браузерах вона знижується) */
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
 }
 
 #user-input:disabled {
-    background-color: #f5f5f5; /* Світло-сірий фон для вимкненого поля */
-    border-color: #ddd; /* Межа для контрасту */
+  background-color: #f5f5f5;
+  border-color: #ddd;
 }
+
+#user-input:disabled::placeholder {
+  color: #999;
+  opacity: 1;
+}
+
 #send-button {
   background-color: #ff6f00;
   color: white;
@@ -190,11 +274,14 @@ h1 {
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   min-width: 60px;
   height: 44px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
 }
 
 #send-button:hover {
   background-color: #e65c00;
 }
+
 #send-button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
@@ -211,55 +298,34 @@ h1 {
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   min-width: 60px;
   height: 44px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
 }
 
 .record-btn:hover {
   background-color: #ffd900;
 }
+
 .record-btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
 
-/* === STAGE INDICATOR === */
-.stage-indicator-single {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 16px;
-  margin-top: 12px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  width: 540px;
-  max-width: 800px;
-  font-weight: bold;
-  font-size: 14px;
-  color: white;
-  transition: all 0.3s ease;
-}
-
 .recording-indicator {
-  color: red;
-  font-weight: bold;
-  margin-top: 10px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 1000;
+  animation: pulse 1.5s infinite;
+  font-family: 'Manrope', sans-serif;
 }
 
-.stage-indicator-single .stage {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeStage 0.4s forwards;
-}
-
-@keyframes fadeStage {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* === STATUS / TYPING === */
+/* ===== STATUS & TYPING ===== */
 .status {
   font-style: italic;
   font-size: clamp(12px, 2.5vw, 14px);
@@ -268,12 +334,16 @@ h1 {
   width: 90%;
   max-width: 800px;
   margin: 0 auto;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
 }
+
 .typing-indicator {
   display: inline-block;
   padding: 10px;
   margin-left: 10px;
 }
+
 .typing-dot {
   display: inline-block;
   width: 8px;
@@ -283,32 +353,113 @@ h1 {
   margin: 0 2px;
   animation: typingAnimation 1.4s infinite ease-in-out;
 }
+
 .typing-dot:nth-child(1) { animation-delay: 0s; }
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
 @keyframes typingAnimation {
   0%, 60%, 100% { transform: translateY(0); }
   30% { transform: translateY(-5px); }
 }
 
-.modal-content input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
+/* ===== FEEDBACK TOAST ===== */
+.feedback-toast {
+  position: fixed;
+  top: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  animation: slideDown 0.5s ease-out;
+  width: 90%;
+  max-width: 500px;
 }
 
-.modal-content button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    font-size: 16px;
-    cursor: pointer;
+.feedback-toast.hidden {
+  display: none;
 }
 
-/* === RESTART BUTTON === */
+.feedback-toast-content {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  border-left: 5px solid #ff6f00;
+  position: relative;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  font-family: 'Manrope', sans-serif;
+}
+
+
+.feedback-toast-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.feedback-toast-close:hover {
+  background: rgba(0,0,0,0.1);
+  color: #333;
+}
+
+.feedback-toast-message {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-right: 25px;
+  font-weight: 500;
+}
+
+.feedback-toast.warning .feedback-toast-content {
+  border-left-color: #ffc107;
+  background: linear-gradient(135deg, #fffbf0, #fff3cd);
+  color: #856404;
+}
+
+.feedback-toast.error .feedback-toast-content {
+  border-left-color: #dc3545;
+  background: linear-gradient(135deg, #fdf2f2, #f8d7da);
+  color: #721c24;
+}
+
+.feedback-toast.info .feedback-toast-content {
+  border-left-color: #17a2b8;
+  background: linear-gradient(135deg, #f0f9ff, #d1ecf1);
+  color: #0c5460;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+  50% { box-shadow: 0 8px 32px rgba(255, 111, 0, 0.3); }
+}
+
+.feedback-toast:not(.hidden) .feedback-toast-content {
+  animation: pulseGlow 2s infinite;
+}
+
+/* ===== BUTTONS ===== */
 #restart-button {
   display: none;
   position: fixed;
@@ -323,57 +474,113 @@ h1 {
   font-size: clamp(12px, 2.5vw, 14px);
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
 }
+
 #restart-button:hover {
   background-color: #ff0000a5;
 }
 
-.chat-blur-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  pointer-events: none;
-
-  background: transparent;
-  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  z-index: 5;
-}
-
 #choose-model-btn {
   display: none;
-  position: absolute;
-  right: 80px; /* Відступ від правого краю чату */
-  bottom: 50%; /* Вертикальне центрування */
-  transform: translateY(50%);
-  z-index: 999;
-  background-color: #ff6f00;
+  position: fixed;
+  top: 50%;
+  right: 5%;
+  transform: translateY(-50%) scale(1);
+  z-index: 9999;
+
+  background: linear-gradient(45deg, #28a745, #20c997, #198754, #0f5132);
+  background-size: 400% 400%;
   color: white;
   border: none;
-  border-radius: 25px 25px 25px 25px; /* Скруглення тільки зліва */
-  padding: 25px 25px 25px 25px;
+  border-radius: 25px;
+  padding: 20px 28px;
   font-size: clamp(14px, 3vw, 16px);
   text-align: center;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
   white-space: nowrap;
   max-width: 200px;
+  font-family: 'Manrope', sans-serif;
+
+  box-shadow:
+    0 0 20px rgba(40, 167, 69, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+  transition: transform 0.25s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  animation: gradientFlow 3s ease infinite, gentlePulse 2s ease-in-out infinite;
+  overflow: hidden;
 }
 
 #choose-model-btn:hover {
-  background-color: #e65c00;
-  right: 80px; /* Зсуваємо ближче до чату при наведенні */
-  box-shadow: -2px 4px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50%) scale(1.07);
+  box-shadow:
+    0 0 30px rgba(40, 167, 69, 0.6),
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  filter: brightness(1.08);
 }
 
-/* === MODELS SELECTION === */
+#choose-model-btn:active {
+  transform: translateY(-50%) scale(0.97);
+  filter: brightness(0.9);
+}
+
+
+/* Анімація переливу кольорів */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Анімація пульсації */
+@keyframes gentlePulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(40, 167, 69, 0.4),
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(40, 167, 69, 0.6),
+      0 6px 16px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Адаптація для мобільних пристроїв */
+@media (max-width: 768px) {
+  #choose-model-btn {
+    padding: 20px;
+    max-width: 180px;
+    font-size: clamp(12px, 3vw, 14px);
+    animation: gradientFlow 4s ease infinite, gentlePulse 3s ease-in-out infinite;
+  }
+  
+  #choose-model-btn:hover {
+    animation: gradientFlow 2s ease infinite, gentlePulse 2s ease-in-out infinite;
+  }
+}
+
+@media (max-width: 480px) {
+  #choose-model-btn {
+    padding: 16px;
+    max-width: 150px;
+    font-size: 12px;
+  }
+}
+
+/* ===== MODELS SELECTION ===== */
 #models-container {
   display: none;
   margin-top: 15px;
@@ -382,6 +589,7 @@ h1 {
   max-width: 800px;
   margin: 15px auto 0;
 }
+
 #models-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -389,6 +597,7 @@ h1 {
   justify-content: center;
   margin-top: 10px;
 }
+
 .model-button {
   min-width: 180px;
   flex: 0 0 auto;
@@ -400,307 +609,392 @@ h1 {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
+
 .model-button:hover {
   background-color: #ff6f00;
   transform: scale(1.03);
 }
 
-/* === MODEL OVERLAY === */
+/* === MODEL SELECTION OVERLAY === */
 .model-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+    padding: 20px;
+    box-sizing: border-box;
+    font-family: 'Manrope', sans-serif;
 }
+
 .model-selector {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  max-width: 90%;
-  overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    padding: 24px;
+    width: 90vw;
+    max-width: 1200px;
+    max-height: 85vh;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Manrope', sans-serif;
 }
+
 .models-scroll {
-  display: flex;
-  overflow-x: auto;
-  gap: 16px;
-  padding: 10px;
-  scroll-behavior: smooth;
-  max-width: 80vw;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
-}
-.arrow {
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  user-select: none;
-  padding: 10px;
-  color: #333;
-}
-.arrow:hover {
-  color: #ff6600;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    max-height: 65vh;
+    overflow-y: auto;
+    padding: 8px 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #ff6f00 transparent;
+    font-family: 'Manrope', sans-serif;
 }
 
-  @keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+.models-scroll::-webkit-scrollbar {
+    width: 6px;
+}
 
-  @keyframes modalFadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
+.models-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
 
-  @keyframes contentScaleIn {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
+.models-scroll::-webkit-scrollbar-thumb {
+    background: #ff6f00;
+    border-radius: 10px;
+}
 
-  /* Основні стилі */
-  .model-detail-modal {
+/* === MODEL BUTTONS === */
+.model-button {
+    background: white;
+    border: 2px solid #f0f0f0;
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 200px;
+    justify-content: space-between;
+    font-family: 'Manrope', sans-serif;
+}
+
+.model-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 111, 0, 0.1), transparent);
+    transition: left 0.6s;
+}
+
+.model-button:hover::before {
+    left: 100%;
+}
+
+.model-button:hover {
+    border-color: #ff6f00;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(255, 111, 0, 0.15);
+}
+
+.model-button img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    margin: 0 auto 12px;
+    display: block;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.model-button:hover img {
+    transform: scale(1.05);
+}
+
+.model-button > div {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    font-size: 16px;
+    line-height: 1.3;
+    text-align: center;
+    flex-shrink: 0;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+}
+
+/* === DETAIL VIEW BUTTON === */
+.detail-view-btn {
+    background: linear-gradient(135deg, #ff6f00, #ff8f00);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 8px;
+    flex-shrink: 0;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.detail-view-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 111, 0, 0.3);
+}
+
+/* === MODEL DETAIL MODAL === */
+.model-detail-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: 10000;
-    animation: modalFadeIn 0.3s ease-out forwards;
-  }
-
-  .model-detail-modal.closing {
-    animation: modalFadeOut 0.3s ease-out forwards;
-  }
-  
-  .model-detail-content {
-    background: white;
+    z-index: 10001;
+    animation: modalFadeIn 0.4s ease-out;
     padding: 20px;
-    border-radius: 12px;
+    box-sizing: border-box;
+    font-family: 'Manrope', sans-serif;
+}
+
+.model-detail-content {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    padding: 32px;
     width: 90vw;
-    max-width: 400px; /* Фіксована ширина */
-    max-height: 90vh; /* Максимальна висота */
-    padding: 2vh 2vw;
+    max-width: 500px;
+    max-height: 90vh;
     position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    transform: scale(0.95);
-    opacity: 0;
-    animation: contentScaleIn 0.3s ease-out 0.1s forwards; /* Вимкнення прокрутки */
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: flex;
     flex-direction: column;
-  }
-  
-  .model-detail-main {
+    font-family: 'Manrope', sans-serif;
+}
+
+.model-detail-main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    overflow: hidden; /* Запобігаємо виходу контенту */
-  }
-  
-  .model-detail-image {
-    width: 50vmin; /* Комбінація vw і vh */
-    height: 50vmin;
-    max-width: 300px;
-    max-height: 300px;
-    object-fit: contain; 
-    padding: 0; /* Прибираємо відступи */
-    margin: 10px 0; /* Відступи зверху та знизу */
-  }
-  
-  .model-detail-title {
-    font-size: 20px;
-    font-weight: bold;
+    gap: 20px;
+    flex: 1;
+    overflow: hidden;
+    font-family: 'Manrope', sans-serif;
+}
+
+.model-detail-image {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.model-detail-title {
+    font-size: 24px;
+    font-weight: 700;
     color: #333;
     text-align: center;
     margin: 0;
-    padding: 0 10px 8px;
-    border-bottom: 2px solid #ff6f00;
+    padding-bottom: 12px;
+    border-bottom: 3px solid #ff6f00;
     width: 100%;
-  }
-  
-  .model-detail-specs {
+    flex-shrink: 0;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.model-detail-specs {
     width: 100%;
-    padding: 0 10px;
-    margin: 5px 0;
-    flex-grow: 1;
-    overflow: hidden; /* Запобігаємо прокрутці */
-  }
-  
-  .model-detail-specs ul {
-    padding-left: 20px;
+    flex: 1;
+    overflow-y: auto;
+    font-family: 'Manrope', sans-serif;
+}
+
+.model-detail-specs ul {
+    list-style: none;
+    padding: 0;
     margin: 0;
-  }
-  
-  .model-detail-specs li {
-    margin-bottom: 8px;
-    line-height: 1.4;
-    padding: 4px 0;
+    font-family: 'Manrope', sans-serif;
+}
+
+.model-detail-specs li {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     font-size: 15px;
-  }
+    line-height: 1.5;
+    color: #555;
+    position: relative;
+    padding-left: 20px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 500;
+}
 
-  .model-detail-specs li:last-child {
-    margin-bottom: 0;
-  }
+.model-detail-specs li:last-child {
+    border-bottom: none;
+}
 
-  .model-detail-close {
+.model-detail-specs li::before {
+    content: '•';
+    color: #ff6f00;
+    font-weight: bold;
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
+    left: 0;
+}
+
+.model-detail-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    font-size: 20px;
     color: #666;
-    z-index: 1;
-  }
-
-  /* Адаптація для мобільних */
-  @media (max-width: 500px) {
-    .model-detail-content {
-      width: 90%;
-      padding: 1.5vh 1.5vw;
-    }
-    
-    .model-detail-image {
-      width: 25vmin;
-      height: 25vmin;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.15); /* Менша тінь на мобільних */
-    }
-    
-    .model-detail-title {
-        font-size: calc(16px + 0.5vw);
-
-    }
-    
-    .model-detail-specs li {
-      font-size: calc(14px + 0.3vw);
-    }
-  }
-
-  @media (max-width: 300px) {
-    .model-detail-specs li {
-      font-size: calc(12px + 0.3vw);
-    }
-  }
-
-  /* Стилі для кнопки "Детальніше" */
-  .detail-view-btn {
-    background: #ff3c00;
-    color: white;
+    transition: all 0.3s ease;
     border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
+    z-index: 1;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+}
+
+.model-detail-close:hover {
+    background: #ff6f00;
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* === КАТЕГОРІЇ ТА ФІЛЬТРИ === */
+.model-categories {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+    font-family: 'Manrope', sans-serif;
+}
+
+.category-tab {
+    padding: 12px 20px;
+    border: 2px solid transparent;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
     cursor: pointer;
-    margin-top: 10px;
+    font-weight: 600;
     font-size: 14px;
-    transition: all 0.3s;
-    width: auto;
-    align-self: center;
-  }
-  
-  .detail-view-btn:hover {
-    background: #ffc400;
-    transform: scale(1.05);
-  }
-
-/* === PROGRESS === */
-.progress-hint {
-  color: #ffffff;
-  font-size: clamp(10px, 2vw, 12px);
-  text-align: center;
-  width: 90%;
-  max-width: 800px;
-  margin: 3px auto;
-}
-.progress-container {
-  margin-top: 10px;
-  width: 90%;
-  max-width: 800px;
-  height: 10px;
-  background-color: #eee;
-  border-radius: 5px;
-  overflow: hidden;
-  transition: opacity 0.5s ease;
-}
-.progress-bar {
-  height: 100%;
-  width: 0%;
-  background-color: #4caf50;
-  transition: width 0.3s ease-out;
-  animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-.fade-out {
-  opacity: 0;
-  transition: opacity 1s ease-out;
+    color: #666;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
 }
 
-.selected-category {
-  background: #d0ff00 !important;
-  color: rgb(0, 0, 0) !important;
+.category-tab:hover {
+    background: rgba(255, 111, 0, 0.1);
+    color: #ff6f00;
+    transform: translateY(-2px);
 }
 
-#category-selection-buttons button {
-  padding: 14px 12px;
-  border-radius: 14px;
-  border: 2px solid #ddd;
-  background: #fff;
-  cursor: pointer;
-  transition: 0.25s;
-  font-size: 14px;
+.category-tab.active {
+    background: #ff6f00;
+    color: white;
+    border-color: #ff6f00;
+    box-shadow: 0 4px 12px rgba(255, 111, 0, 0.3);
+    font-weight: 700;
 }
 
-#category-selection-buttons button:hover {
-  border-color: #ff6f00;
+/* === НАВІГАЦІЙНІ СТРІЛКИ === */
+.arrow {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: bold;
+    color: #2d3748;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    border: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    backdrop-filter: blur(10px);
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
 }
 
-#category-selection-buttons button.selected-category {
-  background: #ff6f00;
-  color: white;
-  border-color: #ff6f00;
+.arrow:hover {
+    background: #ff6f00;
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 12px 32px rgba(255, 111, 0, 0.3);
 }
 
-#mode-selection-modal button,
-#confirm-category-btn,
-#submit-name-btn,
-#back-to-category-select,
-#back-to-mode-select,
-#exam-mode-btn,
-#training-mode-btn {
-  border-radius: 12px;
-  padding: 12px 18px;
-  background: #ffffff;
-  color: #000000;
-  border: none;
-  cursor: pointer;
-  transition: 0.25s;
-  font-size: 15px;
-  font-weight: 500;
+#modelLeftArrow {
+    left: -28px;
 }
 
-#mode-selection-modal button:hover,
-#confirm-category-btn:hover,
-#submit-name-btn:hover {
-  background: #aeff00;
+#modelRightArrow {
+    right: -28px;
 }
 
-#back-to-category-select:hover {
-  background:#ff330f;
+#close-model-overlay {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 52px;
+    height: 52px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    font-size: 20px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
 }
 
-/* === MODAL === */
+/* ===== MODALS ===== */
 .modal {
   position: fixed;
   z-index: 9999;
@@ -715,10 +1009,12 @@ h1 {
   visibility: visible;
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
+
 .modal.hidden {
   opacity: 0;
   visibility: hidden;
 }
+
 .modal-content {
   background: #ff6f00;
   padding: 20px 30px;
@@ -728,13 +1024,16 @@ h1 {
   text-align: left;
   overflow-y: auto;
 }
+
 .modal-content h2 {
   font-size: clamp(18px, 4vw, 22px);
 }
+
 .modal-content ul {
   font-size: clamp(14px, 3vw, 16px);
   padding-left: 20px;
 }
+
 .modal-content button {
   padding: 20px 30px;
   font-weight: bold;
@@ -742,31 +1041,26 @@ h1 {
   cursor: pointer;
 }
 
-/* Додаткові стилі для підказки */
+.modal-content input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.modal-content button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
 #model-hint-modal .modal-content {
-  background: #4CAF50; /* Зелений колір для підказки */
+  background: #4CAF50;
   text-align: center;
-}
-
-#client-character {
-  position: fixed;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px); /* трохи нижче на старті */
-  opacity: 0;
-  z-index: 501;
-  animation: fadeInUp 0.5s ease-out 1.0s forwards; /* 1.5s затримка */
-}
-
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
 }
 
 #model-hint-modal button {
@@ -781,80 +1075,440 @@ h1 {
   display: none;
 }
 
-.recording-indicator {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    z-index: 1000;
-    animation: pulse 1.5s infinite;
+#accept-rules-btn {
+  border-radius: 12px;
+  padding: 16px 24px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Manrope', sans-serif;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 300px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  transition: background-color 0.2s ease;
 }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+#accept-rules-btn:hover {
+  background: #45a049;
 }
 
+#accept-rules-btn:active {
+  background: #3d8b40;
+}
+
+#seller-name-input {
+  width: 100%;
+  padding: 14px 16px;
+  margin: 15px 0;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  background: white;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+#seller-name-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+#seller-name-input::placeholder {
+  color: #999;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+}
+
+/* Адаптація для мобільних */
+@media (max-width: 768px) {
+  #seller-name-input {
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+}
+
+/* ===== CATEGORY SELECTION ===== */
 #category-selection-buttons {
-  max-height: 200px; /* можеш змінити під себе */
+  max-height: 280px;
   overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding-right: 4px; /* щоб не різало контент біля скролу */
+  gap: 10px;
+  padding: 8px 4px 12px 0;
+  font-family: 'Manrope', sans-serif;
 }
 
-/* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
+#category-selection-buttons::-webkit-scrollbar {
+  width: 4px;
+}
+
+#category-selection-buttons::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+#category-selection-buttons::-webkit-scrollbar-thumb {
+  background: #4CAF50;
+  border-radius: 10px;
+}
+
+#category-selection-buttons button {
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  min-width: 140px;
+  flex: 1 1 calc(33.333% - 10px);
+  font-family: 'Manrope', sans-serif;
+}
+
+/* Hover ефекти */
+#category-selection-buttons button:hover {
+  border-color: #4CAF50;
+  background: #f8fff8;
+}
+
+/* Активна/обрана категорія */
+#category-selection-buttons button.selected-category {
+  background: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+  font-weight: 600;
+}
+
+.progress-container,
+.progress-bar, 
+.progress-hint {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
+}
+
+/* ===== MODE SELECTION BUTTONS ===== */
+#mode-selection-modal button,
+#confirm-category-btn,
+#submit-name-btn,
+#back-to-category-select,
+#back-to-mode-select,
+#exam-mode-btn,
+#training-mode-btn {
+  border-radius: 12px;
+  padding: 14px 20px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Manrope', sans-serif;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Кольори для кнопок режимів */
+#training-mode-btn {
+  background: #4CAF50;
+}
+
+#exam-mode-btn {
+  background: #f44336;
+}
+
+#confirm-category-btn {
+  background: #4CAF50;
+}
+
+#submit-name-btn {
+  background: #008f2b;
+}
+
+#back-to-category-select {
+  background: #ff3c00;
+}
+
+/* Hover ефекти */
+#mode-selection-modal button:hover,
+#confirm-category-btn:hover,
+#submit-name-btn:hover,
+#back-to-category-select:hover,
+#exam-mode-btn:hover,
+#training-mode-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Стилі для звіту */
+.report-section {
+  margin: 15px 0;
+  padding: 15px;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.report-score {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 5px 0;
+}
+
+.report-score.excellent { color: #28a745; }
+.report-score.good { color: #ffc107; }
+.report-score.poor { color: #dc3545; }
+
+.report-details {
+  margin: 10px 0;
+  padding: 10px;
+  background: white;
+  border-radius: 5px;
+  border-left: 4px solid #007bff;
+}
+
+.report-advice {
+  margin: 10px 0;
+  padding: 10px;
+  background: #e7f3ff;
+  border-radius: 5px;
+  border-left: 4px solid #17a2b8;
+}
+
+.report-final {
+  text-align: center;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.report-final.excellent { 
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  color: #155724;
+  border: 2px solid #28a745;
+}
+
+.report-final.good { 
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  color: #856404;
+  border: 2px solid #ffc107;
+}
+
+.report-final.poor { 
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  color: #721c24;
+  border: 2px solid #dc3545;
+}
+
+/* Адаптація для мобільних */
+@media (max-width: 768px) {
+  #category-selection-buttons button {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 120px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  
+  #mode-selection-modal button,
+  #confirm-category-btn,
+  #submit-name-btn,
+  #back-to-category-select,
+  #exam-mode-btn,
+  #training-mode-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  #category-selection-buttons button {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
+}
+
+/* ===== CLIENT CHARACTER ===== */
+#client-character {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  z-index: 501;
+  animation: fadeInUp 0.5s ease-out 1.0s forwards;
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+#client-character img {
+  max-height: 520px;
+  border-radius: 16px;
+  filter: drop-shadow(0 0 8px rgba(0,0,0,0.3));
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablets */
+@media (min-width: 601px) and (max-width: 900px) {
+  .chat-shell {
+    width: 80%;
+    height: 36vh;
+  }
+
+  .top-panel {
+    width: 90%;
+  }
+
+  .message {
+    font-size: 15px;
+  }
+
+  #send-button, #record-btn {
+    font-size: 15px;
+  }
+
+  .stage-indicator-single {
+    font-size: 13px;
+  }
+}
+
+/* ===== SUCCESS FEEDBACK TOAST ===== */
+.feedback-toast.success .feedback-toast-content {
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #f0fff4, #d4edda);
+    color: #155724;
+}
+
+.feedback-toast.success .feedback-toast-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.feedback-toast.success .feedback-toast-content p {
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.feedback-toast.success .feedback-toast-content strong {
+    color: #155724;
+    font-weight: bold;
+}
+
+.feedback-toast.success .feedback-toast-content em {
+    color: #0f5132;
+    font-style: italic;
+}
+
+/* Анімація для успішних підказок */
+@keyframes successPulse {
+    0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+    50% { box-shadow: 0 8px 32px rgba(40, 167, 69, 0.3); }
+}
+
+.feedback-toast.success:not(.hidden) .feedback-toast-content {
+    animation: successPulse 2s infinite;
+}
+
+/* Темна тема для success */
+@media (prefers-color-scheme: dark) {
+    .feedback-toast.success .feedback-toast-content {
+        background: linear-gradient(135deg, #0f5132, #1e7e34);
+        color: #d4edda;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .feedback-toast.success .feedback-toast-content strong {
+        color: #d4edda;
+    }
+    
+    .feedback-toast.success .feedback-toast-content em {
+        color: #c3e6cb;
+    }
+}
+
+/* Mobile */
 @media (max-width: 900px) {
-    html, body {
-    background-image: url("/static/main/fon.jpg");
-    background-image: linear-gradient(
-        rgba(0, 0, 0, 0.5), 
-        rgba(0, 0, 0, 0.5)
-      ),
+  html, body {
+    background-image: 
+      linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
       url("/static/main/fon.jpg");
-    background-size: cover;         /* або contain — залежно від бажаного ефекту */
+    background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
     overflow-x: hidden;
     overflow-y: auto;
     width: 100%;
     height: 100%;
-    position: fixed; /* Фіксуємо розміри */
-    touch-action: pan-y; /* Тільки вертикальний скрол */
-    -webkit-overflow-scrolling: touch; /* Плавний скрол для iOS */
+    position: fixed;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* Запобігає підскакуванню контенту при фокусі на input */
   input, textarea {
     touch-action: manipulation;
   }
 
-  /* Фіксуємо чат у межах екрану */
   .chat-container {
-    max-height: calc(100dvh - 200px); /* Враховує висоту інших елементів */
+    max-height: calc(100dvh - 200px);
     overflow-y: auto;
   }
 
-  /* Додатковий фікс для iOS */
   .chat-shell {
     -webkit-overflow-scrolling: touch;
   }
+}
 
-  #choose-model-btn {
-    right: -100px;
-    padding: 12px 12px 12px 20px;
-    font-size: 14px;
+@media (max-width: 768px) {
+  .model-selector {
+    flex-direction: column;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  
+  .models-scroll {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 60vh;
+    width: 100%;
+  }
+  
+  #modelLeftArrow, #modelRightArrow {
+    display: none;
+  }
+  
+  #client-character {
+    bottom: auto;  
+    top: 15%; 
+    left: 50%;
+    transform: translate(-50%, 0); 
+    max-width: 90%;
+  }
+    
+  #client-avatar {
+    max-height: 60vh; 
   }
 }
 
 @media (max-width: 600px) {
-
   .top-panel {
     width: 95%;
     padding: 12px 16px;
@@ -907,13 +1561,7 @@ h1 {
     min-height: 30px;
   }
 
-  #send-button {
-    width: 100%;
-    height: 42px;
-    font-size: 14px;
-  }
-
-  #record-btn {
+  #send-button, #record-btn {
     width: 100%;
     height: 42px;
     font-size: 14px;
@@ -933,79 +1581,568 @@ h1 {
     font-size: 14px;
   }
 
-  #choose-model-btn {
-    right: 10px;
-    bottom: 60%;
-    padding: 14px;
+}
+
+/* Feedback Toast Mobile Adaptations */
+@media (max-width: 768px) {
+  .feedback-toast {
+    top: 100px;
+    width: 95%;
+    max-width: 400px;
+  }
+  
+  .feedback-toast-content {
+    padding: 12px 16px;
+    border-radius: 14px;
+    border-left-width: 4px;
+  }
+  
+  .feedback-toast-message {
     font-size: 13px;
-    max-width: 150px;
-    white-space: normal;
+    margin-right: 20px;
+    line-height: 1.4;
+  }
+  
+  .feedback-toast-close {
+    top: 6px;
+    right: 10px;
+    font-size: 18px;
+    width: 22px;
+    height: 22px;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
+  .feedback-toast {
+    top: 90px;
+    width: 92%;
+    max-width: 350px;
+  }
+  
+  .feedback-toast-content {
+    padding: 10px 14px;
+    border-radius: 12px;
+  }
+  
+  .feedback-toast-message {
+    font-size: 12px;
+    margin-right: 18px;
+  }
+  
+  .feedback-toast-close {
+    top: 5px;
+    right: 8px;
+    font-size: 16px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .feedback-toast {
+    top: 80px;
+    width: 90%;
+    max-width: 300px;
+  }
+  
+  .feedback-toast-content {
+    padding: 8px 12px;
+  }
+  
+  .feedback-toast-message {
+    font-size: 11px;
+    margin-right: 16px;
+  }
+}
+
+/* === АДАПТИВНІСТЬ ДЛЯ ВСІХ ПРИСТРОЇВ === */
+
+/* Планшети (768px - 1024px) */
+@media (max-width: 1024px) {
     .model-selector {
-        flex-direction: column;
-        max-height: 80vh;
-        overflow-y: auto;
+        padding: 20px;
+        border-radius: 20px;
+        width: 95vw;
     }
     
     .models-scroll {
-        flex-direction: column;
-        overflow-x: hidden;
-        overflow-y: auto;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 14px;
         max-height: 60vh;
-        width: 100%;
     }
     
-    #modelLeftArrow, #modelRightArrow {
-        display: none; /* Приховуємо стрілки на мобільних */
+    .model-button {
+        padding: 16px;
+        min-height: 180px;
     }
     
-    .close-btn {
-        margin-left: 0;
-        margin-top: 10px;
+    .model-button img {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .model-button > div {
+        font-size: 15px;
+    }
+    
+    .model-detail-content {
+        padding: 24px;
+        max-width: 450px;
+    }
+    
+    .model-detail-image {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .model-detail-title {
+        font-size: 22px;
     }
 }
 
+/* Мобільні (480px - 767px) */
+@media (max-width: 767px) {
+    .model-overlay {
+        padding: 16px;
+    }
+    
+    .model-selector {
+        padding: 16px;
+        border-radius: 16px;
+        width: 100vw;
+        max-height: 90vh;
+        margin: 0;
+    }
+    
+    .models-scroll {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        max-height: 70vh;
+        padding: 4px 2px;
+    }
+    
+    .model-button {
+        padding: 12px;
+        min-height: 160px;
+        border-radius: 12px;
+    }
+    
+    .model-button img {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 8px;
+    }
+    
+    .model-button > div {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    .detail-view-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 10px;
+        margin-top: 6px;
+    }
+    
+    .model-detail-modal {
+        padding: 16px;
+    }
+    
+    .model-detail-content {
+        padding: 20px;
+        border-radius: 20px;
+        width: 95vw;
+        max-height: 85vh;
+    }
+    
+    .model-detail-image {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .model-detail-title {
+        font-size: 20px;
+        padding-bottom: 10px;
+    }
+    
+    .model-detail-specs li {
+        font-size: 14px;
+        padding: 10px 0;
+        padding-left: 16px;
+    }
+    
+    .model-detail-close {
+        top: 16px;
+        right: 16px;
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+}
+
+/* Малі мобільні (320px - 479px) */
+@media (max-width: 479px) {
+    .model-overlay {
+        padding: 12px;
+    }
+    
+    .model-selector {
+        padding: 12px;
+        border-radius: 14px;
+    }
+    
+    .models-scroll {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        max-height: 75vh;
+    }
+    
+    .model-button {
+        padding: 10px;
+        min-height: 140px;
+        border-radius: 10px;
+        flex-direction: row;
+        text-align: left;
+        gap: 12px;
+    }
+    
+    .model-button img {
+        width: 60px;
+        height: 60px;
+        margin: 0;
+        flex-shrink: 0;
+    }
+    
+    .model-button > div {
+        font-size: 14px;
+        margin-bottom: 0;
+        flex: 1;
+    }
+    
+    .detail-view-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: auto;
+        padding: 6px 12px;
+        font-size: 12px;
+        margin-top: 0;
+    }
+    
+    .model-detail-content {
+        padding: 16px;
+        border-radius: 16px;
+    }
+    
+    .model-detail-image {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .model-detail-title {
+        font-size: 18px;
+    }
+    
+    .model-detail-specs li {
+        font-size: 13px;
+        padding: 8px 0;
+        padding-left: 14px;
+        line-height: 1.4;
+    }
+    
+    .model-detail-close {
+        top: 12px;
+        right: 12px;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+}
+
+/* Дуже малі екрани (до 320px) */
+@media (max-width: 320px) {
+    .model-overlay {
+        padding: 8px;
+    }
+    
+    .model-selector {
+        padding: 10px;
+        border-radius: 12px;
+    }
+    
+    .models-scroll {
+        gap: 8px;
+    }
+    
+    .model-button {
+        padding: 8px;
+        min-height: 120px;
+        gap: 8px;
+    }
+    
+    .model-button img {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .model-button > div {
+        font-size: 13px;
+    }
+    
+    .detail-view-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+        bottom: 8px;
+        right: 8px;
+    }
+    
+    .model-detail-content {
+        padding: 12px;
+    }
+    
+    .model-detail-image {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .model-detail-title {
+        font-size: 16px;
+    }
+    
+    .model-detail-specs li {
+        font-size: 12px;
+        padding: 6px 0;
+        padding-left: 12px;
+    }
+}
+
+/* Портретна орієнтація */
+@media (max-height: 600px) and (orientation: portrait) {
+    .model-selector {
+        max-height: 80vh;
+    }
+    
+    .models-scroll {
+        max-height: 55vh;
+    }
+    
+    .model-detail-content {
+        max-height: 80vh;
+    }
+}
+
+/* Ландшафтна орієнтація */
+@media (max-height: 500px) and (orientation: landscape) {
+    .model-selector {
+        max-height: 75vh;
+    }
+    
+    .models-scroll {
+        max-height: 50vh;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .model-button {
+        min-height: 120px;
+        padding: 10px;
+    }
+    
+    .model-button img {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .model-detail-content {
+        max-height: 75vh;
+    }
+    
+    .model-detail-image {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* Високо-піксельні екрани (Retina) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .model-button img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Підтримка Hover для тач-пристроїв */
+@media (hover: none) and (pointer: coarse) {
+    .model-button:hover {
+        transform: none;
+        border-color: #f0f0f0;
+    }
+    
+    .model-button:active {
+        border-color: #ff6f00;
+        transform: scale(0.98);
+    }
+    
+    .detail-view-btn:hover {
+        transform: none;
+    }
+    
+    .detail-view-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .model-detail-close:hover {
+        transform: none;
+    }
+    
+    .model-detail-close:active {
+        background: #ff6f00;
+        color: white;
+        transform: rotate(90deg);
+    }
+}
+
+/* Безпечні зони для iPhone X+ */
+@supports (padding: max(0px)) {
+    .model-overlay {
+        padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    }
+    
+    .model-selector {
+        margin: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+}
+
+/* Анімації */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalFadeIn {
+    from { 
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to { 
+        opacity: 1;
+        backdrop-filter: blur(25px);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Зменшення анімацій для доступності */
+@media (prefers-reduced-motion: reduce) {
+    .model-overlay,
+    .model-detail-modal,
+    .model-selector,
+    .model-detail-content {
+        animation: none;
+    }
+    
+    .model-button,
+    .detail-view-btn,
+    .model-detail-close {
+        transition: none;
+    }
+}
+
+/* Additional Mobile Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .feedback-toast-close {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+  
+  .feedback-toast-message {
+    margin-right: 30px;
+  }
+}
+
+@supports (padding: max(0px)) {
+  .feedback-toast {
+    top: max(120px, env(safe-area-inset-top) + 80px);
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .feedback-toast-content {
+    background: #2d3748;
+    color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .feedback-toast.warning .feedback-toast-content {
+    background: linear-gradient(135deg, #44350e, #5c4a1a);
+    color: #fef3c7;
+  }
+  
+  .feedback-toast.error .feedback-toast-content {
+    background: linear-gradient(135deg, #5c1a1a, #7c2a2a);
+    color: #fecaca;
+  }
+  
+  .feedback-toast.info .feedback-toast-content {
+    background: linear-gradient(135deg, #1a365d, #2d4a7c);
+    color: #bee3f8;
+  }
+  
+  .feedback-toast-close {
+    color: #a0aec0;
+  }
+  
+  .feedback-toast-close:hover {
+    background: rgba(255,255,255,0.1);
+    color: #e2e8f0;
+  }
+}
+
+/* Tablet support for feedback */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .feedback-toast {
+    top: 110px;
+    width: 85%;
+    max-width: 450px;
+  }
+  
+  .feedback-toast-content {
+    padding: 14px 18px;
+  }
+}
+
+/* Smooth transitions */
+.feedback-toast-content {
+  transition: all 0.3s ease;
+}
+
+.stage-label {
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+/* На малих екранах зменшуємо шрифт */
 @media (max-width: 768px) {
-  #client-character {
-    bottom: auto;  
-    top: 15%; 
-    left: 50%;
-    transform: translate(-50%, 0); 
-    max-width: 90%;
+  .stage-label {
+    font-size: 11px;
   }
-    
-  #client-avatar {
-    max-height: 60vh; 
-    }
 }
 
-@media (min-width: 601px) and (max-width: 900px) {
-  .chat-shell {
-    width: 80%;
-    height: 36vh;
-  }
-
-  .top-panel {
-    width: 90%;
-  }
-
-  .message {
-    font-size: 15px;
-  }
-
-  #send-button {
-    font-size: 15px;
-  }
-
-  #record-btn {
-    font-size: 15px;
-  }
-
-  .stage-indicator-single {
-    font-size: 13px;
+/* На дуже малих екранах використовуємо скорочення */
+@media (max-width: 480px) {
+  .stage-label {
+    font-size: 10px;
   }
 }
 
@@ -1013,16 +2150,33 @@ h1 {
 </head>
 <body>
 <div class="top-panel">
-  <div class="progress-hint" id="progressHint">Бажаємо успіхів у консультації клієнта!</div>
-  <div class="progress-container" id="progressContainer">
-    <div class="progress-bar" id="questionProgressBar"></div>
-  </div>
+    <div id="stage-indicator">
+        <div class="stage-item" data-stage="1">
+            <div class="stage-dot"></div>
+            <div class="stage-label">Пошук потреби</div>
+        </div>
+
+        <div class="stage-item" data-stage="2">
+            <div class="stage-dot"></div>
+            <div class="stage-label">Підбір моделі</div>
+        </div>
+
+        <div class="stage-item" data-stage="3">
+            <div class="stage-dot"></div>
+            <div class="stage-label">Презентація</div>
+        </div>
+
+        <div class="stage-item" data-stage="4">
+            <div class="stage-dot"></div>
+            <div class="stage-label">Заперечення</div>
+        </div>
+    </div>
+</div>
+
 
   <div id="top-title-area">
     <h1 id="welcome-title">Клієнт зайшов до Вашого магазину...</h1>
-
     <div id="stage-indicator" class="stage-indicator-single" style="display: none;">
-      <div id="stage-label" class="stage active">Етап: Виявлення потреби</div>
     </div>
   </div>
 </div>
@@ -1076,6 +2230,13 @@ h1 {
     <button id="training-mode-btn">Тренування</button>
     <button id="exam-mode-btn">Екзамен</button>
   </div>
+</div>
+
+<div id="feedback-toast" class="feedback-toast hidden">
+    <div class="feedback-toast-content">
+        <span class="feedback-toast-close">&times;</span>
+        <div class="feedback-toast-message" id="feedback-toast-message"></div>
+    </div>
 </div>
 
 <div id="category-selection-modal" class="modal">
@@ -1134,13 +2295,16 @@ h1 {
         <button id="restart-button">Почати новий діалог</button>
     </div>
 
-    <div id="model-hint-modal" class="modal hidden">
-      <div class="modal-content">
-        <h2>Порада</h2>
-        <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Для цього натисніть на кнопку: Оберіть модель. Але уважно: якщо Ви перейдете до вибору моделі, Ви вже не зможете ставити питання.</p>
-        <button id="close-hint-btn">Зрозуміло</button>
-      </div>
+<div id="model-hint-modal" class="feedback-toast hidden">
+    <div class="feedback-toast-content success">
+        <span class="feedback-toast-close">&times;</span>
+        <div class="feedback-toast-message">
+            <h3>💡 Порада</h3>
+            <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Для цього натисніть на кнопку: <strong>Оберіть модель</strong>.</p>
+            <p><em>Уважно: якщо Ви перейдете до вибору моделі, Ви вже не зможете ставити питання.</em></p>
+        </div>
     </div>
+</div>
 
     <div id="rules-modal" class="modal">
         <div class="modal-content">
@@ -1158,6 +2322,37 @@ h1 {
             <button id="accept-rules-btn">Я ознайомився і готовий</button>
         </div>
     </div>
+
+  <!-- Додайте цей блок, якщо потрібен прогрес-бар -->
+<div id="progressContainer" style="display: none; opacity: 0; transition: opacity 0.3s;">
+    <div id="progressHint" style="display: none;"></div>
+    <div style="width: 100%; background: #f0f0f0; border-radius: 10px;">
+        <div id="questionProgressBar" style="height: 8px; background: #ff6f00; border-radius: 10px; width: 0%; transition: width 0.3s;"></div>
+    </div>
+</div>
+
+<div id="report-modal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+    <h2>📊 Результати консультації</h2>
+    
+    <div id="report-content">
+      <!-- Тут буде динамічно додаватись звіт -->
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="accept-report-btn" style="
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+      ">Ознайомлений</button>
+    </div>
+  </div>
+</div>
 
 <div id="modelDetailModal" class="model-detail-modal">
   <div class="model-detail-content">
@@ -1267,56 +2462,94 @@ h1 {
           const h1 = document.getElementById('welcome-title');
           const indicator = document.getElementById('stage-indicator');
 
-          h1.style.display = 'none';
+          h1.style.display = 'hidden';
           indicator.style.display = 'flex'; // або 'block' для вертикального вигляду
         }
 
-        function showModelHint() {
-          const hintModal = document.getElementById("model-hint-modal");
-          hintModal.classList.remove("hidden");
-        }
+function showModelHint() {
+    const hintToast = document.getElementById("model-hint-modal");
+    hintToast.classList.remove("hidden");
+    hintToast.classList.add("success"); // Додаємо клас success для зеленого кольору
+    
+    // Автоматичне закриття через 15 секунд
+    setTimeout(() => {
+        hideModelHint();
+    }, 15000);
+}
 
-        function hideModelHint() {
-          const hintModal = document.getElementById("model-hint-modal");
-          hintModal.classList.add("hidden");
-        }
+function hideModelHint() {
+    const hintToast = document.getElementById("model-hint-modal");
+    hintToast.classList.add("hidden");
+    hintToast.classList.remove("success"); // Видаляємо клас success
+}
 
-        // Обробник для кнопки закриття
-        document.getElementById("close-hint-btn").addEventListener("click", hideModelHint);
+// Безпечне додавання обробників подій
+document.addEventListener('DOMContentLoaded', function() {
+    // Обробник для кнопки закриття в toast (якщо вона існує)
+    const toastCloseBtn = document.querySelector('#model-hint-modal .feedback-toast-close');
+    if (toastCloseBtn) {
+        toastCloseBtn.addEventListener('click', hideModelHint);
+    }
+    
+    // Обробник для кнопки "Зрозуміло" (якщо вона існує)
+    const closeHintBtn = document.getElementById("close-hint-btn");
+    if (closeHintBtn) {
+        closeHintBtn.addEventListener("click", hideModelHint);
+    }
+    
+    // Інші обробники
+    const closeOverlayBtn = document.getElementById("close-model-overlay");
+    if (closeOverlayBtn) {
+        closeOverlayBtn.addEventListener("click", hideModelButtons);
+    }
+});
 
-        document.getElementById("close-model-overlay").addEventListener("click", hideModelButtons);
-
-        let modelHintShown = false;
+let modelHintShown = false;
 
         // Оновіть функцію updateProgressBar
-       function updateProgressBar(progress, maxQuestions = 5) {
-          const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
-          questionProgressBar.style.width = `${percent}%`;
+function updateProgressBar(progress, maxQuestions = 5) {
+    // Знаходимо елементи тільки якщо вони існують
+    const questionProgressBar = document.getElementById("questionProgressBar");
+    const progressHint = document.getElementById("progressHint");
+    const progressContainer = document.getElementById("progressContainer");
+    
+    // Якщо елементи не знайдені - виходимо
+    if (!questionProgressBar || !progressHint || !progressContainer) {
+        return;
+    }
 
-          if (progress < maxQuestions) {
-              progressHint.textContent = `Прогрес виявлення потреби`;
-              progressHint.style.opacity = "1";
-              document.getElementById("progressContainer").style.opacity = "1";
-              progressHint.style.display = "block";
-              document.getElementById("progressContainer").style.display = "block";
+    const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
+    questionProgressBar.style.width = `${percent}%`;
 
-              if (progress >= 3 && !modelHintShown) { // Перевірка, щоб кнопка з'являлась після третього питання і залишалась
-                  document.getElementById("choose-model-btn").style.display = "inline-block";
-                  showModelHint();
-                  modelHintShown = true; // Позначаємо, що пораду вже показали
-              }
-          } else {
-              progressHint.textContent = "Максимальна кількість питань!";
-              setTimeout(() => {
-                  progressHint.style.opacity = "0";
-                  document.getElementById("progressContainer").style.opacity = "0";
-              }, 1500);
-              setTimeout(() => {
-                  progressHint.style.display = "none";
-                  document.getElementById("progressContainer").style.display = "none";
-              }, 2000);
-          }
-      }
+    if (progress < maxQuestions) {
+        progressHint.textContent = `Прогрес виявлення потреби`;
+        progressHint.style.opacity = "1";
+        progressContainer.style.opacity = "1";
+        progressHint.style.display = "block";
+        progressContainer.style.display = "block";
+
+        // Показуємо кнопку "Оберіть модель" для ВСІХ категорій, але підказку тільки для не-exam
+        if (progress >= 3 && !modelHintShown) {
+            document.getElementById("choose-model-btn").style.display = "inline-block";
+            
+            // Показуємо підказку тільки для НЕ exam категорій
+            if (selectedCategory !== "exam") {
+                showModelHint();
+            }
+            modelHintShown = true;
+        }
+    } else {
+        progressHint.textContent = "Максимальна кількість питань!";
+        setTimeout(() => {
+            progressHint.style.opacity = "0";
+            progressContainer.style.opacity = "0";
+        }, 1500);
+        setTimeout(() => {
+            progressHint.style.display = "none";
+            progressContainer.style.display = "none";
+        }, 2000);
+    }
+}
 
         function showModelButtons(models, promptText = "Оберіть модель:", attemptsLeft = 1) {
           modelsButtons.innerHTML = "";
@@ -2549,8 +3782,8 @@ async function sendModelChoice(model) {
     userInput.disabled = false;
     sendButton.disabled = false;
     recordBtn.disabled = false; 
-    userInput.placeholder = "Напишіть ваше повідомлення..."; // Повертаємо стандартний текст
-    userInput.focus(); // Опціонально - фокусуємось на полі вводу
+    userInput.placeholder = "Напишіть ваше повідомлення...";
+    userInput.focus();
 
     try {
         const response = await fetch("/chat", {
@@ -2565,6 +3798,11 @@ async function sendModelChoice(model) {
         // Оновлюємо stage, якщо сервер його повернув
         if (data.stage !== undefined) {
             updateStageIndicator(data.stage);
+        }
+
+        // ДОДАЄМО ОБРОБКУ ПІДКАЗКИ ПРО ВИБІР МОДЕЛІ
+        if (data.model_feedback) {
+            showModelFeedback(data.model_feedback);
         }
 
         // Додаємо повідомлення тільки якщо це не перехід на stage 3
@@ -2601,6 +3839,65 @@ async function sendModelChoice(model) {
     }
 }
 
+// ФУНКЦІЯ ДЛЯ ВІДОБРАЖЕННЯ ПІДКАЗКИ ПРО ВИБІР МОДЕЛІ
+function showModelFeedback(feedbackText) {
+    // Визначаємо тип підказки на основі тексту
+    let toastType = 'info';
+    if (feedbackText.includes('✅')) {
+        toastType = 'success';
+    } else if (feedbackText.includes('❌')) {
+        toastType = 'error';
+    } else if (feedbackText.includes('⚠️')) {
+        toastType = 'warning';
+    }
+    
+    // Використовуємо вже існуючу функцію showFeedback або створюємо нову
+    if (typeof showFeedback === 'function') {
+        showFeedback(feedbackText, toastType);
+    } else {
+        // Альтернативна реалізація, якщо функції showFeedback немає
+        createFeedbackToast(feedbackText, toastType);
+    }
+}
+
+// АЛЬТЕРНАТИВНА ФУНКЦІЯ, ЯКЩО showFeedback НЕ ІСНУЄ
+function createFeedbackToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `feedback-toast ${type}`;
+    
+    toast.innerHTML = `
+        <div class="feedback-toast-content">
+            <span class="feedback-toast-close">&times;</span>
+            <div class="feedback-toast-message">${message}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Додаємо обробник закриття
+    const closeBtn = toast.querySelector('.feedback-toast-close');
+    closeBtn.addEventListener('click', () => {
+        toast.style.animation = 'slideUp 0.5s ease-out forwards';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 500);
+    });
+    
+    // Автоматичне закриття через 5 секунд
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideUp 0.5s ease-out forwards';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 500);
+        }
+    }, 5000);
+}
+
 function createModelButton(model) {
     const button = document.createElement("button");
     button.innerText = model;
@@ -2611,23 +3908,41 @@ function createModelButton(model) {
     return button;
 }
 
-function updateStageIndicator(currentStage) {
-  const stageNames = {
-    1: "Етап: Виявлення потреби",
-    2: "Етап: Вибір моделі",
-    3: "Етап: Презентація інструменту",
-    4: "Етап: Робота із запереченнями"
-  };
+function updateStageIndicator(stage) {
+    document.querySelectorAll(".stage-item").forEach(item => {
+        const dot = item.querySelector(".stage-dot");
+        const itemStage = parseInt(item.dataset.stage);
 
-  const stageLabel = document.getElementById('stage-label');
-  if (!stageLabel) return;
+        dot.classList.remove("active", "completed");
 
-  stageLabel.textContent = stageNames[currentStage] || "";
+        if (itemStage < stage) {
+            dot.classList.add("completed");
+        } else if (itemStage === stage) {
+            dot.classList.add("active");
+        }
+    });
+}
 
-  // Перезапуск анімації (щоб кожен новий етап анімовано оновлювався)
-  stageLabel.classList.remove('stage'); 
-  void stageLabel.offsetWidth; // тригер перерендеру
-  stageLabel.classList.add('stage');
+
+function updateStageProgress(currentStage) {
+  const progressPercent = ((currentStage - 1) / 3) * 100; // 4 етапи, але прогресс бар на 3 кроки
+  questionProgressBar.style.width = `${progressPercent}%`;
+  
+  // Оновлюємо точки етапів
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById(`stage-dot-${i}`);
+    if (!dot) continue;
+    
+    if (i < currentStage) {
+      dot.classList.add('completed');
+      dot.classList.remove('active');
+    } else if (i === currentStage) {
+      dot.classList.add('active');
+      dot.classList.remove('completed');
+    } else {
+      dot.classList.remove('active', 'completed');
+    }
+  }
 }
 
 let sellerName = '';
@@ -2771,18 +4086,31 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function playVoice(text) {
-  fetch("/speak", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  })
-  .then(res => res.blob())
-  .then(blob => {
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.play();
-  })
-  .catch(err => console.error("TTS error:", err));
+    // Перевіряємо, чи це exam режим
+    if (selectedCategory !== "exam") {
+        return; // Не програємо озвучку для інших категорій
+    }
+    
+    fetch("/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.blob();
+    })
+    .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play();
+    })
+    .catch(err => {
+        console.error("TTS error:", err);
+        // Можна додати повідомлення про помилку, але не обов'язково
+    });
 }
 
 let isCooldown = false;
@@ -2795,9 +4123,9 @@ async function sendMessage() {
         return;
     }
 
-    if (!message) return; // Перевірка на порожній рядок
+    if (!message) return;
 
-    addMessage(message, true); // Повідомлення продавця
+    addMessage(message, true);
     userInput.value = '';
     showTypingIndicator();
     statusElement.textContent = "Клієнт набирає відповідь...";
@@ -2806,7 +4134,6 @@ async function sendMessage() {
     userInput.disabled = true;
     sendButton.disabled = true;
 
-    // ✅ тепер перевіряємо глобальний прапорець
     setTimeout(() => {
         if (!chatEnded) {
             isCooldown = false;
@@ -2827,6 +4154,26 @@ async function sendMessage() {
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
 
+        // --- ОБРОБКА FEEDBACK ДЛЯ ВСІХ ЕТАПІВ ---
+        if (data.question_feedback) {
+            showFeedbackToast(data.question_feedback, data.question_score || 0);
+        }
+        
+        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ STAGE 3
+        if (data.answer_feedback) {
+            showFeedbackToast(data.answer_feedback, data.current_score || 0);
+        }
+        
+        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ ВИБОРУ МОДЕЛІ
+        if (data.model_feedback) {
+            showFeedbackToast(data.model_feedback);
+        }
+        
+        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ STAGE 4 (ЗАПЕРЕЧЕННЯ)
+        if (data.objection_feedback) {
+            showFeedbackToast(data.objection_feedback, 'objection-info');
+        }
+
         // Обробка відповіді
         if (data.error) {
             statusElement.textContent = "Помилка: " + data.error;
@@ -2837,18 +4184,25 @@ async function sendMessage() {
             return;
         }
 
-        // --- НОВИЙ КОД: Обробка фінальної оцінки ---
-        if (data.evaluation) {
-            // Додаємо перше повідомлення (репліку клієнта)
-            addMessage(data.reply, false);
-            playVoice(data.reply);
-            
-            // Додаємо друге повідомлення (оцінку) з невеликою затримкою
-            setTimeout(() => {
-                addMessage(data.evaluation, false);
-                playVoice(data.evaluation);
-            }, 1000);
-        } 
+        // --- Обробка фінальної оцінки ---
+if (data.detailed_report) {
+    addMessage(data.reply, false);
+    playVoice(data.reply);
+    
+    // 🔴 ПОКАЗУЄМО МОДАЛЬНЕ ВІКНО З ДЕТАЛЬНИМ ЗВІТОМ
+    setTimeout(() => {
+        showDetailedReport(data.detailed_report);
+    }, 1000);
+} else if (data.evaluation) {
+    // Стара логіка для зворотної сумісності
+    addMessage(data.reply, false);
+    playVoice(data.reply);
+    
+    setTimeout(() => {
+        addMessage(data.evaluation, false);
+        playVoice(data.evaluation);
+    }, 1000);
+}
         // --- Логіка для етапу 3 (технічні питання) ---
         else if (data.stage === 3) {
             addMessage(data.reply, false);
@@ -2856,19 +4210,45 @@ async function sendMessage() {
             userInput.focus();
             playVoice(data.reply);
 
-            // Додаємо питання по одному з затримкою
-            questions.forEach((question, index) => {
+            // 🔴 ВІДОБРАЖЕННЯ ПІДСУМКУ БАЛІВ ПІСЛЯ ОСТАННЬОЇ ВІДПОВІДІ
+            if (data.answers_summary) {
                 setTimeout(() => {
-                    addMessage(question, false);
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                }, index * 1000);
-            });
-        } else {
-            // Для інших етапів - стандартна обробка
+                    showFeedbackToast(data.answers_summary, 'info');
+                }, 500);
+            }
+
+            if (data.questions) {
+                data.questions.forEach((question, index) => {
+                    setTimeout(() => {
+                        addMessage(question, false);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }, (index + 1) * 1000);
+                });
+            }
+        }
+        // 🔴 ЛОГІКА ДЛЯ ЕТАПУ 4 (ЗАПЕРЕЧЕННЯ)
+        else if (data.stage === 4) {
             addMessage(data.reply, false);
+            
+            // Оновлюємо статус відповідно до раунду
+            if (data.current_round === 1) {
+                statusElement.textContent = "Клієнт обмірковує вашу відповідь...";
+            } else if (data.current_round === 2) {
+                statusElement.textContent = "Клієнт приймає остаточне рішення...";
+            }
+            
+            userInput.focus();
             playVoice(data.reply);
         }
+        else {
+            // Для інших етапів - стандартна обробка
+            if (data.reply) {
+                addMessage(data.reply, false);
+                playVoice(data.reply);
+            }
+        }
 
+        // --- СТАНДАРТНА ОБРОБКА ДАНИХ ---
         if (data.show_restart_button) {
             restartButton.style.display = "inline-block";
         } else {
@@ -2879,7 +4259,6 @@ async function sendMessage() {
             document.getElementById("choose-model-btn").style.display = "none";
         }
 
-        // Обробка етапу вибору моделі
         if (data.show_models) {
             showModelButtons(data.models, "Оберіть модель:", data.attempts_left);
         }
@@ -2890,11 +4269,22 @@ async function sendMessage() {
 
         if (data.stage !== undefined) {
             updateStageIndicator(data.stage);
-        }
-
-        if (data.stage === 3) {
-            statusElement.textContent = "Клієнт уточнює деталі про модель...";
-            userInput.focus();
+            
+            // 🔴 ОНОВЛЮЄМО СТАТУС ВІДПОВІДНО ДО ЕТАПУ
+            switch(data.stage) {
+                case 1:
+                    statusElement.textContent = "Клієнт очікує на ваші питання...";
+                    break;
+                case 2:
+                    statusElement.textContent = "Оберіть модель інструменту";
+                    break;
+                case 3:
+                    statusElement.textContent = "Клієнт уточнює деталі про модель...";
+                    break;
+                case 4:
+                    statusElement.textContent = "Клієнт висловив заперечення...";
+                    break;
+            }
         }
 
         if (data.question_progress !== undefined) {
@@ -2902,7 +4292,7 @@ async function sendMessage() {
         }
 
         if (data.chat_ended) {
-            chatEnded = true;   // ✅ позначаємо, що чат завершено
+            chatEnded = true;
             disableChat();
 
             if (data.show_restart_button) {
@@ -2915,9 +4305,19 @@ async function sendMessage() {
                 }, 1000);
             }
 
-            return; // 🛑 одразу вихід, щоб далі код не виконувався
+            // 🔴 ВІДОБРАЖЕННЯ ФІНАЛЬНИХ БАЛІВ
+            if (data.objection_score !== undefined && data.total_score !== undefined) {
+                setTimeout(() => {
+                    showFeedbackToast(`🎯 За заперечення: ${data.objection_score}/10 балів | Загальний результат: ${data.total_score}/30`, 'success');
+                }, 2000);
+            }
+
+            return;
         } else {
-            statusElement.textContent = "";
+            // Якщо чат не завершено, але немає спеціального статусу - очищаємо
+            if (!data.stage) {
+                statusElement.textContent = "";
+            }
         }
 
     } catch (error) {
@@ -2928,6 +4328,92 @@ async function sendMessage() {
         hideTypingIndicator();
     }
 }
+
+// Функція для показу плаваючого сповіщення
+// Функція для показу плаваючого сповіщення
+function showFeedbackToast(message, score = 0) {
+    const toast = document.getElementById('feedback-toast');
+    const messageElement = document.getElementById('feedback-toast-message');
+    
+    // Визначаємо тип сповіщення
+    let type = 'info';
+    
+    // Для stage 1 та stage 2 (питання та модель)
+    if (typeof score === 'number') {
+        if (score === 0 || message.includes('❌') || message.includes('не стосується') || message.includes('неправильне')) {
+            type = 'error';
+        } else if (score === 1 || message.includes('⚠️') || message.includes('краще') || message.includes('потрібно краще')) {
+            type = 'warning';
+        } else if (score === 2 || message.includes('✅') || message.includes('відмінно') || message.includes('чудово')) {
+            type = 'success';
+        }
+    } 
+    // Для stage 3 (відповіді на технічні питання)
+    else if (typeof score === 'string') {
+        if (score.startsWith('answer-')) {
+            type = score;
+        }
+        // 🔴 ДЛЯ STAGE 4 (ЗАПЕРЕЧЕННЯ)
+        else if (score === 'objection-info') {
+            type = 'objection-info';
+        }
+    }
+    // Для текстових підказок
+    else if (message.includes('❌') && (message.includes('не по темі') || message.includes('неправильну модель') || message.includes('Потрібно більш переконливі'))) {
+        type = 'error';
+    } else if (message.includes('⚠️') && (message.includes('характеристику') || message.includes('Добре, але'))) {
+        type = 'warning';
+    } else if (message.includes('✅') && (message.includes('Відмінна відповідь') || message.includes('Відмінно'))) {
+        type = 'success';
+    } else if (message.includes('Загальний бал за відповіді') || message.includes('За заперечення:')) {
+        type = 'info';
+    } else if (message.includes('💡') && message.includes('заперечення')) {
+        type = 'objection-info';
+    }
+    
+    // Очищаємо попередні класи
+    toast.className = 'feedback-toast';
+    toast.classList.add(type);
+    
+    // Встановлюємо повідомлення
+    messageElement.textContent = message;
+    
+    // Показуємо сповіщення
+    toast.classList.remove('hidden');
+    
+    // Автоматичне закриття через різний час в залежності від типу
+    let timeout = 5000;
+    if (type.includes('error') || type.includes('warning')) {
+        timeout = 8000; // Більше часу для помилок
+    } else if (type.includes('info') && (message.includes('Загальний бал') || message.includes('За заперечення'))) {
+        timeout = 10000; // Ще більше часу для підсумку
+    } else if (type.includes('objection-info')) {
+        timeout = 6000; // Для підказок stage 4
+    }
+    
+    setTimeout(() => {
+        hideFeedbackToast();
+    }, timeout);
+}
+
+// Функція для приховування сповіщення
+function hideFeedbackToast() {
+    const toast = document.getElementById('feedback-toast');
+    toast.style.animation = 'slideUp 0.5s ease-out forwards';
+    
+    setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.style.animation = '';
+    }, 500);
+}
+
+// Додаємо обробник для кнопки закриття
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.querySelector('.feedback-toast-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', hideFeedbackToast);
+    }
+});
 
 let mediaRecorder;
 let audioChunks = [];
@@ -3006,6 +4492,105 @@ recordBtn.addEventListener("click", async () => {
   }
 });
 
+// Додайте ці функції
+function showDetailedReport(reportData) {
+    const modal = document.getElementById('report-modal');
+    const content = document.getElementById('report-content');
+    
+    // Визначаємо клас для фінальної оцінки
+    let finalClass = 'poor';
+    if (reportData.total_score >= 24) finalClass = 'excellent';
+    else if (reportData.total_score >= 16) finalClass = 'good';
+    
+    // Формуємо HTML звіту з ТРЬОМА окремими блоками
+    content.innerHTML = `
+        <div class="report-final ${finalClass}">
+            ${reportData.summary_label}
+        </div>
+        
+        <div class="report-section">
+            <h3>📈 Детальні бали:</h3>
+            <div class="report-details">
+                <div class="report-score">За модель: ${reportData.model_score}/6 балів</div>
+                <div class="report-score">За питання: ${reportData.questions_score}/8 балів</div>
+                <div class="report-score">За відповіді: ${reportData.answers_score}/6 балів</div>
+                <div class="report-score">За заперечення: ${reportData.objection_score}/10 балів</div>
+                <div class="report-score" style="font-size: 20px; margin-top: 10px;">
+                    Загальний результат: ${reportData.total_score}/30 балів
+                </div>
+            </div>
+        </div>
+        
+        <!-- 🔴 БЛОК ДЛЯ STAGE 1 - ВИЯВЛЕННЯ ПОТРЕБ -->
+        <div class="report-section">
+            <h3>🔍 Аналіз виявлення потреб:</h3>
+            <div class="report-details">
+                <strong>Оцінка якості виявлення потреб:</strong><br>
+                ${reportData.stage1_analysis || "Аналіз недоступний"}
+            </div>
+            <div class="report-advice">
+                <strong>💡 Поради для покращення виявлення потреб:</strong><br>
+                ${reportData.stage1_advice || "Рекомендації відсутні"}
+            </div>
+        </div>
+        
+        <!-- 🔴 БЛОК ДЛЯ STAGE 3 - ПРЕЗЕНТАЦІЯ МОДЕЛІ -->
+        <div class="report-section">
+            <h3>🎯 Аналіз презентації моделі:</h3>
+            <div class="report-details">
+                <strong>Оцінка якості презентації:</strong><br>
+                ${reportData.stage3_analysis || "Аналіз недоступний"}
+            </div>
+            <div class="report-advice">
+                <strong>💡 Поради для покращення презентації:</strong><br>
+                ${reportData.stage3_advice || "Рекомендації відсутні"}
+            </div>
+        </div>
+        
+        <!-- 🔴 БЛОК ДЛЯ STAGE 4 - РОБОТА З ЗАПЕРЕЧЕННЯМИ -->
+        <div class="report-section">
+            <h3>🛡️ Аналіз роботи з запереченнями:</h3>
+            <div class="report-details">
+                <strong>Оцінка роботи з запереченнями:</strong><br>
+                ${reportData.stage4_analysis || "Аналіз недоступний"}
+            </div>
+            <div class="report-advice">
+                <strong>💡 Поради для роботи з запереченнями:</strong><br>
+                ${reportData.stage4_advice || "Рекомендації відсутні"}
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <strong>📋 Звіт збережено для вашого тренера</strong>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+function hideDetailedReport() {
+    const modal = document.getElementById('report-modal');
+    modal.style.display = 'none';
+}
+
+// Обробник для кнопки "Ознайомлений"
+document.getElementById('accept-report-btn').addEventListener('click', function() {
+    hideDetailedReport();
+    // Додаємо фінальне повідомлення в чат
+    addMessage("Результат консультації: " + document.querySelector('.report-final').textContent + ". Звіт збережено для вашого тренера.", false);
+});
+
+// Додайте обробник для закриття модального вікна по кліку на backdrop
+document.getElementById('report-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideDetailedReport();
+        // Все одно додаємо повідомлення в чат
+        const finalElement = document.querySelector('.report-final');
+        if (finalElement) {
+            addMessage("Результат консультації: " + finalElement.textContent + ". Звіт збережено для вашого тренера.", false);
+        }
+    }
+});
 
     // Стартове повідомлення при завантаженні
     document.getElementById('accept-rules-btn').addEventListener('click', async () => {

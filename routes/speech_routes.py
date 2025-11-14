@@ -42,31 +42,41 @@ def speech_to_text():
 
 
 # 🔊 Text-to-Speech (озвучка)
+# 🔊 Text-to-Speech (озвучка)
 @speech_bp.route("/speak", methods=["POST"])
 def speak():
     text = request.json.get("text", "").strip()
     if not text:
         return jsonify({"error": "Порожній текст"}), 400
     
-    category = session.get("category", None)
-    if category != "exam":   # ← тут залиш умовний фільтр (або прибери, якщо озвучка всюди дозволена)
-        return jsonify({"error": "Озвучка недоступна для цієї категорії"}), 403
-
-    # Отримуємо ID клієнта та визначаємо голос
+    # Перевіряємо, чи це exam категорія
+    category = session.get("category")
+    if category != "exam":
+        return jsonify({"error": "Озвучка доступна тільки в режимі екзамену"}), 403
+    
+    # Отримуємо ID клієнта
     client_id = session.get("current_situation_id")
     
+    # АКТУАЛЬНІ ГОЛОСИ (підтримувані OpenAI)
     FEMALE_VOICES = ["nova", "shimmer", "fable", "verse", "coral"]
-    MALE_VOICES = ["alloy", "ash", "ballad", "echo", "onyx", "sage"]
+    MALE_VOICES = ["alloy", "echo", "onyx", "sage"]
     FEMALE_IDS = {3, 8, 20, 34, 35, 46, 47, 49, 58, 59, 61}
 
-    # Визначаємо голос на основі ID клієнта
-    if client_id in FEMALE_IDS:
-        voice = random.choice(FEMALE_VOICES)
+    # Якщо голос ще не визначений для цієї сесії - вибираємо його
+    if "voice" not in session:
+        # Визначаємо голос на основі ID клієнта
+        if client_id in FEMALE_IDS:
+            voice = random.choice(FEMALE_VOICES)
+        else:
+            voice = random.choice(MALE_VOICES)
+        
+        # Зберігаємо голос у сесії для подальшого використання
+        session["voice"] = voice
+        print(f"[TTS] Обрано голос: {voice} для клієнта ID: {client_id} (exam режим)")
     else:
-        voice = random.choice(MALE_VOICES)
-    
-    # Зберігаємо голос у сесії для подальшого використання
-    session["voice"] = voice
+        # Використовуємо вже збережений голос
+        voice = session["voice"]
+        print(f"[TTS] Використовуємо збережений голос: {voice} (exam режим)")
 
     try:
         response = client.audio.speech.create(

@@ -131,7 +131,7 @@ CATEGORY_SITUATION_IDS = {
     "exam": list(range(1, 47))
 }
 
-FEMALE_VOICES = ["nova", "shimmer", "fable", "verse", "coral"]
-MALE_VOICES = ["alloy", "ash", "ballad", "echo", "onyx", "sage"]
+FEMALE_VOICES = ["nova", "shimmer", "fable", "verse", "coral", "alloy", "sage"]
+MALE_VOICES = ["ash", "echo", "onyx"]
 
 FEMALE_IDS = {3, 8, 20, 34, 35, 46, 47, 49, 58, 59, 61}

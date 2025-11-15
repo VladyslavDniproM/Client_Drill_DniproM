@@ -236,7 +236,7 @@ SITUATIONS = [
         "avatar": "id6.png",
         "behavior": "переважно спокійний, іноді схильний до експериментів",
         "correct_models": ["GS-140SE", "GL-160SE", "GL-145S"],
-        "wrong_models": ["GS-98", "GS-100S", "CG-12BC", "GL-125S", "DGA-201"],
+        "wrong_models": ["GS-98", "GS-100S", "CG-12BC", "GL-125S", "DGA-201BC", "DGA-202SBC"],
         "hints": [
             "Мені точно потрібна мережева болгарка для шліфування металу",
             "Для різання, шліфування та зачистки",
@@ -259,7 +259,7 @@ SITUATIONS = [
         "avatar": "id7.png",
         "behavior": "акуратний у роботі, але іноді потребує високої продуктивності",
         "correct_models": ["GS-98", "GS-100S"],
-        "wrong_models": ["CG-12BC", "DGA-201", "GS-140SE", "GL-160SE", "GL-125S"],
+        "wrong_models": ["CG-12BC", "DGA-201BC", "GS-140SE", "GL-160SE", "GL-125S", "DGA-202SBC"],
         "hints": [
             "Потрібен інструмент для чистової обробки металу",
             "Для арматури та металу",
@@ -282,7 +282,7 @@ SITUATIONS = [
         "avatar": "id10.png",
         "behavior": "інтенсивне використання, але з дотриманням техніки безпеки",
         "correct_models": ["GS-140SE"],
-        "wrong_models": ["GS-98", "GS-100S", "CG-12BC", "GL-125S", "DGA-201", "GL-160SE", "GL-240"],
+        "wrong_models": ["GS-98", "GS-100S", "CG-12BC", "GL-125S", "DGA-201BC", "GL-160SE", "GL-240", "DGA-202SBC"],
         "hints": [
             "Часто ріжу арматуру, потрібна стійкість до навантажень",
             "Для ремонту, доволі тривалого",
@@ -305,7 +305,7 @@ SITUATIONS = [
         "avatar": "id1.png",
         "behavior": "дідусь",
         "correct_models": ["GS-98", "GS-100S", "GL-125S"],
-        "wrong_models": ["CG-12BC", "DGA-201", "GS-140SE", "GL-160SE"],
+        "wrong_models": ["CG-12BC", "DGA-201BC", "GS-140SE", "GL-160SE", "DGA-202SBC"],
         "hints": [
             "Шліфую зварні шви, ріжу арматуру в гаражі",
             "Треба недорога модель",
@@ -327,7 +327,7 @@ SITUATIONS = [
         "requirements": "маленька акумуляторна болгарка для вузькоспеціалізованих завдань",
         "avatar": "id2.png",
         "behavior": "експерт з автомобілів",
-        "correct_models": ["DGA-201", "CG-12BC"],
+        "correct_models": ["DGA-201BC", "CG-12BC", "DGA-202SBC"],
         "wrong_models": ["GS-98", "GS-100S", "GL-125S", "GS-140SE", "GL-160SE"],
         "hints": [
             "Потрібен інструмент максимально зручний та компактний",
@@ -350,7 +350,7 @@ SITUATIONS = [
         "requirements": "компактний та недорогий перфоратор для роботи по дому",
         "avatar": "id5.png",
         "behavior": "красивий клієнт",
-        "correct_models": ["DHR-200", "DHR-202BC"],
+        "correct_models": ["DHR-200", "DHR-201BC"],
         "wrong_models": ["DHR-201BC", "RH-100", "RH-12Q", "RH-16", "BH-14S", "BH-20", "BH-30"],
         "hints": [
             "Шукаю перфоратор для нечастого домашнього використання",
@@ -439,7 +439,7 @@ SITUATIONS = [
     {
         "id": 20,
         "description": "перфоратор.",
-        "requirements": "перфоратор з можливістю свердління металу",
+        "requirements": "перфоратор, який може і сверлити, і працювати як перфоратор",
         "avatar": "id14.png",
         "behavior": "клієнт-слюсар",
         "correct_models": ["RH-12Q"],
@@ -581,7 +581,7 @@ SITUATIONS = [
         "avatar": "id16.png",
         "behavior": "клієнт-майстер на виробництві",
         "correct_models": ["SAB-15DX", "SAB-17DX"],
-        "wrong_models": ["SAB-14DMINI", "M-18D", "M-20D", "M-16PW"],
+        "wrong_models": ["SAB-14DMINI", "M-20D", "M-16PW"],
         "hints": [
             "Потрібен інвертор із режимом TIG-LIFT для аргонного зварювання",
             "Важливі всі базові функції для комфортної роботи",
@@ -603,8 +603,8 @@ SITUATIONS = [
         "requirements": "апарат, який працює від 140 В і має хороший захист",
         "avatar": "id17.png",
         "behavior": "клієнт-електрик у сільській місцевості",
-        "correct_models": ["M-16PW"],
-        "wrong_models": ["SAB-14DMINI", "SAB-17DX", "M-18D", "M-20D"],
+        "correct_models": ["M-16PW", "SAB-15DX"],
+        "wrong_models": ["SAB-14DMINI", "SAB-17DX", "M-20D"],
         "hints": [
             "Часто працюю там, де нестабільна напруга (низька або коливається)",
             "Потрібен яскравий дисплей для роботи на сонці",
@@ -626,7 +626,7 @@ SITUATIONS = [
         "requirements": "апарат для тривалої роботи з товстими металами",
         "avatar": "id18.png",
         "behavior": "клієнт-зварник на будівництві",
-        "correct_models": ["SAB-17DX", "M-18D", "M-20D"],
+        "correct_models": ["SAB-17DX", "M-20D"],
         "wrong_models": ["SAB-14DMINI", "M-16PW", "SAB-15DX"],
         "hints": [
             "Потрібно варити електродами до 5 мм",
@@ -649,8 +649,8 @@ SITUATIONS = [
         "requirements": "надійний апарат без зайвих функцій",
         "avatar": "id19.png",
         "behavior": "клієнт-бригадир будівельної компанії",
-        "correct_models": ["M-18D"],
-        "wrong_models": ["SAB-15DX", "M-20D", "SAB-17DX", "M-16PW"],
+        "correct_models": ["M-20D"],
+        "wrong_models": ["SAB-15DX", "SAB-14DMINI", "SAB-17DX", "M-16PW"],
         "hints": [
             "Потрібна гарантія 5+ років",
             "Працюю переважно електродами до 5 мм",
@@ -672,8 +672,8 @@ SITUATIONS = [
         "requirements": "апарат для зварювання товстих конструкцій (10+ мм)",
         "avatar": "id20.png",
         "behavior": "клієнт-інженер на металургійному підприємстві",
-        "correct_models": ["M-20D", "M-18D"],
-        "wrong_models": ["SAB-14DMINI", "M-16PW", "M-18D"],
+        "correct_models": ["M-20D"],
+        "wrong_models": ["SAB-14DMINI", "M-16PW", "SAB-15DX"],
         "hints": [
             "Потрібно варити метали товщиною понад 10 мм",
             "Важливий широкий дисплей для точних налаштувань",
@@ -695,7 +695,7 @@ SITUATIONS = [
         "requirements": "легка, компактна, для періодичних робіт у саду",
         "avatar": "id25.png",
         "behavior": "власник дачі або приватного будинку",
-        "correct_models": ["CS-12", "DSE-15T"],
+        "correct_models": ["CS-12", "DSE-15T", "DMS-201BC"],
         "wrong_models": ["DSG-25H", "NSG-45H", "NSG-52H", "NSG-62H", "DSE-22S", "DSE-24DS", "DCS-201BCDUAL"],
         "hints": [
             "Гілки інколи заважають проходу — треба щось для обрізки",
@@ -764,7 +764,7 @@ SITUATIONS = [
         "requirements": "доступна за ціною, проста в обслуговуванні",
         "avatar": "id28.png",
         "behavior": "непрофесійний користувач",
-        "correct_models": ["DSE-22S", "DSE-15T"],
+        "correct_models": ["DSE-22S", "DSE-15T", "DMS-201BC"],
         "wrong_models": ["DSG-25H", "NSG-45H", "NSG-52H", "NSG-62H", "DSE-24DS", "DCS-201BCDUAL", "CS-12"],
         "hints": [
             "Треба щось універсальне: і гілки зрізати, і дошки перепиляти",
@@ -787,7 +787,7 @@ SITUATIONS = [
         "requirements": "компактна, зручна, для висотних робіт",
         "avatar": "id29.png",
         "behavior": "садівник або працівник ЖКГ",
-        "correct_models": ["CS-12", "DSE-15T"],
+        "correct_models": ["CS-12", "DSE-15T", "DMS-201BC"],
         "wrong_models": ["DSG-25H", "NSG-45H", "NSG-52H", "NSG-62H", "DSE-22S", "DSE-24DS", "DCS-201BCDUAL"],
         "hints": [
             "Обрізаю дерева з драбини — має бути легка",
@@ -902,7 +902,7 @@ SITUATIONS = [
         "requirements": "мінімальна вага і простота — для літньої жінки",
         "avatar": "id34.png",
         "behavior": "пенсіонерка, яка сама доглядає сад",
-        "correct_models": ["CS-12", "DSE-15T"],
+        "correct_models": ["CS-12", "DSE-15T", "DMS-201BC"],
         "wrong_models": ["DSG-25H", "NSG-45H", "NSG-52H", "NSG-62H", "DSE-22S", "DSE-24DS", "DCS-201BCDUAL"],
         "hints": [
             "Треба обрізати гілки в саду — нічого великого",
@@ -925,7 +925,7 @@ SITUATIONS = [
         "requirements": "інструмент для навчального закладу, безпечний і простий",
         "avatar": "id35.png",
         "behavior": "представник школи чи ліцею",
-        "correct_models": ["DSE-22S", "DSE-15T"],
+        "correct_models": ["DSE-22S", "DSE-15T", "DMS-201BC"],
         "wrong_models": ["DSG-25H", "NSG-45H", "NSG-52H", "NSG-62H", "DSE-24DS", "DCS-201BCDUAL", "CS-12"],
         "hints": [
             "Пила буде у користуванні працівників шкільного господарства",
@@ -948,7 +948,7 @@ SITUATIONS = [
         "requirements": "для клієнта, який ніколи не працював пилою",
         "avatar": "id36.png",
         "behavior": "новачок, купує перший інструмент",
-        "correct_models": ["DSE-15T", "CS-12"],
+        "correct_models": ["DSE-15T", "CS-12", "DMS-201BC"],
         "wrong_models": ["DSG-25H", "NSG-45H", "NSG-52H", "NSG-62H", "DSE-22S", "DSE-24DS", "DCS-201BCDUAL"],
         "hints": [
             "Хочу просто спробувати попиляти щось у дворі",
@@ -1017,8 +1017,8 @@ SITUATIONS = [
         "requirements": "для дому — іноді різати дерево, зробити лавку чи обрізати яблуню",
         "avatar": "id27.png",
         "behavior": "домовласник із невеликим садом",
-        "correct_models": ["DSE-22S", "CS-12"],
-        "wrong_models": ["DSG-25H", "NSG-45H", "NSG-52H", "NSG-62H", "DSE-15T", "DSE-24DS", "DCS-201BCDUAL"],
+        "correct_models": ["DSE-22S", "CS-12", "DSE-15T", "DMS-201BC"],
+        "wrong_models": ["DSG-25H", "NSG-45H", "NSG-52H", "NSG-62H", "DSE-24DS", "DCS-201BCDUAL"],
         "hints": [
             "Час від часу треба щось підпиляти вдома",
             "Дерева — максимум 25 см, частіше гілки до 15 см",
@@ -2490,7 +2490,7 @@ SITUATIONS = [
                 },
                 {
                 "id": 134,
-                "description": "лобзик для роботи в умовах обмеженого освітлення",
+                "description": "лобзик",
                 "requirements": "потрібен для монтажних робіт у темних приміщеннях, підвалах та на об'єктах без природного освітлення",
                 "avatar": "id25.png",
                 "behavior": "спеціаліст з монтажу, працює в складних умовах, цінує комфорт",

@@ -9,9 +9,14 @@ from googleapiclient.http import MediaInMemoryUpload
 
 def generate_report(session_data):
     seller_name = session_data.get('seller_name') or 'Невідомий продавець'
-    total_score = session_data.get('total_score', 0)
-    max_score = 30
     selected_category = session_data.get('category', 'Не вказано')
+
+    model_score = session_data.get('model_score', 0)
+    questions_score = min(sum(q['score'] for q in session_data.get('question_scores', [])), 8)
+    answers_score = min(sum(a['score'] for a in session_data.get('user_answers', {}).values()), 10)
+    objection_score = session_data.get('objection_score', 0)
+    total_score = model_score + questions_score + answers_score + objection_score
+    max_score = 30
     
     report_lines = [
         f"Звіт про діалог продавця: {seller_name}",
@@ -40,10 +45,10 @@ def generate_report(session_data):
     # Додати результати оцінювання
     report_lines.extend([
         "\nРезультати:",
-        f"- Оцінка за модель: {session_data.get('model_score', 0)}/6",
+        f"- Оцінка за модель: {session_data.get('model_score', 0)}/4",  # Змінити з 6 на 4
         f"- Оцінка за питання: {questions_score}/8",
-        f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/6",
-        f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/10"
+        f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/10",  # Змінити з 6 на 10
+        f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/8"  # Змінити з 10 на 8
     ])
     
     return "\n".join(report_lines)

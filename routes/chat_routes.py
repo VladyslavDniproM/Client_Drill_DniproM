@@ -86,6 +86,16 @@ def chat():
         session["objection_round"] = 1
 
     if session["stage"] == 1:
+        # --- Перевірка, чи користувач вибрав модель ---
+        if user_input.lower().startswith("обираю модель:"):
+            model_name = user_input.split(":", 1)[1].strip()
+            session["stage"] = 2
+            return jsonify({
+                "reply": f"Ви обрали модель: {model_name}. Переходимо до перевірки...",
+                "chat_ended": False,
+                "stage": 2,
+                "chosen_model": model_name
+            })
 
         # --- Оцінка питання ---
         question_score = evaluate_question(user_input, session["situation"]["description"])
@@ -350,7 +360,7 @@ def chat():
             session.modified = True
 
             return jsonify({
-                "reply": f"Добре, {user_model} виглядає непогано. \n\n{first_question}",
+                "reply": f"Добре, наче виглядає непогано. \n\n{first_question}",
                 "chat_ended": False,
                 "stage": 3,
                 "model_feedback": model_feedback

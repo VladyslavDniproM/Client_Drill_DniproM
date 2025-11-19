@@ -257,6 +257,15 @@ def save_report_to_drive(session_data):
         
         print(f"[DRIVE] Звіт успішно збережено на Google Drive: {filename}")
         print(f"[DRIVE] ID файлу: {file.get('id')}")
+        
+        # 🔴 ДОДАЄМО ВИКЛИК ФУНКЦІЇ ДЛЯ GOOGLE SHEETS
+        print("[SHEETS] Запускаємо оновлення Google Tables...")
+        sheets_success = update_google_sheets(session_data)
+        if sheets_success:
+            print("[SHEETS] Дані успішно додано до таблиці")
+        else:
+            print("[SHEETS] Не вдалося додати дані до таблиці")
+        
         return True
         
     except Exception as e:

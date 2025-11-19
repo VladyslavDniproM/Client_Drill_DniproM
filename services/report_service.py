@@ -1,13 +1,14 @@
 from datetime import datetime
 import os
 import json
+import io
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from googleapiclient.http import MediaInMemoryUpload
 
 def update_google_sheets(session_data):
-    """Записує статистику в Google Таблицю"""
+    """Записує статистику в єдину Google Таблицю"""
     try:
         # Отримуємо credentials
         if os.path.exists('token.json'):
@@ -24,11 +25,55 @@ def update_google_sheets(session_data):
         if creds.expired and creds.refresh_token:
             creds.refresh(Request())
         
-        # Створюємо сервіс Sheets
+        # Створюємо сервіси
+        drive_service = build('drive', 'v3', credentials=creds)
         sheets_service = build('sheets', 'v4', credentials=creds)
         
-        # ID вашої Google Таблиці
-        SPREADSHEET_ID = "1WhAPBi8hSHPLdWBJAPnk1jDiQxYWlPw1vMg5BOwfx74"
+        # ID папки
+        FOLDER_ID = '1vU_AH8bQspbT4Viw7EoMoCObrFWqcV3d'
+        
+        # Назва таблиці (постійна)
+        spreadsheet_name = "ЗВІТИ ПРОДАЖІВ"
+        
+        # Перевіряємо, чи вже існує таблиця
+        query = f"name='{spreadsheet_name}' and '{FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false"
+        results = drive_service.files().list(q=query).execute()
+        files = results.get('files', [])
+        
+        if files:
+            # Використовуємо існуючу таблицю
+            SPREADSHEET_ID = files[0]['id']
+            print(f"[SHEETS] Використовуємо існуючу таблицю: {spreadsheet_name}")
+        else:
+            # Створюємо нову таблицю
+            spreadsheet_body = {
+                'properties': {
+                    'title': spreadsheet_name
+                },
+                'sheets': [
+                    {
+                        'properties': {
+                            'title': 'Звіти',
+                            'gridProperties': {
+                                'rowCount': 1000,
+                                'columnCount': 8
+                            }
+                        }
+                    }
+                ]
+            }
+            
+            spreadsheet = sheets_service.spreadsheets().create(body=spreadsheet_body).execute()
+            SPREADSHEET_ID = spreadsheet['spreadsheetId']
+            
+            # Переміщуємо таблицю в потрібну папку
+            drive_service.files().update(
+                fileId=SPREADSHEET_ID,
+                addParents=FOLDER_ID,
+                fields='id, parents'
+            ).execute()
+            
+            print(f"[SHEETS] Створено нову таблицю: {spreadsheet_name}")
         
         # Підготовка даних
         seller_name = session_data.get('seller_name', 'Невідомий')
@@ -54,40 +99,48 @@ def update_google_sheets(session_data):
             objection_score
         ]
         
-        # ВИКОРИСТОВУЄМО АРКУШ "1" (де є шапка)
-        range_name = "1!A:A"
+        # Шапка таблиці
+        headers = ['Дата', 'Продавець', 'Категорія', 'Загальний бал', 'Бал за модель', 'Бал за питання', 'Бал за відповіді', 'Бал за заперечення']
         
-        # Отримуємо поточні дані, щоб знайти вільний рядок
+        # Перевіряємо, чи є шапка
         result = sheets_service.spreadsheets().values().get(
             spreadsheetId=SPREADSHEET_ID,
-            range=range_name
+            range="A1:H1"
         ).execute()
         
         values = result.get('values', [])
         
-        # Визначаємо наступний вільний рядок (починаємо з рядка 2, бо рядок 1 - шапка)
-        next_row = len(values) + 1 if values else 2
+        if not values:
+            # Додаємо шапку
+            header_body = {'values': [headers]}
+            sheets_service.spreadsheets().values().update(
+                spreadsheetId=SPREADSHEET_ID,
+                range="A1",
+                valueInputOption="RAW",
+                body=header_body
+            ).execute()
+            print("[SHEETS] Додано шапку таблиці")
         
-        # Якщо є тільки шапка, починаємо з рядка 2
-        if len(values) == 1:
-            next_row = 2
+        # Знаходимо вільний рядок
+        result = sheets_service.spreadsheets().values().get(
+            spreadsheetId=SPREADSHEET_ID,
+            range="A:A"
+        ).execute()
         
-        print(f"[SHEETS] Записуємо дані в аркуш '1', рядок {next_row}")
+        values = result.get('values', [])
+        next_row = len(values) + 1
         
         # Записуємо дані
-        body = {
-            'values': [row_data]
-        }
-        
+        body = {'values': [row_data]}
         sheets_service.spreadsheets().values().update(
             spreadsheetId=SPREADSHEET_ID,
-            range=f"1!A{next_row}",
+            range=f"A{next_row}",
             valueInputOption="RAW",
             body=body
         ).execute()
         
-        print(f"[SHEETS] Статистику успішно додано до Google Таблиці, аркуш '1', рядок {next_row}")
-        print(f"[SHEETS] Дані: {row_data}")
+        print(f"[SHEETS] Статистику успішно додано до таблиці '{spreadsheet_name}', рядок {next_row}")
+        print(f"[SHEETS] Посилання на таблицю: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit")
         return True
         
     except Exception as e:
@@ -123,6 +176,7 @@ def generate_report(session_data):
             role = message['role'].capitalize()
         report_lines.append(f"{role} ({message['timestamp']}): {message['message']}")
     
+    # обчислюємо бал за питання з обмеженням максимум 8
     questions_score = min(
         sum(q['score'] for q in session_data.get('question_scores', [])), 
         8
@@ -131,10 +185,10 @@ def generate_report(session_data):
     # Додати результати оцінювання
     report_lines.extend([
         "\nРезультати:",
-        f"- Оцінка за модель: {session_data.get('model_score', 0)}/4",
+        f"- Оцінка за модель: {session_data.get('model_score', 0)}/4",  # Змінити з 6 на 4
         f"- Оцінка за питання: {questions_score}/8",
-        f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/10",
-        f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/8"
+        f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/10",  # Змінити з 6 на 10
+        f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/8"  # Змінити з 10 на 8
     ])
     
     return "\n".join(report_lines)
@@ -203,10 +257,6 @@ def save_report_to_drive(session_data):
         
         print(f"[DRIVE] Звіт успішно збережено на Google Drive: {filename}")
         print(f"[DRIVE] ID файлу: {file.get('id')}")
-        
-        # ДОДАЄМО ВИКЛИК ФУНКЦІЇ ДЛЯ GOOGLE SHEETS
-        update_google_sheets(session_data)
-        
         return True
         
     except Exception as e:
@@ -216,4 +266,5 @@ def save_report_to_drive(session_data):
 # Застаріла функція для зворотньої сумісності
 def send_email_report(subject, body, to_email):
     print("[INFO] Функція send_email_report застаріла. Використовується Google Drive")
-    return save_report_to_drive({"conversation_log": []})
+    # Тут можна використати session_data з body, якщо потрібно
+    return save_report_to_drive({"conversation_log": []})  # Мінімальні дані для збереження

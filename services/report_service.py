@@ -54,8 +54,8 @@ def update_google_sheets(session_data):
             objection_score
         ]
         
-        # Записуємо дані в аркуш "REPORT_RESULTS"
-        range_name = "REPORT_RESULTS!A:A"
+        # ВИКОРИСТОВУЄМО АРКУШ "1" (де є шапка)
+        range_name = "1!A:A"
         
         # Отримуємо поточні дані, щоб знайти вільний рядок
         result = sheets_service.spreadsheets().values().get(
@@ -65,18 +65,14 @@ def update_google_sheets(session_data):
         
         values = result.get('values', [])
         
-        # Визначаємо наступний вільний рядок
-        next_row = len(values) + 1 if values else 1
+        # Визначаємо наступний вільний рядок (починаємо з рядка 2, бо рядок 1 - шапка)
+        next_row = len(values) + 1 if values else 2
         
-        # Якщо перший рядок - це шапка, починаємо з рядка 2
-        if next_row == 1:
-            # Перевіряємо, чи є вже дані в аркуші
-            result_all = sheets_service.spreadsheets().values().get(
-                spreadsheetId=SPREADSHEET_ID,
-                range="REPORT_RESULTS!A1:H1"
-            ).execute()
-            if result_all.get('values'):
-                next_row = 2  # Починаємо з другого рядка після шапки
+        # Якщо є тільки шапка, починаємо з рядка 2
+        if len(values) == 1:
+            next_row = 2
+        
+        print(f"[SHEETS] Записуємо дані в аркуш '1', рядок {next_row}")
         
         # Записуємо дані
         body = {
@@ -85,22 +81,17 @@ def update_google_sheets(session_data):
         
         sheets_service.spreadsheets().values().update(
             spreadsheetId=SPREADSHEET_ID,
-            range=f"REPORT_RESULTS!A{next_row}",
+            range=f"1!A{next_row}",
             valueInputOption="RAW",
             body=body
         ).execute()
         
-        print(f"[SHEETS] Статистику успішно додано до Google Таблиці, рядок {next_row}")
+        print(f"[SHEETS] Статистику успішно додано до Google Таблиці, аркуш '1', рядок {next_row}")
+        print(f"[SHEETS] Дані: {row_data}")
         return True
         
     except Exception as e:
         print(f"[SHEETS ERROR] Не вдалося оновити таблицю: {str(e)}")
-        
-        # Якщо помилка через неактивований API - активуємо
-        if "SERVICE_DISABLED" in str(e):
-            print("[SHEETS INFO] Активуйте Google Sheets API:")
-            print("https://console.developers.google.com/apis/api/sheets.googleapis.com/overview")
-        
         return False
 
 def generate_report(session_data):

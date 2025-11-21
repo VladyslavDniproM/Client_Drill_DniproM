@@ -29,6 +29,7 @@ def restart_chat():
     ]
     for key in keys_to_clear:
         session.pop(key, None)
+        session.pop("user_selected_model", None)
     return jsonify({"message": "Сесію скинуто."})
 
 @chat_bp.route("/start_chat")
@@ -90,8 +91,9 @@ def chat():
         if user_input.lower().startswith("обираю модель:"):
             model_name = user_input.split(":", 1)[1].strip()
             session["stage"] = 2
+            session["user_selected_model"] = model_name.upper()  # Зберігаємо обрану модель
             return jsonify({
-                "reply": f"Ви обрали модель: {model_name}. Переходимо до перевірки...",
+                "reply": f"Так, оце модель {model_name}. А можна взяти її в руки?",
                 "chat_ended": False,
                 "stage": 2,
                 "chosen_model": model_name
@@ -253,7 +255,7 @@ def chat():
 
     # --- Stage 2: Вибір моделі ---
     elif session["stage"] == 2:
-        user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
+        user_model = session.get("user_selected_model") or re.sub(r'[^A-Z0-9-]', '', user_input.upper())
         matched_models = [m for m in session["available_models"] if user_model in m.upper()]
 
         if not matched_models:

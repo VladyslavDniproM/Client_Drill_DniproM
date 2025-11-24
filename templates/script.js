@@ -1,1119 +1,4 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Тест «Віртуальний клієнт»</title>
-    <link rel="icon" type="image/png" href="/static/main/ikonka.png">
-    <style>
-/* === RESET === */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
-
-/* === BASE === */
-body {
-background-image: url("/static/main/fon.jpg");
-  background-image: linear-gradient(
-        rgba(0, 0, 0, 0.250), 
-        rgba(0, 0, 0, 0.800)
-      ),
-      url("/static/main/fon.jpg");
-  background-size: cover;         /* або contain — залежно від бажаного ефекту */
-  background-repeat: no-repeat;
-  background-position: center;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  padding: 20px;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  background-color: #ffffff;
-  color: #000000;
-  padding-top: 140px;
-}
-
-.top-panel {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 750px;
-  max-width: 1000px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;         /* по центру по горизонталі */
-  justify-content: center;     /* по центру по вертикалі */
-
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.3),
-    rgba(255, 255, 255, 0.05)
-  );
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-
-  padding: 16px 24px;
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  z-index: 500;
-  text-align: center;
-}
-
-.background-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background-color: rgba(0, 0, 0, 0.742); /* або 0.2-0.5 */
-  z-index: -1;
-}
-
-/* === HEADER === */
-h1 {
-  color: #ffffff;
-  text-align: center;
-  padding: 5px;
-  font-size: clamp(18px, 4vw, 24px);
-  margin: 0.5em 0;
-}
-
-/* === CHAT CONTAINER === */
-.chat-container {
-  background: transparent;
-  backdrop-filter: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 20px;
-  max-height: 50dvh;
-  overflow-y: auto;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  flex-grow: 1;
-  pointer-events: auto;
-}
-
-.chat-shell {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  width: 750px;
-  max-width: 1000px;
-  height: 28vh;
-  overflow: hidden;
-
-  display: flex;
-  flex-direction: column;
-
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  z-index: 999;
-}
-
-/* === MESSAGES === */
-.message {
-  margin-bottom: 15px;
-  padding: 10px 15px;
-  border-radius: 18px;
-  max-width: 80%;
-  line-height: 1.4;
-  animation: fadeIn 0.3s ease;
-  word-wrap: break-word;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.bot-message {
-  background-color: #e0e0e0;
-  color: #333;
-  align-self: flex-start;
-  border-radius: 18px 18px 5px 18px;
-}
-.user-message {
-  background-color: #ff6f00;
-  color: white;
-  align-self: flex-end;
-  border-radius: 18px 18px 18px 5px;
-}
-
-/* === INPUT AREA === */
-.input-area {
-  display: flex;
-  gap: 10px;
-  padding: 16px 20px;
-  background: transparent;
-  border-top: 1px solid rgba(255, 255, 255, 0.2); /* тонка межа */
-}
-#user-input {
-  flex-grow: 1;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  font-size: clamp(14px, 3vw, 16px);
-  min-height: 20px;
-  max-height: 120px;
-  resize: vertical;
-  pointer-events: auto;
-}
-#user-input:disabled::placeholder {
-    color: #999; /* Сірий колір, що добре видно на білому фоні */
-    opacity: 1; /* Фіксує прозорість (за замовчуванням у деяких браузерах вона знижується) */
-}
-
-#user-input:disabled {
-    background-color: #f5f5f5; /* Світло-сірий фон для вимкненого поля */
-    border-color: #ddd; /* Межа для контрасту */
-}
-#send-button {
-  background-color: #ff6f00;
-  color: white;
-  border: none;
-  padding: 0 clamp(10px, 3vw, 20px);
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: clamp(14px, 3vw, 16px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  min-width: 60px;
-  height: 44px;
-}
-
-#send-button:hover {
-  background-color: #e65c00;
-}
-#send-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-#record-btn {
-  background-color: #ff3c00;
-  color: white;
-  border: none;
-  padding: 0 clamp(10px, 3vw, 20px);
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: clamp(14px, 3vw, 16px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  min-width: 60px;
-  height: 44px;
-}
-
-.record-btn:hover {
-  background-color: #ffd900;
-}
-.record-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-/* === STAGE INDICATOR === */
-.stage-indicator-single {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 16px;
-  margin-top: 12px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  width: 540px;
-  max-width: 800px;
-  font-weight: bold;
-  font-size: 14px;
-  color: white;
-  transition: all 0.3s ease;
-}
-
-.recording-indicator {
-  color: red;
-  font-weight: bold;
-  margin-top: 10px;
-}
-
-.stage-indicator-single .stage {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: fadeStage 0.4s forwards;
-}
-
-@keyframes fadeStage {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* === STATUS / TYPING === */
-.status {
-  font-style: italic;
-  font-size: clamp(12px, 2.5vw, 14px);
-  color: #ffffff;
-  text-align: center;
-  width: 90%;
-  max-width: 800px;
-  margin: 0 auto;
-}
-.typing-indicator {
-  display: inline-block;
-  padding: 10px;
-  margin-left: 10px;
-}
-.typing-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #999;
-  margin: 0 2px;
-  animation: typingAnimation 1.4s infinite ease-in-out;
-}
-.typing-dot:nth-child(1) { animation-delay: 0s; }
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes typingAnimation {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-5px); }
-}
-
-.modal-content input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-}
-
-.modal-content button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-/* === RESTART BUTTON === */
-#restart-button {
-  display: none;
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  z-index: 9999;
-  background-color: #ff4d4f;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: clamp(12px, 2.5vw, 14px);
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-#restart-button:hover {
-  background-color: #ff0000a5;
-}
-
-.chat-blur-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  pointer-events: none;
-
-  background: transparent;
-  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  z-index: 5;
-}
-
-#choose-model-btn {
-  display: none;
-  position: absolute;
-  right: 80px; /* Відступ від правого краю чату */
-  bottom: 50%; /* Вертикальне центрування */
-  transform: translateY(50%);
-  z-index: 999;
-  background-color: #ff6f00;
-  color: white;
-  border: none;
-  border-radius: 25px 25px 25px 25px; /* Скруглення тільки зліва */
-  padding: 25px 25px 25px 25px;
-  font-size: clamp(14px, 3vw, 16px);
-  text-align: center;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  max-width: 200px;
-}
-
-#choose-model-btn:hover {
-  background-color: #e65c00;
-  right: 80px; /* Зсуваємо ближче до чату при наведенні */
-  box-shadow: -2px 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-/* === MODELS SELECTION === */
-#models-container {
-  display: none;
-  margin-top: 15px;
-  text-align: center;
-  width: 90%;
-  max-width: 800px;
-  margin: 15px auto 0;
-}
-#models-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 10px;
-}
-.model-button {
-  min-width: 180px;
-  flex: 0 0 auto;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-.model-button:hover {
-  background-color: #ff6f00;
-  transform: scale(1.03);
-}
-
-/* === MODEL OVERLAY === */
-.model-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-.model-selector {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  max-width: 90%;
-  overflow: hidden;
-}
-.models-scroll {
-  display: flex;
-  overflow-x: auto;
-  gap: 16px;
-  padding: 10px;
-  scroll-behavior: smooth;
-  max-width: 80vw;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
-}
-.arrow {
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  user-select: none;
-  padding: 10px;
-  color: #333;
-}
-.arrow:hover {
-  color: #ff6600;
-}
-
-  @keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes modalFadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-
-  @keyframes contentScaleIn {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-
-  /* Основні стилі */
-  .model-detail-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    animation: modalFadeIn 0.3s ease-out forwards;
-  }
-
-  .model-detail-modal.closing {
-    animation: modalFadeOut 0.3s ease-out forwards;
-  }
-  
-  .model-detail-content {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    width: 90vw;
-    max-width: 400px; /* Фіксована ширина */
-    max-height: 90vh; /* Максимальна висота */
-    padding: 2vh 2vw;
-    position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    transform: scale(0.95);
-    opacity: 0;
-    animation: contentScaleIn 0.3s ease-out 0.1s forwards; /* Вимкнення прокрутки */
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .model-detail-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    overflow: hidden; /* Запобігаємо виходу контенту */
-  }
-  
-  .model-detail-image {
-    width: 50vmin; /* Комбінація vw і vh */
-    height: 50vmin;
-    max-width: 300px;
-    max-height: 300px;
-    object-fit: contain; 
-    padding: 0; /* Прибираємо відступи */
-    margin: 10px 0; /* Відступи зверху та знизу */
-  }
-  
-  .model-detail-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-    text-align: center;
-    margin: 0;
-    padding: 0 10px 8px;
-    border-bottom: 2px solid #ff6f00;
-    width: 100%;
-  }
-  
-  .model-detail-specs {
-    width: 100%;
-    padding: 0 10px;
-    margin: 5px 0;
-    flex-grow: 1;
-    overflow: hidden; /* Запобігаємо прокрутці */
-  }
-  
-  .model-detail-specs ul {
-    padding-left: 20px;
-    margin: 0;
-  }
-  
-  .model-detail-specs li {
-    margin-bottom: 8px;
-    line-height: 1.4;
-    padding: 4px 0;
-    font-size: 15px;
-  }
-
-  .model-detail-specs li:last-child {
-    margin-bottom: 0;
-  }
-
-  .model-detail-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-    z-index: 1;
-  }
-
-  /* Адаптація для мобільних */
-  @media (max-width: 500px) {
-    .model-detail-content {
-      width: 90%;
-      padding: 1.5vh 1.5vw;
-    }
-    
-    .model-detail-image {
-      width: 25vmin;
-      height: 25vmin;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.15); /* Менша тінь на мобільних */
-    }
-    
-    .model-detail-title {
-        font-size: calc(16px + 0.5vw);
-
-    }
-    
-    .model-detail-specs li {
-      font-size: calc(14px + 0.3vw);
-    }
-  }
-
-  @media (max-width: 300px) {
-    .model-detail-specs li {
-      font-size: calc(12px + 0.3vw);
-    }
-  }
-
-  /* Стилі для кнопки "Детальніше" */
-  .detail-view-btn {
-    background: #ff3c00;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-    font-size: 14px;
-    transition: all 0.3s;
-    width: auto;
-    align-self: center;
-  }
-  
-  .detail-view-btn:hover {
-    background: #ffc400;
-    transform: scale(1.05);
-  }
-
-/* === PROGRESS === */
-.progress-hint {
-  color: #ffffff;
-  font-size: clamp(10px, 2vw, 12px);
-  text-align: center;
-  width: 90%;
-  max-width: 800px;
-  margin: 3px auto;
-}
-.progress-container {
-  margin-top: 10px;
-  width: 90%;
-  max-width: 800px;
-  height: 10px;
-  background-color: #eee;
-  border-radius: 5px;
-  overflow: hidden;
-  transition: opacity 0.5s ease;
-}
-.progress-bar {
-  height: 100%;
-  width: 0%;
-  background-color: #4caf50;
-  transition: width 0.3s ease-out;
-  animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-.fade-out {
-  opacity: 0;
-  transition: opacity 1s ease-out;
-}
-
-/* === MODAL === */
-.modal {
-  position: fixed;
-  z-index: 9999;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-.modal.hidden {
-  opacity: 0;
-  visibility: hidden;
-}
-.modal-content {
-  background: #ff6f00;
-  padding: 20px 30px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 400px;
-  text-align: left;
-  overflow-y: auto;
-}
-.modal-content h2 {
-  font-size: clamp(18px, 4vw, 22px);
-}
-.modal-content ul {
-  font-size: clamp(14px, 3vw, 16px);
-  padding-left: 20px;
-}
-.modal-content button {
-  padding: 20px 30px;
-  font-weight: bold;
-  font-size: clamp(14px, 3vw, 16px);
-  cursor: pointer;
-}
-
-/* Додаткові стилі для підказки */
-#model-hint-modal .modal-content {
-  background: #4CAF50; /* Зелений колір для підказки */
-  text-align: center;
-}
-
-#client-character {
-  position: fixed;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px); /* трохи нижче на старті */
-  opacity: 0;
-  z-index: 501;
-  animation: fadeInUp 0.5s ease-out 1.0s forwards; /* 1.5s затримка */
-}
-
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-#model-hint-modal button {
-  background: white;
-  color: #4CAF50;
-  border: none;
-  margin-top: 15px;
-  border-radius: 5px;
-}
-
-#model-hint-modal.hidden {
-  display: none;
-}
-
-.recording-indicator {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    z-index: 1000;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-/* ===== МОБІЛЬНА АДАПТАЦІЯ ===== */
-@media (max-width: 900px) {
-    html, body {
-    background-image: url("/static/main/fon.jpg");
-    background-image: linear-gradient(
-        rgba(0, 0, 0, 0.5), 
-        rgba(0, 0, 0, 0.5)
-      ),
-      url("/static/main/fon.jpg");
-    background-size: cover;         /* або contain — залежно від бажаного ефекту */
-    background-repeat: no-repeat;
-    background-position: center;
-    overflow-x: hidden;
-    overflow-y: auto;
-    width: 100%;
-    height: 100%;
-    position: fixed; /* Фіксуємо розміри */
-    touch-action: pan-y; /* Тільки вертикальний скрол */
-    -webkit-overflow-scrolling: touch; /* Плавний скрол для iOS */
-  }
-
-  /* Запобігає підскакуванню контенту при фокусі на input */
-  input, textarea {
-    touch-action: manipulation;
-  }
-
-  /* Фіксуємо чат у межах екрану */
-  .chat-container {
-    max-height: calc(100dvh - 200px); /* Враховує висоту інших елементів */
-    overflow-y: auto;
-  }
-
-  /* Додатковий фікс для iOS */
-  .chat-shell {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  #choose-model-btn {
-    right: -100px;
-    padding: 12px 12px 12px 20px;
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 600px) {
-
-  .top-panel {
-    width: 95%;
-    padding: 12px 16px;
-    border-radius: 12px;
-  }
-
-  .stage-indicator-single {
-    width: auto;
-    font-size: 12px;
-    padding: 4px 10px;
-  }
-
-  .progress-hint {
-    font-size: 11px;
-  }
-
-  .progress-container {
-    height: 8px;
-  }
-
-  .chat-shell {
-    width: 100%;
-    left: 0;
-    transform: none;
-    border-radius: 0;
-    bottom: 0;
-    height: 42vh;
-  }
-
-  .chat-container {
-    padding: 10px;
-    max-height: 30vh;
-  }
-
-  .message {
-    max-width: 95%;
-    padding: 8px 12px;
-    font-size: 14px;
-  }
-
-  .input-area {
-    flex-direction: column;
-    padding: 10px;
-    gap: 6px;
-  }
-
-  #user-input {
-    padding: 10px;
-    font-size: 14px;
-    min-height: 30px;
-  }
-
-  #send-button {
-    width: 100%;
-    height: 42px;
-    font-size: 14px;
-  }
-
-  #record-btn {
-    width: 100%;
-    height: 42px;
-    font-size: 14px;
-  }
-
-  #client-character img {
-    max-height: 280px;
-  }
-
-  .modal-content {
-    width: 95%;
-    padding: 15px 20px;
-  }
-
-  .modal-content button {
-    padding: 15px 20px;
-    font-size: 14px;
-  }
-
-  #choose-model-btn {
-    right: 10px;
-    bottom: 60%;
-    padding: 14px;
-    font-size: 13px;
-    max-width: 150px;
-    white-space: normal;
-  }
-}
-
-@media (max-width: 768px) {
-    .model-selector {
-        flex-direction: column;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-    
-    .models-scroll {
-        flex-direction: column;
-        overflow-x: hidden;
-        overflow-y: auto;
-        max-height: 60vh;
-        width: 100%;
-    }
-    
-    #modelLeftArrow, #modelRightArrow {
-        display: none; /* Приховуємо стрілки на мобільних */
-    }
-    
-    .close-btn {
-        margin-left: 0;
-        margin-top: 10px;
-    }
-}
-
-@media (max-width: 768px) {
-  #client-character {
-    bottom: auto;  
-    top: 15%; 
-    left: 50%;
-    transform: translate(-50%, 0); 
-    max-width: 90%;
-  }
-    
-  #client-avatar {
-    max-height: 60vh; 
-    }
-}
-
-@media (min-width: 601px) and (max-width: 900px) {
-  .chat-shell {
-    width: 80%;
-    height: 36vh;
-  }
-
-  .top-panel {
-    width: 90%;
-  }
-
-  .message {
-    font-size: 15px;
-  }
-
-  #send-button {
-    font-size: 15px;
-  }
-
-  #record-btn {
-    font-size: 15px;
-  }
-
-  .stage-indicator-single {
-    font-size: 13px;
-  }
-}
-
-</style>
-</head>
-<body>
-<div class="top-panel">
-  <div class="progress-hint" id="progressHint">Бажаємо успіхів у консультації клієнта!</div>
-  <div class="progress-container" id="progressContainer">
-    <div class="progress-bar" id="questionProgressBar"></div>
-  </div>
-
-  <div id="top-title-area">
-    <h1 id="welcome-title">Клієнт зайшов до Вашого магазину...</h1>
-
-    <div id="stage-indicator" class="stage-indicator-single" style="display: none;">
-      <div id="stage-label" class="stage active">Етап: Виявлення потреби</div>
-    </div>
-  </div>
-</div>
-
-    <button id="choose-model-btn" style="display: none;">Оберіть модель</button>
-
-    <div class="chat-shell">
-      <div class="chat-blur-overlay"></div>
-      <div class="chat-container" id="chat-container">
-        <!-- Чат буде додаватись сюди -->
-      </div>
-
-    <div class="input-area">
-        <input
-            type="text"
-            id="user-input"
-            placeholder="Напишіть ваше повідомлення..."
-            autocomplete="off"
-        />
-        <button id="send-button">Надіслати</button>
-        <button id="record-btn">🎤</button>
-      </div>
-    </div>
-
-        <div id="recording-indicator" class="recording-indicator" style="display:none;">
-          🎙 Йде запис...
-        </div>
-
-    <div id="client-character" style="
-      display: none;
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    ">
-      <img id="client-avatar" src="" alt="Клієнт" style="
-        max-height: 520px;
-        border-radius: 16px;
-        filter: drop-shadow(0 0 8px rgba(0,0,0,0.3));
-      ">
-    </div>
-
-    <div id="auth-modal" class="modal">
-      <div class="modal-content">
-        <h2>Введіть ваші дані</h2>
-        <p>1. Оберіть категорію інструменту:</p>
-        <select 
-            id="tool-category" 
-            style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;"
-        >
-          <option value="">-- Оберіть категорію --</option>
-          <option value="screwdrivers">Шуруповерти</option>
-          <option value="grinders">КШМ (болгарки)</option>
-          <option value="hammers">Перфоратори</option>
-          <option value="inverters">Інвертори</option>
-          <option value="saws">Ланцюгові пили</option>
-          <option value="trimmers">Тримери</option>
-          <option value="sprayers">Обприскувачі</option>
-          <option value="busters">Пускові та зарядні пристрої</option>
-          <option value="compresor">Компресори</option>
-          <option value="impact">Гвинто- та гайковерти</option>
-          <option value="showers">Мийки високого тиску</option>
-          <option value="lighters">Акумуляторні ліхтарі</option>
-          <option value="exam">Екзамен (інструменти стажування)</option>
-        </select>
-
-        <p>2. Вкажіть ваше ПІБ для початку консультації:</p>
-        <input 
-            type="text" 
-            id="seller-name-input" 
-            placeholder="ПІБ (наприклад, Іванов Іван Іванович)" 
-            style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;"
-        >
-        
-        <button 
-            id="submit-name-btn" 
-            style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;"
-        >
-          Продовжити
-        </button>
-      </div>
-    </div>
-
-
-    <!-- Контейнер для вибору моделей (залишився, але не показуємо) -->
-    <div id="models-container" style="display:none;">
-        <p id="models-prompt"></p>
-        <div id="models-buttons">
-            <!-- Кнопки моделей будуть додані динамічно -->
-        </div>
-    </div>
-
-    <!-- Overlay для вибору моделей -->
-    <div id="modelOverlay" class="model-overlay">
-        <div class="model-selector">
-            <div id="modelLeftArrow" class="arrow">←</div>
-            <div id="modelsButtons" class="models-scroll"></div>
-            <div id="modelRightArrow" class="arrow">→</div>
-            <div id="close-model-overlay" class="arrow" style="margin-left: 10px;">✖</div>
-        </div>
-    </div>
-
-    <div class="status" id="status"></div>
-
-    <div style="text-align: center;">
-        <button id="restart-button">Почати новий діалог</button>
-    </div>
-
-    <div id="model-hint-modal" class="modal hidden">
-      <div class="modal-content">
-        <h2>Порада</h2>
-        <p>Тепер ви можете обрати модель інструменту, яка відповідає потребам клієнта. Для цього натисніть на кнопку: Оберіть модель. Але не спішіть: якщо не впевнені у виборі, поставте клієнтові ще декілька запитань.</p>
-        <button id="close-hint-btn">Зрозуміло</button>
-      </div>
-    </div>
-
-    <div id="rules-modal" class="modal">
-        <div class="modal-content">
-            <h2>Правила комунікації з ботом</h2>
-            <ul>
-                <li>Вам необхідно проконсультувати клієнта згідно трьох етапів.</li>
-                <li>Для початку розмови - привітайтесь та поставте три початкових питання.</li>
-                <li>Після трьох запитань Вам відкриється можливість вибору інструменту.</li>
-                <li>Не пишіть модель інструменту вручну - натискайте на кнопку «Оберіть модель»</li>
-                <li>Назви етапів відображаються вгорі для відслідковування</li>
-                <li>Комунікація з ботом по часу - необмежена.</li>
-                <li>Тренер буде переглядати Ваші відповіді: спілкуйтесь адекватно</li>
-                <li>Якщо виникають проблеми — зробіть скріншот та надішліть тренеру.</li>
-            </ul>
-            <button id="accept-rules-btn">Я ознайомився і готовий</button>
-        </div>
-    </div>
-
-<div id="modelDetailModal" class="model-detail-modal">
-  <div class="model-detail-content">
-    <span class="model-detail-close">&times;</span>
-    <div class="model-detail-main">
-      <img id="detailModelImage" class="model-detail-image" src="" alt="Модель">
-      <h2 id="detailModelTitle" class="model-detail-title"></h2>
-      <div class="model-detail-specs">
-        <ul id="detailModelSpecs">
-          <!-- Специфікації будуть додані динамічно -->
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-    <script>
-        const chatContainer = document.getElementById("chat-container");
+const chatContainer = document.getElementById("chat-container");
         const userInput = document.getElementById("user-input");
         const sendButton = document.getElementById("send-button");
         const statusElement = document.getElementById("status");
@@ -1152,6 +37,7 @@ h1 {
         function unblockChat() {
             userInput.disabled = false;
             sendButton.disabled = false;
+            recordBtn.disabled = false;
         }
 
         acceptBtn.addEventListener("click", () => {
@@ -1195,6 +81,7 @@ h1 {
         function disableChat() {
             userInput.disabled = true;
             sendButton.disabled = true;
+            recordBtn.disabled = true;
             hideModelButtons();
             statusElement.textContent = "Діалог завершено";
         }
@@ -1203,56 +90,94 @@ h1 {
           const h1 = document.getElementById('welcome-title');
           const indicator = document.getElementById('stage-indicator');
 
-          h1.style.display = 'none';
+          h1.style.display = 'hidden';
           indicator.style.display = 'flex'; // або 'block' для вертикального вигляду
         }
 
-        function showModelHint() {
-          const hintModal = document.getElementById("model-hint-modal");
-          hintModal.classList.remove("hidden");
-        }
+function showModelHint() {
+    const hintToast = document.getElementById("model-hint-modal");
+    hintToast.classList.remove("hidden");
+    hintToast.classList.add("success"); // Додаємо клас success для зеленого кольору
+    
+    // Автоматичне закриття через 15 секунд
+    setTimeout(() => {
+        hideModelHint();
+    }, 15000);
+}
 
-        function hideModelHint() {
-          const hintModal = document.getElementById("model-hint-modal");
-          hintModal.classList.add("hidden");
-        }
+function hideModelHint() {
+    const hintToast = document.getElementById("model-hint-modal");
+    hintToast.classList.add("hidden");
+    hintToast.classList.remove("success"); // Видаляємо клас success
+}
 
-        // Обробник для кнопки закриття
-        document.getElementById("close-hint-btn").addEventListener("click", hideModelHint);
+// Безпечне додавання обробників подій
+document.addEventListener('DOMContentLoaded', function() {
+    // Обробник для кнопки закриття в toast (якщо вона існує)
+    const toastCloseBtn = document.querySelector('#model-hint-modal .feedback-toast-close');
+    if (toastCloseBtn) {
+        toastCloseBtn.addEventListener('click', hideModelHint);
+    }
+    
+    // Обробник для кнопки "Зрозуміло" (якщо вона існує)
+    const closeHintBtn = document.getElementById("close-hint-btn");
+    if (closeHintBtn) {
+        closeHintBtn.addEventListener("click", hideModelHint);
+    }
+    
+    // Інші обробники
+    const closeOverlayBtn = document.getElementById("close-model-overlay");
+    if (closeOverlayBtn) {
+        closeOverlayBtn.addEventListener("click", hideModelButtons);
+    }
+});
 
-        document.getElementById("close-model-overlay").addEventListener("click", hideModelButtons);
-
-        let modelHintShown = false;
+let modelHintShown = false;
 
         // Оновіть функцію updateProgressBar
-       function updateProgressBar(progress, maxQuestions = 5) {
-          const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
-          questionProgressBar.style.width = `${percent}%`;
+function updateProgressBar(progress, maxQuestions = 5) {
+    // Знаходимо елементи тільки якщо вони існують
+    const questionProgressBar = document.getElementById("questionProgressBar");
+    const progressHint = document.getElementById("progressHint");
+    const progressContainer = document.getElementById("progressContainer");
+    
+    // Якщо елементи не знайдені - виходимо
+    if (!questionProgressBar || !progressHint || !progressContainer) {
+        return;
+    }
 
-          if (progress < maxQuestions) {
-              progressHint.textContent = `Прогрес виявлення потреби`;
-              progressHint.style.opacity = "1";
-              document.getElementById("progressContainer").style.opacity = "1";
-              progressHint.style.display = "block";
-              document.getElementById("progressContainer").style.display = "block";
+    const percent = (Math.min(progress, maxQuestions) / maxQuestions) * 100;
+    questionProgressBar.style.width = `${percent}%`;
 
-              if (progress >= 3 && !modelHintShown) { // Перевірка, щоб кнопка з'являлась після третього питання і залишалась
-                  document.getElementById("choose-model-btn").style.display = "inline-block";
-                  showModelHint();
-                  modelHintShown = true; // Позначаємо, що пораду вже показали
-              }
-          } else {
-              progressHint.textContent = "Максимальна кількість питань!";
-              setTimeout(() => {
-                  progressHint.style.opacity = "0";
-                  document.getElementById("progressContainer").style.opacity = "0";
-              }, 1500);
-              setTimeout(() => {
-                  progressHint.style.display = "none";
-                  document.getElementById("progressContainer").style.display = "none";
-              }, 2000);
-          }
-      }
+    if (progress < maxQuestions) {
+        progressHint.textContent = `Прогрес виявлення потреби`;
+        progressHint.style.opacity = "1";
+        progressContainer.style.opacity = "1";
+        progressHint.style.display = "block";
+        progressContainer.style.display = "block";
+
+        // Показуємо кнопку "Оберіть модель" для ВСІХ категорій, але підказку тільки для не-exam
+        if (progress >= 3 && !modelHintShown) {
+            document.getElementById("choose-model-btn").style.display = "inline-block";
+            
+            // Показуємо підказку тільки для НЕ exam категорій
+            if (selectedCategory !== "exam") {
+                showModelHint();
+            }
+            modelHintShown = true;
+        }
+    } else {
+        progressHint.textContent = "Максимальна кількість питань!";
+        setTimeout(() => {
+            progressHint.style.opacity = "0";
+            progressContainer.style.opacity = "0";
+        }, 1500);
+        setTimeout(() => {
+            progressHint.style.display = "none";
+            progressContainer.style.display = "none";
+        }, 2000);
+    }
+}
 
         function showModelButtons(models, promptText = "Оберіть модель:", attemptsLeft = 1) {
           modelsButtons.innerHTML = "";
@@ -1402,13 +327,31 @@ h1 {
                       "Довга ручка",
                   ],
               },
-              "DGA-201": {
-                  image: "/static/instruments/dga201.png",
+              "GL-190S": {
+                  image: "/static/instruments/gl190s.png",
+                  specs: [
+                      "180 мм діаметр диску",
+                      "1900 Вт потужності",
+                      "Модель із плавним пуском та захистами",
+                      "Модель для розрізання товстих матеріалів",
+                  ],
+              },
+              "DGA-201BC": {
+                  image: "/static/instruments/dga201BC.png",
                   specs: [
                       "125 мм діаметр диску",
                       "20V модель КШМ",
-                      "Зручна, проста та автономна",
-                      "Немає жодних особливих функцій",
+                      "Найкраща акумуляторна модель КШМ",
+                      "Усі функції захистів та підтримка обертів",
+                  ],
+              },
+              "DGA-202SBC": {
+                  image: "/static/instruments/dga202sbc.png",
+                  specs: [
+                      "125 мм діаметр диску",
+                      "20V модель КШМ",
+                      "Єдина модель із повноцінним регулятором обертів",
+                      "Має підтримку потужності",
                   ],
               },
               "DHR-200": {
@@ -1528,15 +471,6 @@ h1 {
                       "Працює електродами до 5 мм",
                   ],
               },
-                "M-18D": {
-                  image: "/static/instruments/M18D.png",
-                  specs: [
-                      "Надійний інвертор",
-                      "5 років гарантії на інструмент",
-                      "Працює електродами до 5 мм",
-                      "Не має функції TIG-LIFT Та VRD",
-                  ],
-              },
                 "M-20D": {
                   image: "/static/instruments/M20D.png",
                   specs: [
@@ -1623,6 +557,15 @@ h1 {
                   specs: [
                       "Найменша 12V пила-гілкоріз",
                       "Працює з гілками до 10 мм в діаметрі",
+                      "Безключова система натягу ланцюга",
+                      "Має захист від перенавантаження",
+                  ],
+              },
+                  "DMS-201BC": {
+                  image: "/static/instruments/DMS201BC.png",
+                  specs: [
+                      "Найменша 20V пила-гілкоріз",
+                      "Працює з гілками до 15 мм в діаметрі",
                       "Безключова система натягу ланцюга",
                       "Має захист від перенавантаження",
                   ],
@@ -2125,6 +1068,226 @@ h1 {
                   "Регульований кут нахилу",
                   "Захищений корпус для роботи у важких умовах"
                 ]
+              },
+              "ULTRA-150": {
+                image: "/static/instruments/ULTRA-150.png",
+                specs: [
+                  "150 предметів у комплекті",
+                  "Магнітні свічкові головки",
+                  "Посилений ударний кардан ½",
+                  "Біти типу 'M' для авто VAG-групи",
+                  "Гарантія 5 років"
+                ]
+              },
+              "ULTRA-SUPERLOCK-12": {
+                image: "/static/instruments/ULTRA-SUPERLOCK-12.png",
+                specs: [
+                  "12 предметів у комплекті",
+                  "Торцеві головки Super Lock",
+                  "Для мопедів, мотоциклів, велосипедів",
+                  "Тріскачка з квадратом ½",
+                  "Подовжувач 125 мм"
+                ]
+              },
+              "ULTRA-73": {
+                image: "/static/instruments/ULTRA-73.png",
+                specs: [
+                  "73 предмети у комплекті",
+                  "Для легкових авто та автобусів",
+                  "Тріскачки ½ та ¼",
+                  "Свічкові торцеві головки",
+                  "Торцеві головки Super Lock"
+                ]
+              },
+              "ULTRA-56": {
+                image: "/static/instruments/ULTRA-56.png",
+                specs: [
+                  "56 предметів у комплекті",
+                  "Ключі рожково-накидні",
+                  "Кліщі, молоток, викрутки",
+                  "Пасатижі та шестигранники",
+                  "Свічкові торцеві головки"
+                ]
+              },
+              "ULTRA-110": {
+                image: "/static/instruments/ULTRA-110.png",
+                specs: [
+                  "110 предметів у комплекті",
+                  "Для легкових авто та вантажівок",
+                  "Торцеві головки TORX",
+                  "Свічкові торцеві головки",
+                  "Популярний на СТО"
+                ]
+              },
+              "ULTRA-112": {
+                image: "/static/instruments/ULTRA-112.png",
+                specs: [
+                  "112 предметів у комплекті",
+                  "Ударні торцеві головки",
+                  "Для роботи з гайковертами",
+                  "Ідентичний ULTRA-110 за призначенням",
+                  "Професійне використання"
+                ]
+              },
+              "DJS-200BCULTRA": {
+                "image": "/static/instruments/DJS-200BCULTRA.png",
+                "specs": [
+                  "Акумуляторний лобзик",
+                  "Глибина різу дерева: 135 мм",
+                  "800-2600 об/хв",
+                  "Амплітуда коливання: 26 мм",
+                  "Лита алюмінієва підошва"
+                ]
+              },
+              "JS-100LX": {
+                "image": "/static/instruments/JS-100LX.png",
+                "specs": [
+                  "Глибина різу дерева: 100 мм",
+                  "800-3000 об/хв",
+                  "Амплітуда коливання: 28 мм",
+                  "Лита алюмінієва підошва",
+                  "Підсвітка знімається з кнопки"
+                ]
+              },
+              "JS-80LX": {
+                "image": "/static/instruments/JS-80LX.png",
+                "specs": [
+                  "Глибина різу дерева: 80 мм",
+                  "800-2900 об/хв",
+                  "Амплітуда коливання: 22 мм",
+                  "Лита алюмінієва підошва",
+                  "Максимальний контроль різу"
+                ]
+              },
+              "JS-65LX": {
+                "image": "/static/instruments/JS-65LX.png",
+                "specs": [
+                  "Глибина різу дерева: 65 мм",
+                  "800-2800 об/хв",
+                  "Амплітуда коливання: 22 мм",
+                  "Штампована сталева підошва",
+                  "Для монтажних робіт"
+                ]
+              },
+              "PS-30S": {
+                "image": "/static/instruments/PS-30S.png",
+                "specs": [
+                  "Вібраційна шліфмашина",
+                  "Потужність: 200 Вт",
+                  "6000-13000 коливань/хв",
+                  "Підошва: 90 х 182 мм",
+                  "Амплітуда: 2 мм"
+                ]
+              },
+              "PE-29S": {
+                "image": "/static/instruments/PE-29S.png",
+                "specs": [
+                  "Ексцентрикова шліфмашина",
+                  "Потужність: 290 Вт",
+                  "7500-12000 об/хв",
+                  "Підошва: 125 мм",
+                  "Амплітуда: 2.5 мм"
+                ]
+              },
+              "PE-50S": {
+                "image": "/static/instruments/PE-50S.png",
+                "specs": [
+                  "Ексцентрикова шліфмашина",
+                  "Потужність: 380 Вт",
+                  "6000-13000 об/хв",
+                  "Підошва: 125 мм",
+                  "Амплітуда: 2 мм"
+                ]
+              },
+              "PE-35RX": {
+                "image": "/static/instruments/PE-35RX.png",
+                "specs": [
+                  "Ексцентрикова шліфмашина",
+                  "Безщітковий двигун 350 Вт",
+                  "4000-10000 об/хв",
+                  "Підошва: 150 мм",
+                  "Амплітуда: 5 мм"
+                ]
+              },
+              "DSO-200BCULTRA": {
+                "image": "/static/instruments/DSO-200BCULTRA.png",
+                "specs": [
+                  "Акумуляторна ексцентрикова",
+                  "Напруга: 20 В",
+                  "6000-12000 об/хв",
+                  "Підошва: 125 мм",
+                  "Амплітуда: 3 мм"
+                ]
+              },
+              "BS-100S": {
+                "image": "/static/instruments/BS-100S.png",
+                "specs": [
+                  "Стрічкова шліфмашина",
+                  "Потужність: 1050 Вт",
+                  "Швидкість стрічки: 200-380 м/хв",
+                  "Розмір стрічки: 533 х 76 мм",
+                  "Вага: 3.7 кг"
+                ]
+              },
+              "DSC-200BCULTRA": {
+                "image": "/static/instruments/DSC-200BCULTRA.png",
+                "specs": [
+                  "Акумуляторна циркулярна пила",
+                  "Безщітковий двигун 20V",
+                  "Глибина пропилу: 55 мм",
+                  "Захист від заклинювання диска",
+                  "Динамічне гальмо"
+                ]
+              },
+              "DSC-201BC": {
+                "image": "/static/instruments/DSC-201BC.png", 
+                "specs": [
+                  "Акумуляторна циркулярна пила",
+                  "Потужність: 20V",
+                  "Для виїзних робіт",
+                  "Легка та мобільна",
+                  "Патрубок для пилососа"
+                ]
+              },
+              "CS-235IN": {
+                "image": "/static/instruments/CS-235IN.png",
+                "specs": [
+                  "Професійна циркулярна пила", 
+                  "Глибина пропилу: 85 мм",
+                  "Можливість стаціонарного встановлення",
+                  "Розклинювальний ніж",
+                  "Литий алюмінієвий підошва"
+                ]
+              },
+              "CS-210": {
+                "image": "/static/instruments/CS-210.png",
+                "specs": [
+                  "Універсальна циркулярна пила",
+                  "Глибина пропилу: 75 мм", 
+                  "Для професійних користувачів",
+                  "Для твердих заготовок",
+                  "Литий алюмінієвий підошва"
+                ]
+              },
+              "CS-185LX": {
+                "image": "/static/instruments/CS-185LX.png",
+                "specs": [
+                  "Удосконалена циркулярна пила",
+                  "Глибина пропилу: 62 мм",
+                  "Для тривалих робіт",
+                  "Литий алюмінієвий підошва", 
+                  "Патрубок для пилососа"
+                ]
+              },
+              "CS-185M": {
+                "image": "/static/instruments/CS-185M.png",
+                "specs": [
+                  "Базова циркулярна пила",
+                  "Глибина пропилу: 62 мм",
+                  "Мала вага та компактність",
+                  "Штампований алюмінієвий підошва",
+                  "Для будівельних робіт"
+                ]
               }
             };
 
@@ -2265,8 +1428,8 @@ async function sendModelChoice(model) {
     userInput.disabled = false;
     sendButton.disabled = false;
     recordBtn.disabled = false; 
-    userInput.placeholder = "Напишіть ваше повідомлення..."; // Повертаємо стандартний текст
-    userInput.focus(); // Опціонально - фокусуємось на полі вводу
+    userInput.placeholder = "Напишіть ваше повідомлення...";
+    userInput.focus();
 
     try {
         const response = await fetch("/chat", {
@@ -2281,6 +1444,11 @@ async function sendModelChoice(model) {
         // Оновлюємо stage, якщо сервер його повернув
         if (data.stage !== undefined) {
             updateStageIndicator(data.stage);
+        }
+
+        // ДОДАЄМО ОБРОБКУ ПІДКАЗКИ ПРО ВИБІР МОДЕЛІ
+        if (data.model_feedback) {
+            showModelFeedback(data.model_feedback);
         }
 
         // Додаємо повідомлення тільки якщо це не перехід на stage 3
@@ -2317,6 +1485,65 @@ async function sendModelChoice(model) {
     }
 }
 
+// ФУНКЦІЯ ДЛЯ ВІДОБРАЖЕННЯ ПІДКАЗКИ ПРО ВИБІР МОДЕЛІ
+function showModelFeedback(feedbackText) {
+    // Визначаємо тип підказки на основі тексту
+    let toastType = 'info';
+    if (feedbackText.includes('✅')) {
+        toastType = 'success';
+    } else if (feedbackText.includes('❌')) {
+        toastType = 'error';
+    } else if (feedbackText.includes('⚠️')) {
+        toastType = 'warning';
+    }
+    
+    // Використовуємо вже існуючу функцію showFeedback або створюємо нову
+    if (typeof showFeedback === 'function') {
+        showFeedback(feedbackText, toastType);
+    } else {
+        // Альтернативна реалізація, якщо функції showFeedback немає
+        createFeedbackToast(feedbackText, toastType);
+    }
+}
+
+// АЛЬТЕРНАТИВНА ФУНКЦІЯ, ЯКЩО showFeedback НЕ ІСНУЄ
+function createFeedbackToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `feedback-toast ${type}`;
+    
+    toast.innerHTML = `
+        <div class="feedback-toast-content">
+            <span class="feedback-toast-close">&times;</span>
+            <div class="feedback-toast-message">${message}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Додаємо обробник закриття
+    const closeBtn = toast.querySelector('.feedback-toast-close');
+    closeBtn.addEventListener('click', () => {
+        toast.style.animation = 'slideUp 0.5s ease-out forwards';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 500);
+    });
+    
+    // Автоматичне закриття через 5 секунд
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideUp 0.5s ease-out forwards';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 500);
+        }
+    }, 5000);
+}
+
 function createModelButton(model) {
     const button = document.createElement("button");
     button.innerText = model;
@@ -2327,116 +1554,213 @@ function createModelButton(model) {
     return button;
 }
 
-function updateStageIndicator(currentStage) {
-  const stageNames = {
-    1: "Етап: Виявлення потреби",
-    2: "Етап: Вибір моделі",
-    3: "Етап: Презентація інструменту",
-    4: "Етап: Робота із запереченнями"
-  };
+function updateStageIndicator(stage) {
+    document.querySelectorAll(".stage-item").forEach(item => {
+        const dot = item.querySelector(".stage-dot");
+        const itemStage = parseInt(item.dataset.stage);
 
-  const stageLabel = document.getElementById('stage-label');
-  if (!stageLabel) return;
+        dot.classList.remove("active", "completed");
 
-  stageLabel.textContent = stageNames[currentStage] || "";
-
-  // Перезапуск анімації (щоб кожен новий етап анімовано оновлювався)
-  stageLabel.classList.remove('stage'); 
-  void stageLabel.offsetWidth; // тригер перерендеру
-  stageLabel.classList.add('stage');
-}
-
-   let sellerName = '';
-
-async function authenticateSeller(name) {
-    try {
-        const category = document.getElementById("tool-category").value;
-
-        const response = await fetch("/authenticate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                seller_name: name,
-                category: category
-            }),
-            credentials: "include"
-        });
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Помилка автентифікації:", error);
-        return { error: "Помилка з'єднання" };
-    }
-}
-
-  // Показуємо модальне вікно для введення ПІБ при завантаженні
-  document.addEventListener('DOMContentLoaded', () => {
-    const authModal = document.getElementById('auth-modal');
-    const rulesModal = document.getElementById('rules-modal');
-    const nameInput = document.getElementById('seller-name-input');
-    const categoryInput = document.getElementById('tool-category');
-    const submitButton = document.getElementById('submit-name-btn');
-
-    // Приховуємо вікно правил спочатку
-    rulesModal.style.display = 'none';
-
-    // Показуємо вікно автентифікації
-    authModal.style.display = 'flex';
-
-    // Обробник для кнопки "Продовжити"
-    submitButton.addEventListener('click', async () => {
-        const name = nameInput.value.trim();
-        const category = categoryInput.value;
-
-        if (!category) {
-            alert("Будь ласка, оберіть категорію інструменту.");
-            categoryInput.focus();
-            return;
-        }
-
-        if (!name) {
-            alert("Будь ласка, введіть ваше ПІБ.");
-            nameInput.focus();
-            return;
-        }
-
-        // Блокуємо інтерфейс під час відправки
-        nameInput.disabled = true;
-        categoryInput.disabled = true;
-        submitButton.disabled = true;
-
-        const result = await authenticateSeller(name);
-
-        if (result.error) {
-            alert("Помилка: " + result.error);
-            nameInput.disabled = false;
-            categoryInput.disabled = false;
-            submitButton.disabled = false;
-        } else {
-            sellerName = name;
-            authModal.style.display = 'none';
-            rulesModal.style.display = 'flex';
+        if (itemStage < stage) {
+            dot.classList.add("completed");
+        } else if (itemStage === stage) {
+            dot.classList.add("active");
         }
     });
+}
+
+
+function updateStageProgress(currentStage) {
+  const progressPercent = ((currentStage - 1) / 3) * 100; // 4 етапи, але прогресс бар на 3 кроки
+  questionProgressBar.style.width = `${progressPercent}%`;
+  
+  // Оновлюємо точки етапів
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById(`stage-dot-${i}`);
+    if (!dot) continue;
+    
+    if (i < currentStage) {
+      dot.classList.add('completed');
+      dot.classList.remove('active');
+    } else if (i === currentStage) {
+      dot.classList.add('active');
+      dot.classList.remove('completed');
+    } else {
+      dot.classList.remove('active', 'completed');
+    }
+  }
+}
+
+let sellerName = '';
+let selectedCategory = '';
+
+async function authenticateSeller(name, category) {
+  try {
+    const response = await fetch("/authenticate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        seller_name: name,
+        category: category
+      }),
+      credentials: "include"
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Помилка автентифікації:", error);
+    return { error: "Помилка з'єднання" };
+  }
+}
+
+function initializeCategorySelection() {
+  const categoryButtonsContainer = document.getElementById('category-selection-buttons');
+  
+  const availableCategories = [
+    { value: "screwdrivers", name: "Шуруповерти" },
+    { value: "grinders", name: "КШМ (болгарки)" },
+    { value: "hammers", name: "Перфоратори" },
+    { value: "inverters", name: "Інвертори" },
+    { value: "saws", name: "Ланцюгові пили" },
+    { value: "trimmers", name: "Тримери" },
+    { value: "sprayers", name: "Обприскувачі" },
+    { value: "busters", name: "Пускові та зарядні" },
+    { value: "compresor", name: "Компресори" },
+    { value: "impact", name: "Гвинтоверти та гайковерти" },
+    { value: "showers", name: "Мийки високого тиску" },
+    { value: "lighters", name: "Акумуляторні ліхтарі" },
+    { value: "instuments", name: "Набори Ultra" },
+    { value: "jigsaw", name: "Лобзики" },
+    { value: "woodgrinders", name: "Шліфмашини" },
+    { value: "circularsaws", name: "Циркулярні пили" }
+  ];
+  
+  availableCategories.forEach(category => {
+    const button = document.createElement('button');
+    button.textContent = category.name;
+    button.dataset.value = category.value;
+
+    button.addEventListener('click', () => {
+      document.querySelectorAll('#category-selection-buttons button').forEach(btn => {
+        btn.classList.remove('selected-category');
+      });
+      button.classList.add('selected-category');
+      selectedCategory = category.value;
+      document.getElementById('confirm-category-btn').style.display = 'block';
+    });
+
+    categoryButtonsContainer.appendChild(button);
+  });
+
+  document.getElementById('confirm-category-btn').addEventListener('click', () => {
+    if (selectedCategory) {
+      const categoryName = availableCategories.find(cat => cat.value === selectedCategory)?.name || selectedCategory;
+      document.getElementById('selected-category-name').textContent = categoryName;
+      document.getElementById('category-selection-modal').style.display = 'none';
+      document.getElementById('auth-modal').style.display = 'flex';
+      document.getElementById('seller-name-input').focus();
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const modeModal = document.getElementById('mode-selection-modal');
+  const categoryModal = document.getElementById('category-selection-modal');
+  const authModal = document.getElementById('auth-modal');
+  const rulesModal = document.getElementById('rules-modal');
+  const nameInput = document.getElementById('seller-name-input');
+  const submitButton = document.getElementById('submit-name-btn');
+
+  rulesModal.style.display = 'none';
+  categoryModal.style.display = 'none';
+  authModal.style.display = 'none';
+
+  initializeCategorySelection();
+
+  document.getElementById('training-mode-btn').addEventListener('click', () => {
+    modeModal.style.display = 'none';
+    categoryModal.style.display = 'flex';
+  });
+
+  document.getElementById('exam-mode-btn').addEventListener('click', () => {
+    selectedCategory = "exam";
+    document.getElementById('selected-category-info').style.display = 'none';
+    modeModal.style.display = 'none';
+    authModal.style.display = 'flex';
+    nameInput.focus();
+  });
+
+  submitButton.addEventListener('click', async () => {
+    const name = nameInput.value.trim();
+
+    if (!name) {
+      alert("Будь ласка, введіть ваше ПІБ.");
+      nameInput.focus();
+      return;
+    }
+
+    nameInput.disabled = true;
+    submitButton.disabled = true;
+
+    const result = await authenticateSeller(name, selectedCategory);
+
+    if (result.error) {
+      alert("Помилка: " + result.error);
+      nameInput.disabled = false;
+      submitButton.disabled = false;
+    } else {
+      sellerName = name;
+      authModal.style.display = 'none';
+      rulesModal.style.display = 'flex';
+    }
+  });
+
+  // ✅ Ось тут ми додаємо кнопку "Назад"
+  document.getElementById('back-to-category-select').addEventListener('click', () => {
+    // Якщо ЕКЗАМЕН → назад до вибору режиму
+    if (selectedCategory === "exam") {
+      selectedCategory = '';
+      authModal.style.display = 'none';
+      document.getElementById('selected-category-info').style.display = 'block';
+      modeModal.style.display = 'flex';
+    } 
+    // Якщо ТРЕНУВАННЯ → назад до вибору категорій
+    else {
+      authModal.style.display = 'none';
+      categoryModal.style.display = 'flex';
+    }
+  });
 });
 
 function playVoice(text) {
-  fetch("/speak", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  })
-  .then(res => res.blob())
-  .then(blob => {
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.play();
-  })
-  .catch(err => console.error("TTS error:", err));
+    // Перевіряємо, чи це exam режим
+    if (selectedCategory !== "exam") {
+        return; // Не програємо озвучку для інших категорій
+    }
+    
+    fetch("/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.blob();
+    })
+    .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play();
+    })
+    .catch(err => {
+        console.error("TTS error:", err);
+        // Можна додати повідомлення про помилку, але не обов'язково
+    });
 }
 
 let isCooldown = false;
+let chatEnded = false;
 
 async function sendMessage() {
     const message = userInput.value.trim();
@@ -2445,9 +1769,9 @@ async function sendMessage() {
         return;
     }
 
-    if (!message) return; // Перевірка на порожній рядок
+    if (!message) return;
 
-    addMessage(message, true); // Повідомлення продавця
+    addMessage(message, true);
     userInput.value = '';
     showTypingIndicator();
     statusElement.textContent = "Клієнт набирає відповідь...";
@@ -2455,11 +1779,14 @@ async function sendMessage() {
     isCooldown = true;
     userInput.disabled = true;
     sendButton.disabled = true;
+
     setTimeout(() => {
-        isCooldown = false;
-        userInput.disabled = false;
-        sendButton.disabled = false;
-        statusElement.textContent = "";
+        if (!chatEnded) {
+            isCooldown = false;
+            userInput.disabled = false;
+            sendButton.disabled = false;
+            statusElement.textContent = "";
+        }
     }, 4000);
 
     try {
@@ -2473,13 +1800,101 @@ async function sendMessage() {
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
 
+        // --- ОБРОБКА FEEDBACK ДЛЯ ВСІХ ЕТАПІВ ---
+        if (data.question_feedback) {
+            showFeedbackToast(data.question_feedback, data.question_score || 0);
+        }
+        
+        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ STAGE 3
+        if (data.answer_feedback) {
+            showFeedbackToast(data.answer_feedback, data.current_score || 0);
+        }
+        
+        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ ВИБОРУ МОДЕЛІ
+        if (data.model_feedback) {
+            showFeedbackToast(data.model_feedback);
+        }
+        
+        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ STAGE 4 (ЗАПЕРЕЧЕННЯ)
+        if (data.objection_feedback) {
+            showFeedbackToast(data.objection_feedback, 'objection-info');
+        }
+
         // Обробка відповіді
         if (data.error) {
             statusElement.textContent = "Помилка: " + data.error;
-            if (data.chat_ended) disableChat();
+            if (data.chat_ended) {
+                chatEnded = true;
+                disableChat();
+            }
             return;
         }
 
+        // --- Обробка фінальної оцінки ---
+if (data.detailed_report) {
+    addMessage(data.reply, false);
+    playVoice(data.reply);
+    
+    // 🔴 ПОКАЗУЄМО МОДАЛЬНЕ ВІКНО З ДЕТАЛЬНИМ ЗВІТОМ
+    setTimeout(() => {
+        showDetailedReport(data.detailed_report);
+    }, 1000);
+} else if (data.evaluation) {
+    // Стара логіка для зворотної сумісності
+    addMessage(data.reply, false);
+    playVoice(data.reply);
+    
+    setTimeout(() => {
+        addMessage(data.evaluation, false);
+        playVoice(data.evaluation);
+    }, 1000);
+}
+        // --- Логіка для етапу 3 (технічні питання) ---
+        else if (data.stage === 3) {
+            addMessage(data.reply, false);
+            statusElement.textContent = "Клієнт уточнює деталі про модель...";
+            userInput.focus();
+            playVoice(data.reply);
+
+            // 🔴 ВІДОБРАЖЕННЯ ПІДСУМКУ БАЛІВ ПІСЛЯ ОСТАННЬОЇ ВІДПОВІДІ
+            if (data.answers_summary) {
+                setTimeout(() => {
+                    showFeedbackToast(data.answers_summary, 'info');
+                }, 500);
+            }
+
+            if (data.questions) {
+                data.questions.forEach((question, index) => {
+                    setTimeout(() => {
+                        addMessage(question, false);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }, (index + 1) * 1000);
+                });
+            }
+        }
+        // 🔴 ЛОГІКА ДЛЯ ЕТАПУ 4 (ЗАПЕРЕЧЕННЯ)
+        else if (data.stage === 4) {
+            addMessage(data.reply, false);
+            
+            // Оновлюємо статус відповідно до раунду
+            if (data.current_round === 1) {
+                statusElement.textContent = "Клієнт обмірковує вашу відповідь...";
+            } else if (data.current_round === 2) {
+                statusElement.textContent = "Клієнт приймає остаточне рішення...";
+            }
+            
+            userInput.focus();
+            playVoice(data.reply);
+        }
+        else {
+            // Для інших етапів - стандартна обробка
+            if (data.reply) {
+                addMessage(data.reply, false);
+                playVoice(data.reply);
+            }
+        }
+
+        // --- СТАНДАРТНА ОБРОБКА ДАНИХ ---
         if (data.show_restart_button) {
             restartButton.style.display = "inline-block";
         } else {
@@ -2490,27 +1905,6 @@ async function sendMessage() {
             document.getElementById("choose-model-btn").style.display = "none";
         }
 
-        // --- Нова логіка для етапу 3 (технічні питання) ---
-        if (data.stage === 3) {
-            addMessage(data.reply, false);
-            statusElement.textContent = "Клієнт уточнює деталі про модель...";
-            userInput.focus();
-            playVoice(data.reply);   // ✅ тільки після отримання data
-
-            // Додаємо питання по одному з затримкою
-            questions.forEach((question, index) => {
-                setTimeout(() => {
-                    addMessage(question, false);
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                }, index * 1000);
-            });
-        } else {
-            // Для інших етапів - стандартна обробка
-            addMessage(data.reply, false);
-            playVoice(data.reply);   // ✅ тільки після отримання data
-        }
-
-        // Обробка етапу вибору моделі
         if (data.show_models) {
             showModelButtons(data.models, "Оберіть модель:", data.attempts_left);
         }
@@ -2521,11 +1915,22 @@ async function sendMessage() {
 
         if (data.stage !== undefined) {
             updateStageIndicator(data.stage);
-        }
-
-        if (data.stage === 3) {
-            statusElement.textContent = "Клієнт уточнює деталі про модель...";
-            userInput.focus();
+            
+            // 🔴 ОНОВЛЮЄМО СТАТУС ВІДПОВІДНО ДО ЕТАПУ
+            switch(data.stage) {
+                case 1:
+                    statusElement.textContent = "Клієнт очікує на ваші питання...";
+                    break;
+                case 2:
+                    statusElement.textContent = "Оберіть модель інструменту";
+                    break;
+                case 3:
+                    statusElement.textContent = "Клієнт уточнює деталі про модель...";
+                    break;
+                case 4:
+                    statusElement.textContent = "Клієнт висловив заперечення...";
+                    break;
+            }
         }
 
         if (data.question_progress !== undefined) {
@@ -2533,14 +1938,32 @@ async function sendMessage() {
         }
 
         if (data.chat_ended) {
+            chatEnded = true;
             disableChat();
+
+            if (data.show_restart_button) {
+                restartButton.style.display = "inline-block";
+            }
+
             if (data.model_chosen) {
                 setTimeout(() => {
                     addMessage("Дякую! Я беру цю модель.", false);
                 }, 1000);
             }
+
+            // 🔴 ВІДОБРАЖЕННЯ ФІНАЛЬНИХ БАЛІВ
+            if (data.objection_score !== undefined && data.total_score !== undefined) {
+                setTimeout(() => {
+                    showFeedbackToast(`🎯 За заперечення: ${data.objection_score}/8 балів | Загальний результат: ${data.total_score}/30`, 'success');
+                }, 2000);
+            }
+
+            return;
         } else {
-            statusElement.textContent = "";
+            // Якщо чат не завершено, але немає спеціального статусу - очищаємо
+            if (!data.stage) {
+                statusElement.textContent = "";
+            }
         }
 
     } catch (error) {
@@ -2551,6 +1974,92 @@ async function sendMessage() {
         hideTypingIndicator();
     }
 }
+
+// Функція для показу плаваючого сповіщення
+// Функція для показу плаваючого сповіщення
+function showFeedbackToast(message, score = 0) {
+    const toast = document.getElementById('feedback-toast');
+    const messageElement = document.getElementById('feedback-toast-message');
+    
+    // Визначаємо тип сповіщення
+    let type = 'info';
+    
+    // Для stage 1 та stage 2 (питання та модель)
+    if (typeof score === 'number') {
+        if (score === 0 || message.includes('❌') || message.includes('не стосується') || message.includes('неправильне')) {
+            type = 'error';
+        } else if (score === 1 || message.includes('⚠️') || message.includes('краще') || message.includes('потрібно краще')) {
+            type = 'warning';
+        } else if (score === 2 || message.includes('✅') || message.includes('відмінно') || message.includes('чудово')) {
+            type = 'success';
+        }
+    } 
+    // Для stage 3 (відповіді на технічні питання)
+    else if (typeof score === 'string') {
+        if (score.startsWith('answer-')) {
+            type = score;
+        }
+        // 🔴 ДЛЯ STAGE 4 (ЗАПЕРЕЧЕННЯ)
+        else if (score === 'objection-info') {
+            type = 'objection-info';
+        }
+    }
+    // Для текстових підказок
+    else if (message.includes('❌') && (message.includes('не по темі') || message.includes('неправильну модель') || message.includes('Потрібно більш переконливі'))) {
+        type = 'error';
+    } else if (message.includes('⚠️') && (message.includes('характеристику') || message.includes('Добре, але'))) {
+        type = 'warning';
+    } else if (message.includes('✅') && (message.includes('Відмінна відповідь') || message.includes('Відмінно'))) {
+        type = 'success';
+    } else if (message.includes('Загальний бал за відповіді') || message.includes('За заперечення:')) {
+        type = 'info';
+    } else if (message.includes('💡') && message.includes('заперечення')) {
+        type = 'objection-info';
+    }
+    
+    // Очищаємо попередні класи
+    toast.className = 'feedback-toast';
+    toast.classList.add(type);
+    
+    // Встановлюємо повідомлення
+    messageElement.textContent = message;
+    
+    // Показуємо сповіщення
+    toast.classList.remove('hidden');
+    
+    // Автоматичне закриття через різний час в залежності від типу
+    let timeout = 5000;
+    if (type.includes('error') || type.includes('warning')) {
+        timeout = 8000; // Більше часу для помилок
+    } else if (type.includes('info') && (message.includes('Загальний бал') || message.includes('За заперечення'))) {
+        timeout = 10000; // Ще більше часу для підсумку
+    } else if (type.includes('objection-info')) {
+        timeout = 6000; // Для підказок stage 4
+    }
+    
+    setTimeout(() => {
+        hideFeedbackToast();
+    }, timeout);
+}
+
+// Функція для приховування сповіщення
+function hideFeedbackToast() {
+    const toast = document.getElementById('feedback-toast');
+    toast.style.animation = 'slideUp 0.5s ease-out forwards';
+    
+    setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.style.animation = '';
+    }, 500);
+}
+
+// Додаємо обробник для кнопки закриття
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.querySelector('.feedback-toast-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', hideFeedbackToast);
+    }
+});
 
 let mediaRecorder;
 let audioChunks = [];
@@ -2629,6 +2138,105 @@ recordBtn.addEventListener("click", async () => {
   }
 });
 
+// Додайте ці функції
+function showDetailedReport(reportData) {
+    const modal = document.getElementById('report-modal');
+    const content = document.getElementById('report-content');
+    
+    // Визначаємо клас для фінальної оцінки
+    let finalClass = 'poor';
+    if (reportData.total_score >= 24) finalClass = 'excellent';
+    else if (reportData.total_score >= 16) finalClass = 'good';
+    
+    // Формуємо HTML звіту з ТРЬОМА окремими блоками
+    content.innerHTML = `
+        <div class="report-final ${finalClass}">
+            ${reportData.summary_label}
+        </div>
+        
+        <div class="report-section">
+            <h3>📈 Детальні бали:</h3>
+            <div class="report-details">
+                <div class="report-score">За модель: ${reportData.model_score}/4 балів</div>
+                <div class="report-score">За питання: ${reportData.questions_score}/8 балів</div>
+                <div class="report-score">За відповіді: ${reportData.answers_score}/10 балів</div>
+                <div class="report-score">За заперечення: ${reportData.objection_score}/8 балів</div>
+                <div class="report-score" style="font-size: 20px; margin-top: 10px;">
+                    Загальний результат: ${reportData.total_score}/30 балів
+                </div>
+            </div>
+        </div>
+        
+        <!-- 🔴 БЛОК ДЛЯ STAGE 1 - ВИЯВЛЕННЯ ПОТРЕБ -->
+        <div class="report-section">
+            <h3>🔍 Аналіз виявлення потреб:</h3>
+            <div class="report-details">
+                <strong>Оцінка якості виявлення потреб:</strong><br>
+                ${reportData.stage1_analysis || "Аналіз недоступний"}
+            </div>
+            <div class="report-advice">
+                <strong>💡 Поради для покращення виявлення потреб:</strong><br>
+                ${reportData.stage1_advice || "Рекомендації відсутні"}
+            </div>
+        </div>
+        
+        <!-- 🔴 БЛОК ДЛЯ STAGE 3 - ПРЕЗЕНТАЦІЯ МОДЕЛІ -->
+        <div class="report-section">
+            <h3>🎯 Аналіз презентації моделі:</h3>
+            <div class="report-details">
+                <strong>Оцінка якості презентації:</strong><br>
+                ${reportData.stage3_analysis || "Аналіз недоступний"}
+            </div>
+            <div class="report-advice">
+                <strong>💡 Поради для покращення презентації:</strong><br>
+                ${reportData.stage3_advice || "Рекомендації відсутні"}
+            </div>
+        </div>
+        
+        <!-- 🔴 БЛОК ДЛЯ STAGE 4 - РОБОТА З ЗАПЕРЕЧЕННЯМИ -->
+        <div class="report-section">
+            <h3>🛡️ Аналіз роботи з запереченнями:</h3>
+            <div class="report-details">
+                <strong>Оцінка роботи з запереченнями:</strong><br>
+                ${reportData.stage4_analysis || "Аналіз недоступний"}
+            </div>
+            <div class="report-advice">
+                <strong>💡 Поради для роботи з запереченнями:</strong><br>
+                ${reportData.stage4_advice || "Рекомендації відсутні"}
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <strong>📋 Звіт збережено для вашого тренера</strong>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+function hideDetailedReport() {
+    const modal = document.getElementById('report-modal');
+    modal.style.display = 'none';
+}
+
+// Обробник для кнопки "Ознайомлений"
+document.getElementById('accept-report-btn').addEventListener('click', function() {
+    hideDetailedReport();
+    // Додаємо фінальне повідомлення в чат
+    addMessage("Результат консультації: " + document.querySelector('.report-final').textContent + ". Звіт збережено для вашого тренера.", false);
+});
+
+// Додайте обробник для закриття модального вікна по кліку на backdrop
+document.getElementById('report-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideDetailedReport();
+        // Все одно додаємо повідомлення в чат
+        const finalElement = document.querySelector('.report-final');
+        if (finalElement) {
+            addMessage("Результат консультації: " + finalElement.textContent + ". Звіт збережено для вашого тренера.", false);
+        }
+    }
+});
 
     // Стартове повідомлення при завантаженні
     document.getElementById('accept-rules-btn').addEventListener('click', async () => {
@@ -2699,7 +2307,3 @@ document.getElementById("choose-model-btn").addEventListener("click", async () =
         hideModelButtons(); // ❌ не викликаємо sendModelChoice()
         document.getElementById("choose-model-btn").classList.remove("hidden"); // повертаємо кнопку
     });
-
-    </script>
-</body>
-</html>

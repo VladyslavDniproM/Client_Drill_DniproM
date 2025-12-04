@@ -742,7 +742,7 @@ def chat():
                 print(f"[DEBUG] Відповідь GPT для заперечень: {evaluation_text}")
 
                 # Парсинг відповіді для stage 4
-                score_match = re.search(r"ЗАГАЛЬНІ_БАЛИ:\s*(\d+)", evaluation_text)
+                score_match = re.search(r"ЗАГАЛЬНІ[ _]БАЛИ:\s*(\d+)", evaluation_text)
                 analysis_match = re.search(r"АНАЛІЗ_ЗАПЕРЕЧЕННЯ:\s*(.+?)(?=ПОРАДИ_ЗАПЕРЕЧЕННЯ:|$)", evaluation_text, re.DOTALL)
                 advice_match = re.search(r"ПОРАДИ_ЗАПЕРЕЧЕННЯ:\s*(.+)", evaluation_text, re.DOTALL)
 

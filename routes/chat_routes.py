@@ -289,8 +289,8 @@ def chat():
 
         # Оцінка моделі
         if user_model in correct_models:
-            session["model_score"] = 4  # Максимум 4 балів за правильний вибір
-            print(f"[SCORE] Правильна модель: +4 балів")
+            session["model_score"] = 6  # Максимум 4 балів за правильний вибір
+            print(f"[SCORE] Правильна модель: +6 балів")
 
             model_feedback = None
             if session.get('show_hints', True):
@@ -720,15 +720,12 @@ def chat():
 {full_history}
 
 ПРОАНАЛІЗУЙ відповіді продавця за такими критеріями та ВКАЖИ БАЛИ для кожного, але НЕ ВКАЗУЙ ЦІ КРИТЕРІЇ У ФІНАЛЬНОМУ ЗВІТІ:
-1. Відповідність запереченню (0-2 бали): Чи відповідає продавець безпосередньо на заперечення?
-2. Аргументація (0-2 бали): Чи наводить конкретні переваги, факти, приклади?
-3. Емпатія та розуміння (0-2 бали): Чи виявляє розуміння проблеми клієнта?
-4. Закриття (0-2 бали): Чи пропонує рішення або переводить до покупки?
+1. Відповідність запереченню (0-3 бали): Чи відповідає продавець безпосередньо на заперечення?
+2. Аргументація (0-3 бали): Чи наводить конкретні переваги, факти, приклади?
 
 ФОРМАТ ВІДПОВІДІ:
 АНАЛІЗ_ЗАПЕРЕЧЕННЯ: [детальний аналіз за критеріями, але їх не згадуй – два-три речення]
 ПОРАДИ_ЗАПЕРЕЧЕННЯ: [2-3 конкретні рекомендації – два-три речення]
-ЗАГАЛЬНІ_БАЛИ: [сума балів від 0 до 8]
 """
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -752,16 +749,14 @@ def chat():
                 if score_match:
                     objection_score = int(score_match.group(1))
                     # Обмежуємо максимум 8 балами
-                    objection_score = min(objection_score, 8)
-                    print(f"[SCORE] Отримано {objection_score}/8 балів за заперечення")
+                    objection_score = min(objection_score, 6)
+                    print(f"[SCORE] Отримано {objection_score}/6 балів за заперечення")
                 else:
                     # Альтернативний парсинг - шукаємо бали в тексті аналізу
                     total_score = 0
                     criteria_patterns = [
                         r"Відповідність запереченню.*?(\d+) бал",
-                        r"Аргументація.*?(\d+) бал", 
-                        r"Емпатія.*?(\d+) бал",
-                        r"Закриття.*?(\d+) бал"
+                        r"Аргументація.*?(\d+) бал"
                     ]
                     
                     for pattern in criteria_patterns:
@@ -769,18 +764,18 @@ def chat():
                         if match:
                             total_score += int(match.group(1))
                     
-                    objection_score = min(total_score, 8)
-                    print(f"[SCORE] Підраховано {objection_score}/8 балів за заперечення з аналізу")
+                    objection_score = min(total_score, 6)
+                    print(f"[SCORE] Підраховано {objection_score}/6 балів за заперечення з аналізу")
 
                 stage4_analysis = analysis_match.group(1).strip() if analysis_match else "Аналіз недоступний"
                 stage4_advice = advice_match.group(1).strip() if advice_match else "Поради недоступні"
 
                 # Фінальна репліка клієнта на основі балів
-                if objection_score >= 7:
+                if objection_score >= 5:
                     client_final_reply = "Добре, ви мене переконали. Пакуйте!"
-                elif objection_score >= 5:
-                    client_final_reply = "Гаразд, беру. Пакуйте!"
                 elif objection_score >= 3:
+                    client_final_reply = "Гаразд, беру. Пакуйте!"
+                elif objection_score >= 2:
                     client_final_reply = "Ну що ж, давайте. Пакуйте."
                 elif objection_score >= 1:
                     client_final_reply = "Ой, ладно, пакуйте. Але я ще сумніваюся."
@@ -789,7 +784,7 @@ def chat():
 
                 session['objection_score'] = objection_score
 
-                print(f"[SCORE] Оцінка аргументів: {objection_score}/8 балів")
+                print(f"[SCORE] Оцінка аргументів: {objection_score}/6 балів")
                 print(f"[STAGE1_ANALYSIS] Аналіз виявлення потреб: {stage1_analysis}")
                 print(f"[STAGE3_ANALYSIS] Аналіз презентації: {stage3_analysis}")
                 print(f"[STAGE4_ANALYSIS] Аналіз заперечень: {stage4_analysis}")
@@ -809,10 +804,10 @@ def chat():
                 total_score = model_score + questions_score + answers_score + objection_score
 
                 print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
-                print(f"[SCORE] За модель: {model_score}/4")
+                print(f"[SCORE] За модель: {model_score}/6")
                 print(f"[SCORE] За питання: {questions_score}/8")
                 print(f"[SCORE] За відповіді: {answers_score}/10")
-                print(f"[SCORE] За заперечення: {objection_score}/8")
+                print(f"[SCORE] За заперечення: {objection_score}/6")
                 print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/30")
 
                 if total_score >= 24:

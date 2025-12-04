@@ -185,10 +185,10 @@ def generate_report(session_data):
     # Додати результати оцінювання
     report_lines.extend([
         "\nРезультати:",
-        f"- Оцінка за модель: {session_data.get('model_score', 0)}/4",  # Змінити з 6 на 4
+        f"- Оцінка за модель: {session_data.get('model_score', 0)}/6",  # Змінити з 6 на 4
         f"- Оцінка за питання: {questions_score}/8",
         f"- Оцінка за відповіді: {sum(a['score'] for a in session_data.get('user_answers', {}).values())}/10",  # Змінити з 6 на 10
-        f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/8"  # Змінити з 10 на 8
+        f"- Оцінка за заперечення: {session_data.get('objection_score', 0)}/6"  # Змінити з 10 на 8
     ])
     
     return "\n".join(report_lines)

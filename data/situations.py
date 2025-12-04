@@ -73,7 +73,7 @@ SITUATIONS = [
         "description": "шуруповерт",
         "requirements": "для монтажу гіпсокартону на об'єктах",
         "avatar": "id4.png",
-        "behavior": "коротко формулює потребу",
+        "behavior": "душний уйобок просто тварь",
         "correct_models": ["CD-218Q", "CD-200BCCOMPACT"],
         "wrong_models": ["CD-12CX", "CD-12QX", "CD-12BC", "CD-200BCULTRA", "CD-201HBC"],
         "hints": [

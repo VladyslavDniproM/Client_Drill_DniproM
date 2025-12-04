@@ -130,7 +130,6 @@ CATEGORY_SITUATION_IDS = {
     "jigsaw": list(range(126, 136)),
     "woodgrinders": list(range(136, 156)),
     "circularsaws": list(range(156, 176)),
-    "blackfriday": list(range(176, 187)),
     "exam": list(range(1, 47))
 }
 

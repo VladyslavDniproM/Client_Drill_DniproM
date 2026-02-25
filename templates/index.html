@@ -2591,13 +2591,22 @@ function updateProgressBar(progress, maxQuestions = 5) {
                       "Йде без акумулятора",
                   ],
               },
-              "CD-200BCCOMPACT": {
-                  image: "/static/instruments/CD-200BCCOMPACT.png",
+              "CD-200BCKIT": {
+                  image: "/static/instruments/CD-200BCKIT.png",
                   specs: [
-                      "40 Нм",
+                      "50 Нм",
                       "Металевий патрон",
-                      "Найточніший шуруповерт",
-                      "Йде без акумулятора",
+                      "Наявний KickBack Control",
+                      "Йде з акумулятором та зарядкою",
+                  ],
+              },
+              "CD-202BC": {
+                  image: "/static/instruments/CD-202BC.png",
+                  specs: [
+                      "160 Нм",
+                      "Додаткова ручка для якісного втримання",
+                      "Наявний KickBack Control",
+                      "Найпотужніший шуруповерт",
                   ],
               },
               "CD-12CX": {
@@ -2616,6 +2625,24 @@ function updateProgressBar(progress, maxQuestions = 5) {
                       "Металевий патрон",
                       "Максимально компактний",
                       "Йде без акумулятора",
+                  ],
+              },
+              "i120": {
+                  image: "/static/instruments/i120.png",
+                  specs: [
+                      "Наймешний побутовий інвертор",
+                      "120 Ампер потужності",
+                      "20% робочого циклу",
+                      "Усі функції автоматизації",
+                  ],
+              },
+              "GL-280": {
+                  image: "/static/instruments/GL-280.png",
+                  specs: [
+                      "2800 Вт потужності",
+                      "230 мм діаметр диску",
+                      "Найпотужніша болгарка",
+                      "Плавний пуск та захист від випадкового вмикання",
                   ],
               },
               "GS-140SE": {
@@ -2810,10 +2837,28 @@ function updateProgressBar(progress, maxQuestions = 5) {
               "SAB-14DMINI": {
                   image: "/static/instruments/SAB14DMINI.png",
                   specs: [
-                      "Найменший зварювальний інвертор",
+                      "Найменший професійний інвертор",
                       "Має функцію HOT START",
                       "В комплекті йдуть зварювальні кабелі",
                       "Може працювати електродом 4 мм",
+                  ],
+              },
+                            "MG-16DX": {
+                  image: "/static/instruments/MG-16DX.png",
+                  specs: [
+                      "Напівпрофесійний напівавтомат",
+                      "Зварює дротом 1.0 мм та електродом 4 мм",
+                      "Має усі функції автоматизації",
+                      "Має синергетичне керування",
+                  ],
+              },
+                            "MG-18DX": {
+                  image: "/static/instruments/MG-18DX.png",
+                  specs: [
+                      "Професійний напівавтомат",
+                      "Не має функцій автоматизації",
+                      "Зварює дротом 1.2 мм та електродом 5 мм",
+                      "Ручне налаштування процесом зварювання",
                   ],
               },
                 "SAB-15DX": {
@@ -3991,7 +4036,7 @@ function initializeCategorySelection() {
     { value: "screwdrivers", name: "Шуруповерти" },
     { value: "grinders", name: "КШМ (болгарки)" },
     { value: "hammers", name: "Перфоратори" },
-    { value: "inverters", name: "Інвертори" },
+    { value: "inverters", name: "Зварювальні апарати" },
     { value: "saws", name: "Ланцюгові пили" },
     { value: "trimmers", name: "Тримери" },
     { value: "sprayers", name: "Обприскувачі" },

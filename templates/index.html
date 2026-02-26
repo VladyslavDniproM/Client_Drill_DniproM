@@ -4206,7 +4206,7 @@ async function sendMessage() {
         }
     }, 4000);
 
-    try {
+try {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -4217,27 +4217,28 @@ async function sendMessage() {
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
 
-        // --- ОБРОБКА FEEDBACK ДЛЯ ВСІХ ЕТАПІВ ---
+        // --- ОБРОБКА FEEDBACK (ПІДКАЗОК) ---
         if (data.question_feedback) {
             showFeedbackToast(data.question_feedback, data.question_score || 0);
         }
         
-        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ STAGE 3
+        // 🔴 ОНОВЛЕНО: Гнучка обробка для STAGE 3
         if (data.answer_feedback) {
-            showFeedbackToast(data.answer_feedback, data.current_score || 0);
+            // Якщо оцінка (current_score) відсутня або null, значить це був "QUESTION" (зустрічне питання)
+            // Використовуємо нейтральний колір 'info' замість балів
+            const feedbackType = (data.current_score === undefined || data.current_score === null) ? 'info' : data.current_score;
+            showFeedbackToast(data.answer_feedback, feedbackType);
         }
         
-        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ ВИБОРУ МОДЕЛІ
         if (data.model_feedback) {
             showFeedbackToast(data.model_feedback);
         }
         
-        // 🔴 ОБРОБКА ПІДКАЗОК ДЛЯ STAGE 4 (ЗАПЕРЕЧЕННЯ)
         if (data.objection_feedback) {
             showFeedbackToast(data.objection_feedback, 'objection-info');
         }
 
-        // Обробка відповіді
+        // Обробка помилок
         if (data.error) {
             statusElement.textContent = "Помилка: " + data.error;
             if (data.chat_ended) {
@@ -4247,39 +4248,31 @@ async function sendMessage() {
             return;
         }
 
-        // --- Обробка фінальної оцінки ---
-if (data.detailed_report) {
-    addMessage(data.reply, false);
-    playVoice(data.reply);
-    
-    // 🔴 ПОКАЗУЄМО МОДАЛЬНЕ ВІКНО З ДЕТАЛЬНИМ ЗВІТОМ
-    setTimeout(() => {
-        showDetailedReport(data.detailed_report);
-    }, 1000);
-} else if (data.evaluation) {
-    // Стара логіка для зворотної сумісності
-    addMessage(data.reply, false);
-    playVoice(data.reply);
-    
-    setTimeout(() => {
-        addMessage(data.evaluation, false);
-        playVoice(data.evaluation);
-    }, 1000);
-}
-        // --- Логіка для етапу 3 (технічні питання) ---
+        // --- Обробка фінального звіту ---
+        if (data.detailed_report) {
+            addMessage(data.reply, false);
+            playVoice(data.reply);
+            setTimeout(() => {
+                showDetailedReport(data.detailed_report);
+            }, 1000);
+        } 
+        
+        // 🔴 ОНОВЛЕНО: ЛОГІКА ДЛЯ ЕТАПУ 3 (ТЕХНІЧНІ ПИТАННЯ)
         else if (data.stage === 3) {
+            // Виводимо відповідь клієнта (вона може містити відповідь на питання продавця + повтор свого питання)
             addMessage(data.reply, false);
             statusElement.textContent = "Клієнт уточнює деталі про модель...";
             userInput.focus();
             playVoice(data.reply);
 
-            // 🔴 ВІДОБРАЖЕННЯ ПІДСУМКУ БАЛІВ ПІСЛЯ ОСТАННЬОЇ ВІДПОВІДІ
+            // Відображення підсумку балів (тільки в самому кінці етапу)
             if (data.answers_summary) {
                 setTimeout(() => {
                     showFeedbackToast(data.answers_summary, 'info');
                 }, 500);
             }
 
+            // Якщо сервер надіслав масив нових питань (на старті етапу)
             if (data.questions) {
                 data.questions.forEach((question, index) => {
                     setTimeout(() => {
@@ -4288,35 +4281,33 @@ if (data.detailed_report) {
                     }, (index + 1) * 1000);
                 });
             }
+            
+            // Важливо: прокручуємо вниз, бо репліка може бути довгою
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
-        // 🔴 ЛОГІКА ДЛЯ ЕТАПУ 4 (ЗАПЕРЕЧЕННЯ)
+
+        // --- ЛОГІКА ДЛЯ ЕТАПУ 4 (ЗАПЕРЕЧЕННЯ) ---
         else if (data.stage === 4) {
             addMessage(data.reply, false);
-            
-            // Оновлюємо статус відповідно до раунду
             if (data.current_round === 1) {
                 statusElement.textContent = "Клієнт обмірковує вашу відповідь...";
             } else if (data.current_round === 2) {
                 statusElement.textContent = "Клієнт приймає остаточне рішення...";
             }
-            
             userInput.focus();
             playVoice(data.reply);
         }
+
+        // --- СТАНДАРТНА ОБРОБКА ТА ОНОВЛЕННЯ ІНТЕРФЕЙСУ ---
         else {
-            // Для інших етапів - стандартна обробка
             if (data.reply) {
                 addMessage(data.reply, false);
                 playVoice(data.reply);
             }
         }
 
-        // --- СТАНДАРТНА ОБРОБКА ДАНИХ ---
-        if (data.show_restart_button) {
-            restartButton.style.display = "inline-block";
-        } else {
-            restartButton.style.display = "none";
-        }
+        // Кнопка рестарту
+        restartButton.style.display = data.show_restart_button ? "inline-block" : "none";
 
         if (data.hide_choose_model_btn) {
             document.getElementById("choose-model-btn").style.display = "none";
@@ -4330,56 +4321,40 @@ if (data.detailed_report) {
             document.getElementById("choose-model-btn").classList.remove("hidden");
         }
 
+        // Оновлення прогресу та стадій
         if (data.stage !== undefined) {
             updateStageIndicator(data.stage);
             
-            // 🔴 ОНОВЛЮЄМО СТАТУС ВІДПОВІДНО ДО ЕТАПУ
-            switch(data.stage) {
-                case 1:
-                    statusElement.textContent = "Клієнт очікує на ваші питання...";
-                    break;
-                case 2:
-                    statusElement.textContent = "Оберіть модель інструменту";
-                    break;
-                case 3:
-                    statusElement.textContent = "Клієнт уточнює деталі про модель...";
-                    break;
-                case 4:
-                    statusElement.textContent = "Клієнт висловив заперечення...";
-                    break;
+            // Встановлюємо статус повідомлення
+            const statuses = {
+                1: "Клієнт очікує на ваші питання...",
+                2: "Оберіть модель інструменту",
+                3: "Клієнт уточнює деталі про модель...",
+                4: "Клієнт висловив заперечення..."
+            };
+            if (statuses[data.stage]) {
+                statusElement.textContent = statuses[data.stage];
             }
         }
 
+        // Оновлюємо ProgressBar (тільки якщо передано значення)
         if (data.question_progress !== undefined) {
             updateProgressBar(data.question_progress, 5);
         }
 
+        // Завершення чату
         if (data.chat_ended) {
             chatEnded = true;
             disableChat();
-
-            if (data.show_restart_button) {
-                restartButton.style.display = "inline-block";
-            }
-
             if (data.model_chosen) {
                 setTimeout(() => {
                     addMessage("Дякую! Я беру цю модель.", false);
                 }, 1000);
             }
-
-            // 🔴 ВІДОБРАЖЕННЯ ФІНАЛЬНИХ БАЛІВ
             if (data.objection_score !== undefined && data.total_score !== undefined) {
                 setTimeout(() => {
                     showFeedbackToast(`🎯 За заперечення: ${data.objection_score}/8 балів | Загальний результат: ${data.total_score}/30`, 'success');
                 }, 2000);
-            }
-
-            return;
-        } else {
-            // Якщо чат не завершено, але немає спеціального статусу - очищаємо
-            if (!data.stage) {
-                statusElement.textContent = "";
             }
         }
 

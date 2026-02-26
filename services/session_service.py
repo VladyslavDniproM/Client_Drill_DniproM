@@ -79,9 +79,11 @@ def init_conversation():
     session['total_score'] = 0
     session['seller_replies'] = []
     session['irrelevant_answers'] = 0
+    session['confused_attempts'] = 0
     session.modified = True
 
     session['conversation_log'] = []
+    
 
     system_prompt = f"""
     ТИ — ПОКУПЕЦЬ МАГАЗИНУ «DNIPRO-M». ВИКЛЮЧНО ПОКУПЕЦЬ. НІКОЛИ НЕ ПРОДАВЕЦЬ. Твоя роль — бути покупцем, який шукає інструмент для конкретних потреб. **НІКОЛИ НЕ ГРАЙ РОЛЬ ПРОДАВЦЯ, ТИ НЕ ПРОДАЄШ ІНСТРУМЕНТ, ТИ КЛІЄНТ.**

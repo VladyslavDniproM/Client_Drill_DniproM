@@ -374,17 +374,19 @@ def chat():
                 "show_restart_button": True
             })
 
+        # Ініціалізація
+        if "conversation_log" not in session:
+            session["conversation_log"] = []
+        if "user_answers" not in session:
+            session["user_answers"] = {}
+
         index = session.get('current_question_index', 0)
         current_question = session['generated_questions'][index]
         user_input_text = user_input.strip()
 
-        if "conversation_log" not in session:
-            session["conversation_log"] = []
-
         # =====================================================
         # 🔹 Обробка образ та нецензури
         # =====================================================
-
         insults = ["придурок", "дурень", "ідіот", "дебіл"]
         if any(word in user_input_text.lower() for word in insults):
             return jsonify({
@@ -396,8 +398,7 @@ def chat():
         # =====================================================
         # 🔹 Класифікація повідомлення
         # =====================================================
-        msg_type = None  # Ініціалізація
-
+        msg_type = None
         text = user_input_text.lower()
         if "?" in text or text.startswith(("що", "чому", "яке", "яка", "які", "як", "навіщо", "в якому")):
             msg_type = "QUESTION"
@@ -412,7 +413,7 @@ def chat():
             ANSWER — відповідь на питання
             QUESTION — продавець ставить зустрічне питання
             CONFUSED — продавець не знає або не розуміє
-            IRRELEVANT — образи або повністю не по темі
+            IRRELEVANT — образи або не по темі
 
             Відповідай одним словом.
             """
@@ -427,9 +428,12 @@ def chat():
         print(f"[DEBUG] msg_type = {msg_type}")
 
         # =====================================================
-        # 🔹 QUESTION — відповідаємо на уточнення та повторюємо питання
+        # 🔹 QUESTION
         # =====================================================
         if msg_type == "QUESTION":
+            # Зберігаємо відповідь користувача
+            session["user_answers"][current_question] = {"answer": user_input_text}
+
             answer_prompt = f"""
             Ти покупець у магазині інструментів.
             Коротко відповідай на питання продавця:
@@ -443,7 +447,7 @@ def chat():
                 max_tokens=120
             )
             bot_answer = response.choices[0].message.content.strip()
-                
+
             reply_text = f"{bot_answer}\n\nА тепер скажіть, будь ласка: {current_question}"
 
             session["conversation_log"].append({
@@ -458,9 +462,12 @@ def chat():
             })
 
         # =====================================================
-        # 🔹 CONFUSED — максимум одне переформулювання, потім ідемо далі
+        # 🔹 CONFUSED
         # =====================================================
         elif msg_type == "CONFUSED":
+            # Зберігаємо відповідь користувача
+            session["user_answers"][current_question] = {"answer": user_input_text}
+
             attempts = session.get("confused_attempts", 0)
             if attempts == 0:
                 simplify_prompt = f"""
@@ -476,6 +483,7 @@ def chat():
                 )
                 simpler_question = response.choices[0].message.content.strip()
                 session["confused_attempts"] = 1
+
                 reply_text = f"Можливо, я не зовсім зрозуміло сказав.\n\n{simpler_question}"
 
                 session["conversation_log"].append({
@@ -505,11 +513,14 @@ def chat():
                         "reply": reply_text,
                         "chat_ended": False
                     })
+
+                # Переходимо на Stage 4
                 session["stage"] = 4
                 category = session.get("current_category", "default")
                 objections = CATEGORY_OBJECTIONS.get(category, CATEGORY_OBJECTIONS["default"])
                 session["current_objection"] = random.choice(objections)
-                reply_text = f"{feedback}\n\nХм... {session['current_objection']}"
+
+                reply_text = f"Зрозуміло.\n\nХм... {session['current_objection']}"
 
                 session["conversation_log"].append({
                     "role": "assistant",
@@ -520,15 +531,16 @@ def chat():
                 return jsonify({
                     "reply": reply_text,
                     "chat_ended": False,
-                    "stage": 4,
-                    "question_feedback": feedback_toast,
-                    "question_score": final_score
+                    "stage": 4
                 })
 
         # =====================================================
-        # 🔹 IRRELEVANT — просимо відповісти по суті
+        # 🔹 IRRELEVANT
         # =====================================================
         elif msg_type == "IRRELEVANT":
+            # Зберігаємо відповідь користувача
+            session["user_answers"][current_question] = {"answer": user_input_text}
+
             reply_text = f"Вибачте, але мені важливо це зрозуміти.\n\n{current_question}"
 
             session["conversation_log"].append({
@@ -541,8 +553,14 @@ def chat():
                 "reply": reply_text,
                 "chat_ended": False
             })
-        
+
+        # =====================================================
+        # 🔹 ANSWER
+        # =====================================================
         elif msg_type == "ANSWER":
+            # Зберігаємо відповідь користувача
+            session["user_answers"][current_question] = {"answer": user_input_text}
+
             final_score = 0
             question_comment = "Коментар недоступний"
 
@@ -568,19 +586,15 @@ def chat():
 
             stage3_text = evaluation.choices[0].message.content.strip()
 
-            # --- Парсимо оцінку та коментар ---
             score_match = re.search(r"ОЦІНКА:\s*(\d)", stage3_text)
             comment_match = re.search(r"КОМЕНТАР:\s*(.+)", stage3_text)
             final_score = int(score_match.group(1)) if score_match else 0
             question_comment = comment_match.group(1).strip() if comment_match else "Коментар недоступний"
 
-            # --- Зберігаємо відповідь з оцінкою ---
-            session["user_answers"][current_question] = {
-                "answer": user_input_text,
-                "score_text": stage3_text,
-                "score": final_score,
-                "comment": question_comment
-            }
+            # --- Зберігаємо оцінку та коментар
+            session["user_answers"][current_question]["score_text"] = stage3_text
+            session["user_answers"][current_question]["score"] = final_score
+            session["user_answers"][current_question]["comment"] = question_comment
 
             # --- Формуємо тост-підказку ---
             feedback_toast = None
@@ -592,7 +606,7 @@ def chat():
                 elif final_score == 2:
                     feedback_toast = "✅ Чудово! Відповідь повністю пояснює вигоду для клієнта."
 
-            # --- Перехід до наступного питання ---
+            # --- Наступне питання ---
             session["confused_attempts"] = 0
             session['current_question_index'] += 1
 
@@ -613,7 +627,7 @@ def chat():
                     "question_score": final_score
                 })
 
-            # --- Якщо питань більше нема — Stage 4 ---
+            # --- Stage 4 ---
             session["stage"] = 4
             answers_score = min(
                 sum(a.get("score", 0) for a in session.get("user_answers", {}).values()),
@@ -642,7 +656,9 @@ def chat():
             return jsonify({
                 "reply": reply_text,
                 "chat_ended": False,
-                "stage": 4
+                "stage": 4,
+                "question_feedback": feedback_toast,
+                "question_score": final_score
             })
     
     # --- Stage 4: Обробка заперечень ---

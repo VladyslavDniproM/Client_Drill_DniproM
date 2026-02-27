@@ -374,7 +374,7 @@ def chat():
                 "show_restart_button": True
             })
 
-        # Ініціалізація
+        # Ініціалізація логів і відповідей
         if "conversation_log" not in session:
             session["conversation_log"] = []
         if "user_answers" not in session:
@@ -431,8 +431,11 @@ def chat():
         # 🔹 QUESTION
         # =====================================================
         if msg_type == "QUESTION":
-            # Зберігаємо відповідь користувача
-            session["user_answers"][current_question] = {"answer": user_input_text}
+            # Зберігаємо питання + відповідь користувача
+            session["user_answers"][current_question] = {
+                "question": current_question,
+                "answer": user_input_text
+            }
 
             answer_prompt = f"""
             Ти покупець у магазині інструментів.
@@ -465,8 +468,11 @@ def chat():
         # 🔹 CONFUSED
         # =====================================================
         elif msg_type == "CONFUSED":
-            # Зберігаємо відповідь користувача
-            session["user_answers"][current_question] = {"answer": user_input_text}
+            # Зберігаємо питання + відповідь користувача
+            session["user_answers"][current_question] = {
+                "question": current_question,
+                "answer": user_input_text
+            }
 
             attempts = session.get("confused_attempts", 0)
             if attempts == 0:
@@ -538,8 +544,11 @@ def chat():
         # 🔹 IRRELEVANT
         # =====================================================
         elif msg_type == "IRRELEVANT":
-            # Зберігаємо відповідь користувача
-            session["user_answers"][current_question] = {"answer": user_input_text}
+            # Зберігаємо питання + відповідь користувача
+            session["user_answers"][current_question] = {
+                "question": current_question,
+                "answer": user_input_text
+            }
 
             reply_text = f"Вибачте, але мені важливо це зрозуміти.\n\n{current_question}"
 
@@ -558,9 +567,6 @@ def chat():
         # 🔹 ANSWER
         # =====================================================
         elif msg_type == "ANSWER":
-            # Зберігаємо відповідь користувача
-            session["user_answers"][current_question] = {"answer": user_input_text}
-
             final_score = 0
             question_comment = "Коментар недоступний"
 
@@ -591,10 +597,14 @@ def chat():
             final_score = int(score_match.group(1)) if score_match else 0
             question_comment = comment_match.group(1).strip() if comment_match else "Коментар недоступний"
 
-            # --- Зберігаємо оцінку та коментар
-            session["user_answers"][current_question]["score_text"] = stage3_text
-            session["user_answers"][current_question]["score"] = final_score
-            session["user_answers"][current_question]["comment"] = question_comment
+            # --- Зберігаємо питання + відповідь + оцінку
+            session["user_answers"][current_question] = {
+                "question": current_question,
+                "answer": user_input_text,
+                "score_text": stage3_text,
+                "score": final_score,
+                "comment": question_comment
+            }
 
             # --- Формуємо тост-підказку ---
             feedback_toast = None
@@ -630,7 +640,7 @@ def chat():
             # --- Stage 4 ---
             session["stage"] = 4
             answers_score = min(
-                sum(a.get("score", 0) for a in session.get("user_answers", {}).values()),
+                sum(a.get("score", 0) for a in session.get("user_answers", {}).values() if "score" in a),
                 10
             )
 

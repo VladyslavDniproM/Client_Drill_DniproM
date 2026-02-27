@@ -264,15 +264,35 @@ def chat():
     # --- Stage 2: Вибір моделі ---
     elif session["stage"] == 2:
 
+        if "conversation_log" not in session:
+            session["conversation_log"] = []
+
         user_model = re.sub(r'[^A-Z0-9-]', '', user_input.upper())
         matched_models = [m for m in session["available_models"] if user_model in m.upper()]
+
+        # Лог користувача
+        session["history"].append({"role": "user", "content": user_input})
+        session["conversation_log"].append({
+            "role": "user",
+            "message": user_input,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
 
         if not matched_models:
             session["model_score"] = 0
             session["wrong_model_attempts"] += 1
             session["stage"] = 3
+
+            reply_text = "Ця модель не підходить для моїх потреб. Давайте продовжимо."
+
+            session["conversation_log"].append({
+                "role": "assistant",
+                "message": reply_text,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+
             return jsonify({
-                "reply": "Ця модель не підходить для моїх потреб. Давайте продовжимо.",
+                "reply": reply_text,
                 "chat_ended": False,
                 "stage": 3,
                 "model_chosen": False
@@ -286,36 +306,33 @@ def chat():
         )
 
         if not current_situation:
+            reply_text = "Помилка: ситуація не знайдена."
+
+            session["conversation_log"].append({
+                "role": "assistant",
+                "message": reply_text,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+
             return jsonify({
-                "reply": "Помилка: ситуація не знайдена.",
+                "reply": reply_text,
                 "chat_ended": True,
                 "show_restart_button": True
             })
 
         correct_models = [m.upper() for m in current_situation["correct_models"]]
 
-        if user_model in correct_models:
-            session["model_score"] = 6
-        else:
-            session["model_score"] = 0
-
+        session["model_score"] = 6 if user_model in correct_models else 0
         session["model"] = user_model
         session["stage"] = 3
         session["current_question_index"] = 0
         session["user_answers"] = {}
         session["clarification_attempts"] = 0
 
-        # --- Генерація питань клієнта ---
+        # --- Генерація питань ---
         prompt = f"""
         Ти клієнт, який обрав інструмент {user_model} для {session['situation']['description']}.
-
-        Згенеруй 5 природних запитань про:
-        - задачі інструмента
-        - характеристики
-        - конструкцію
-        - ціну
-        - думку продавців
-
+        Згенеруй 5 природних запитань.
         НЕ питай про вагу та розміри.
         """
 
@@ -331,13 +348,19 @@ def chat():
 
         content = response.choices[0].message.content or ""
         questions = [q.strip(" 1234567890.-") for q in content.split('\n') if q.strip()]
-
         session["generated_questions"] = questions
 
         first_question = questions[0] if questions else "Розкажіть про цю модель."
+        reply_text = f"Добре, {user_model} виглядає непогано.\n\n{first_question}"
+
+        session["conversation_log"].append({
+            "role": "assistant",
+            "message": reply_text,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
 
         return jsonify({
-            "reply": f"Добре, {user_model} виглядає непогано.\n\n{first_question}",
+            "reply": reply_text,
             "chat_ended": False,
             "stage": 3
         })
@@ -355,9 +378,13 @@ def chat():
         current_question = session['generated_questions'][index]
         user_input_text = user_input.strip()
 
+        if "conversation_log" not in session:
+            session["conversation_log"] = []
+
         # =====================================================
         # 🔹 Обробка образ та нецензури
         # =====================================================
+
         insults = ["придурок", "дурень", "ідіот", "дебіл"]
         if any(word in user_input_text.lower() for word in insults):
             return jsonify({
@@ -416,8 +443,17 @@ def chat():
                 max_tokens=120
             )
             bot_answer = response.choices[0].message.content.strip()
+                
+            reply_text = f"{bot_answer}\n\nА тепер скажіть, будь ласка: {current_question}"
+
+            session["conversation_log"].append({
+                "role": "assistant",
+                "message": reply_text,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+
             return jsonify({
-                "reply": f"{bot_answer}\n\nА тепер скажіть, будь ласка: {current_question}",
+                "reply": reply_text,
                 "chat_ended": False
             })
 
@@ -440,8 +476,16 @@ def chat():
                 )
                 simpler_question = response.choices[0].message.content.strip()
                 session["confused_attempts"] = 1
+                reply_text = f"Можливо, я не зовсім зрозуміло сказав.\n\n{simpler_question}"
+
+                session["conversation_log"].append({
+                    "role": "assistant",
+                    "message": reply_text,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+
                 return jsonify({
-                    "reply": f"Можливо, я не зовсім зрозуміло сказав.\n\n{simpler_question}",
+                    "reply": reply_text,
                     "chat_ended": False
                 })
             else:
@@ -449,26 +493,52 @@ def chat():
                 session['current_question_index'] += 1
                 if session['current_question_index'] < len(session['generated_questions']):
                     next_question = session['generated_questions'][session['current_question_index']]
+                    reply_text = f"Добре, зрозуміло.\n\n{next_question}"
+
+                    session["conversation_log"].append({
+                        "role": "assistant",
+                        "message": reply_text,
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
+
                     return jsonify({
-                        "reply": f"Добре, зрозуміло.\n\n{next_question}",
+                        "reply": reply_text,
                         "chat_ended": False
                     })
                 session["stage"] = 4
                 category = session.get("current_category", "default")
                 objections = CATEGORY_OBJECTIONS.get(category, CATEGORY_OBJECTIONS["default"])
                 session["current_objection"] = random.choice(objections)
+                reply_text = f"{feedback}\n\nХм... {session['current_objection']}"
+
+                session["conversation_log"].append({
+                    "role": "assistant",
+                    "message": reply_text,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+
                 return jsonify({
-                    "reply": f"Зрозуміло.\n\nХм... {session['current_objection']}",
+                    "reply": reply_text,
                     "chat_ended": False,
-                    "stage": 4
+                    "stage": 4,
+                    "question_feedback": feedback_toast,
+                    "question_score": final_score
                 })
 
         # =====================================================
         # 🔹 IRRELEVANT — просимо відповісти по суті
         # =====================================================
         elif msg_type == "IRRELEVANT":
+            reply_text = f"Вибачте, але мені важливо це зрозуміти.\n\n{current_question}"
+
+            session["conversation_log"].append({
+                "role": "assistant",
+                "message": reply_text,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+
             return jsonify({
-                "reply": f"Вибачте, але мені важливо це зрозуміти.\n\n{current_question}",
+                "reply": reply_text,
                 "chat_ended": False
             })
         
@@ -528,8 +598,16 @@ def chat():
 
             if session['current_question_index'] < len(session['generated_questions']):
                 next_question = session['generated_questions'][session['current_question_index']]
+                reply_text = next_question
+
+                session["conversation_log"].append({
+                    "role": "assistant",
+                    "message": reply_text,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+
                 return jsonify({
-                    "reply": next_question,
+                    "reply": reply_text,
                     "chat_ended": False,
                     "question_feedback": feedback_toast,
                     "question_score": final_score
@@ -553,12 +631,18 @@ def chat():
             objections = CATEGORY_OBJECTIONS.get(category, CATEGORY_OBJECTIONS["default"])
             session["current_objection"] = random.choice(objections)
 
+            reply_text = f"{feedback}\n\nХм... {session['current_objection']}"
+
+            session["conversation_log"].append({
+                "role": "assistant",
+                "message": reply_text,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+
             return jsonify({
-                "reply": f"{feedback}\n\nХм... {session['current_objection']}",
+                "reply": reply_text,
                 "chat_ended": False,
-                "stage": 4,
-                "question_feedback": feedback_toast,
-                "question_score": final_score
+                "stage": 4
             })
     
     # --- Stage 4: Обробка заперечень ---

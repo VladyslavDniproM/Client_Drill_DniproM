@@ -384,6 +384,12 @@ def chat():
         current_question = session['generated_questions'][index]
         user_input_text = user_input.strip()
 
+        session["conversation_log"].append({
+            "role": "user",
+            "message": user_input_text,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+
         # =====================================================
         # 🔹 Обробка образ та нецензури
         # =====================================================
@@ -442,6 +448,8 @@ def chat():
             Коротко відповідай на питання продавця:
             "{user_input_text}"
             Не вигадуй технічні характеристики. Відповідай простою мовою.
+
+            Якщо користувач ставить питання, які не є коректними для продавця-консультанта в магазині, уникни відповіді на нього.
             """
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
@@ -574,7 +582,7 @@ def chat():
             Питання: "{current_question}"
             Відповідь: "{user_input_text}"
 
-            2 — характеристика + користь
+            2 — характеристика та перевага
             1 — лише характеристика
             0 — не по темі
 
@@ -645,7 +653,7 @@ def chat():
             )
 
             if answers_score >= 5:
-                feedback = "Класно презентуєте."
+                feedback = "Чудово."
             elif answers_score >= 3:
                 feedback = "Окей, прикольно."
             else:
@@ -808,7 +816,15 @@ def chat():
                     for i, (question, answer_data) in enumerate(user_answers.items(), 1):
                         answers_text += f"{i}. Питання: {question}\n"
                         answers_text += f"   Відповідь: {answer_data['answer']}\n"
-                        answers_text += f"   Оцінка: {re.search(r'ОЦІНКА:\s*(\d)', answer_data['score_text']).group(1)}/2\n"
+                        score_text = answer_data.get("score_text", "")
+                        score_match = re.search(r"ОЦІНКА:\s*(\d)", score_text)
+
+                        if score_match:
+                            score_value = score_match.group(1)
+                        else:
+                            score_value = answer_data.get("score", 0)
+
+                        answers_text += f"   Оцінка: {score_value}/2\n"
                         if answer_data.get('comment'):
                             answers_text += f"   Коментар: {answer_data['comment']}\n"
                         answers_text += "\n"

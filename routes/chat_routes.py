@@ -579,17 +579,38 @@ def chat():
             question_comment = "Коментар недоступний"
 
             evaluation_prompt = f"""
-            Питання: "{current_question}"
-            Відповідь: "{user_input_text}"
+        Оціни відповідь продавця на технічне питання клієнта.
 
-            2 — характеристика та перевага
-            1 — лише характеристика
-            0 — не по темі
+        Питання клієнта: "{current_question}"
+        Відповідь продавця: "{user_input_text}"
 
-            Відповідай тільки числом і дай короткий коментар:
-            ОЦІНКА: X
-            КОМЕНТАР: <короткий коментар>
-            """
+        КРИТЕРІЇ ОЦІНЮВАННЯ:
+
+        2 бали — ІДЕАЛЬНА ВІДПОВІДЬ:
+        - Продавець назвав ТЕХНІЧНУ ХАРАКТЕРИСТИКУ (цифри, параметри, можливості)
+        - І пояснив, яку КОРИСТЬ/ПЕРЕВАГУ це дає клієнту
+        Приклад: "20 Нм, що дозволяє легко закручувати навіть найміцніші саморізи"
+
+        1 бал — НЕПОВНА ВІДПОВІДЬ:
+        - Продавець назвав тільки характеристику без пояснення користі
+        - АБО пояснив користь, але не назвав конкретну характеристику
+        Приклад погано: "20 Нм" (тільки цифра)
+        Приклад погано: "Дуже потужний" (тільки загальні слова)
+
+        0 балів — ПОГАНА ВІДПОВІДЬ:
+        - Відповідь не по темі або не стосується питання
+        - Продавець уникає відповіді
+        - Загальні фрази без конкретики
+        Приклад: "Це якісний інструмент"
+        Приклад: "Не хвилюйтесь, все буде добре"
+
+        ⚠️ ВАЖЛИВО: Проста наявність цифр у відповіді НЕ гарантує 2 бали!
+        Якщо продавець тільки назвав "20 Вт" або "20 Нм" без пояснення переваг - це 1 бал.
+
+        ФОРМАТ ВІДПОВІДІ СТРОГО:
+        ОЦІНКА: [0, 1 або 2]
+        КОМЕНТАР: [коротке пояснення, чому така оцінка]
+        """
 
             evaluation = client.chat.completions.create(
                 model="gpt-3.5-turbo",
@@ -686,80 +707,90 @@ def chat():
         session["seller_replies"].append(seller_reply)
         current_round = session.get("objection_round", 1)
 
-        # Додаємо репліку продавця до логу ТІЛЬКИ ОДИН РАЗ
+        # Додаємо репліку продавця до логу
         session['conversation_log'].append({
             'role': 'user',
             'message': seller_reply,
             'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
 
-        if current_round <= 1:
+        # Максимальна кількість раундів
+        max_rounds = 3
+        
+        if current_round < max_rounds:  # Не останній раунд (1 або 2)
             try:
+                # Формуємо історію діалогу
                 history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
+                
+                # Промпт для звичайного раунду
                 gpt_prompt = f"""
     Ти — клієнт, який має заперечення: "{objection}".
 
     Ось як продавець відповідав до цього моменту:
     {history}
 
-    Відповідай як реалістичний клієнт. Реагуй природно на останню репліку продавця: "{seller_reply}".
-    Підтримуй контекст заперечення. Твоя відповідь повинна складатися з одного-двох речень. Не повторюйся.
-    Намагайся висловити свій сумнів природньо, можеш навіть агресивно чи ввічливо, обережно чи не дуже."""
+    Відповідай на останню репліку продавця: "{seller_reply}"
+
+    Важливі правила:
+    1. Це раунд {current_round} з {max_rounds}. Ти ще не готовий прийняти рішення.
+    2. Продовжуй сумніватися, став уточнюючі питання
+    3. Реагуй природно на аргументи продавця
+    4. Не погоджуйся на покупку зараз
+    5. Відповідай одним-двома реченнями
+    6. Зберігай контекст заперечення"""
                 
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "Ти — клієнт у діалозі з продавцем. Відповідай чесно, логічно і згідно з контекстом заперечення. Твоя відповідь повинна складатися рівно з одного речення (10–15 слів). Не повторюйся."},
+                        {"role": "system", "content": "Ти — клієнт у діалозі з продавцем. Відповідай чесно, логічно і згідно з контекстом заперечення."},
                         {"role": "user", "content": gpt_prompt}
                     ],
-                    temperature=0.6,
+                    temperature=0.7,
                     max_tokens=300
                 )
+                
                 reply = response.choices[0].message.content
-                session["objection_round"] += 1
-                session.modified = True
-
+                
                 session['conversation_log'].append({
                     'role': 'assistant',
                     'message': reply,
                     'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 })
-
-                # 🔴 ДОДАЄМО ПІДКАЗКУ ДЛЯ STAGE 4
+                
+                # Збільшуємо лічильник раундів
+                session["objection_round"] += 1
+                session.modified = True
+                
+                # Підказки для користувача
                 objection_feedback = None
                 if session.get('show_hints', True):
-                    objection_feedback = "💡 Ви на шляху до розв'язання заперечення! Намагайтесь надавати конкретні аргументи та приклади."
-
+                    if current_round == 1:
+                        objection_feedback = "💡 Клієнт все ще сумнівається. Спробуйте навести конкретний приклад або факт."
+                    elif current_round == 2:
+                        objection_feedback = "💡 Це ваш останній шанс переконати клієнта! Використайте найсильніший аргумент."
+                
                 return jsonify({
                     "reply": reply,
                     "chat_ended": False,
                     "current_round": session["objection_round"],
                     "objection_feedback": objection_feedback
                 })
+                
             except Exception as e:
+                print(f"Помилка в GPT: {str(e)}")
                 return jsonify({
-                    "reply": "Вибачте, сталася помилка під час відповіді. Спробуйте ще раз.",
+                    "reply": "Вибачте, сталася помилка. Спробуйте ще раз.",
                     "chat_ended": False
                 })
-
-        elif current_round == 2:
+        
+        elif current_round == max_rounds:  # Останній раунд - запускаємо оцінювання
             try:
-                if not session.get("seller_replies"):
-                    return jsonify({
-                        "reply": "Помилка: відсутні відповіді для оцінювання.",
-                        "chat_ended": True,
-                        "show_restart_button": True
-                    })
-
-                full_history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
-                
                 # 🔴 АНАЛІЗ ДЛЯ STAGE 1 - ВИЯВЛЕННЯ ПОТРЕБ
                 stage1_analysis = "Інформація про етап виявлення потреб недоступна"
                 stage1_advice = "Рекомендації відсутні"
 
                 question_scores = session.get("question_scores", [])
                 if question_scores:
-                    # Формуємо текст для аналізу
                     questions_text = ""
                     for i, q_data in enumerate(question_scores, 1):
                         questions_text += f"{i}. Питання: {q_data['question']}\n"
@@ -798,7 +829,6 @@ def chat():
                     )
                     stage1_text = stage1_response.choices[0].message.content.strip()
                     
-                    # Парсинг відповіді для stage 1
                     analysis_match = re.search(r"АНАЛІЗ_ВИЯВЛЕННЯ_ПОТРЕБ:\s*(.+?)(?=ПОРАДИ_ВИЯВЛЕННЯ_ПОТРЕБ:|$)", stage1_text, re.DOTALL)
                     advice_match = re.search(r"ПОРАДИ_ВИЯВЛЕННЯ_ПОТРЕБ:\s*(.+)", stage1_text, re.DOTALL)
                     
@@ -811,7 +841,6 @@ def chat():
                 
                 user_answers = session.get("user_answers", {})
                 if user_answers:
-                    # Формуємо текст для аналізу
                     answers_text = ""
                     for i, (question, answer_data) in enumerate(user_answers.items(), 1):
                         answers_text += f"{i}. Питання: {question}\n"
@@ -856,7 +885,6 @@ def chat():
                     )
                     stage3_text = stage3_response.choices[0].message.content.strip()
                     
-                    # Парсинг відповіді для stage 3
                     analysis_match = re.search(r"АНАЛІЗ_ПРЕЗЕНТАЦІЇ:\s*(.+?)(?=ПОРАДИ_ПРЕЗЕНТАЦІЇ:|$)", stage3_text, re.DOTALL)
                     advice_match = re.search(r"ПОРАДИ_ПРЕЗЕНТАЦІЇ:\s*(.+)", stage3_text, re.DOTALL)
                     
@@ -864,145 +892,133 @@ def chat():
                     stage3_advice = advice_match.group(1).strip() if advice_match else "Рекомендації відсутні"
 
                 # 🔴 ОЦІНКА ДЛЯ STAGE 4 - ЗАПЕРЕЧЕННЯ
-                    evaluation_prompt = f"""
-                    Ти — експерт з продажів, який оцінює ефективність роботи з запереченнями.
+                full_history = "\n".join([f"Раунд {i+1}: {reply}" for i, reply in enumerate(session["seller_replies"])])
+                
+                evaluation_prompt = f"""
+    Ти — експерт з продажів, який оцінює ефективність роботи з запереченнями.
 
-                    ЗАПЕРЕЧЕННЯ КЛІЄНТА: "{objection}"
+    ЗАПЕРЕЧЕННЯ КЛІЄНТА: "{objection}"
 
-                    ВІДПОВІДІ ПРОДАВЦЯ (по раундах):
-                    {full_history}
+    ВІДПОВІДІ ПРОДАВЦЯ (по раундах):
+    {full_history}
 
-                    ПРОАНАЛІЗУЙ відповіді продавця та бал від 0 до 6 за таким критерієм:
+    ОЦІНИ ЕФЕКТИВНІСТЬ ЗА ШКАЛОЮ 0-6:
 
-                    1 бал – дуже слабке відпрацювання заперечення
-                    2 бали – слабке відпрацювання заперечення
-                    3 бали – не дуже точне відпрацювання заперечення
-                    4 бали – середнє відпрацювання заперечення
-                    5 балів – гарне відпрацювання заперечення
-                    6 балів – ідеальне відпрацювання заперечення
+    1 бал – Продавець ігнорує суть, сперечається або дає занадто коротку відписку.
+    2 бали – Спроба відповісти є, але аргументів немає (наприклад, тільки зустрічне запитання).
+    3 бали – Відповідь загальна ("у нас все якісне"), не знімає конкретний сумнів клієнта.
+    4 бали – Є один логічний аргумент, але він не підкріплений фактами або емоційною вигодою.
+    5 балів – Гарна відповідь: чітка аргументація, робота саме з цим запереченням, професійний тон.
+    6 балів – Ідеально: продавець навів вагомий аргумент, закрив страх клієнта і зробив перехід до покупки.
 
-                    ФОРМАТ ВІДПОВІДІ ОБОВ'ЯЗКОВО ТАКИЙ:
-                    АНАЛІЗ_ЗАПЕРЕЧЕННЯ: [детальний аналіз за критеріями, але їх не згадуй – два-три речення]
-                    ПОРАДИ_ЗАПЕРЕЧЕННЯ: [2-3 конкретні рекомендації – два-три речення]
-                    ЗАГАЛЬНІ_БАЛИ: [число від 0 до 6]
-                    """
-                    response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[
-                            {"role": "system", "content": "Ти — експерт з оцінки комунікацій. Повертай тільки цілі числа від 0 до 6. Будь об'єктивним та конструктивним."},
-                            {"role": "user", "content": evaluation_prompt}
-                        ],
-                        temperature=0.3,
-                        max_tokens=700
-                    )
-                    evaluation_text = response.choices[0].message.content.strip()
+    ФОРМАТ ВІДПОВІДІ ОБОВ'ЯЗКОВО ТАКИЙ:
+    АНАЛІЗ_ЗАПЕРЕЧЕННЯ: [детальний аналіз за критеріями, але їх не згадуй – два-три речення]
+    ПОРАДИ_ЗАПЕРЕЧЕННЯ: [2-3 конкретні рекомендації – два-три речення]
+    ЗАГАЛЬНІ_БАЛИ: [число від 0 до 6]
+    """
 
-                    print(f"[DEBUG] Відповідь GPT для заперечень: {evaluation_text}")
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "Ти — експерт з оцінки комунікацій. Повертай тільки цілі числа від 0 до 6. Будь об'єктивним та конструктивним."},
+                        {"role": "user", "content": evaluation_prompt}
+                    ],
+                    temperature=0.3,
+                    max_tokens=700
+                )
+                evaluation_text = response.choices[0].message.content.strip()
 
-                    # Парсинг відповіді для stage 4 - СПРОЩЕНИЙ ТА НАДІЙНИЙ ВАРІАНТ
-                    objection_score = 0  # значення за замовчуванням
+                print(f"[DEBUG] Відповідь GPT для заперечень: {evaluation_text}")
 
-                    # Спробуємо знайти число 0-6 різними способами
-                    score_match = re.search(r"ЗАГАЛЬНІ_БАЛИ:\s*(\d+)", evaluation_text)
-                    if score_match:
-                        objection_score = int(score_match.group(1))
-                        print(f"[SCORE] Отримано {objection_score} балів за заперечення (парсинг з ЗАГАЛЬНІ_БАЛИ)")
+                # Парсинг відповіді для stage 4
+                objection_score = 0
 
-                    # Якщо не знайшли, шукаємо інші варіанти
-                    if objection_score == 0:
-                        # Шукаємо число 0-6 у всьому тексті
-                        all_numbers = re.findall(r'\b([0-6])\b', evaluation_text)
-                        if all_numbers:
-                            # Беремо останнє знайдене число 0-6
-                            for num in reversed(all_numbers):
-                                if 0 <= int(num) <= 6:
-                                    objection_score = int(num)
-                                    print(f"[SCORE] Отримано {objection_score} балів за заперечення (знайдено в тексті)")
-                                    break
+                score_match = re.search(r"ЗАГАЛЬНІ_БАЛИ:\s*(\d+)", evaluation_text)
+                if score_match:
+                    objection_score = int(score_match.group(1))
+                    print(f"[SCORE] Отримано {objection_score} балів за заперечення")
 
-                    # 🔴 ГАРАНТОВАНЕ ОБМЕЖЕННЯ 0-6
-                    if objection_score > 6:
-                        print(f"[WARNING] GPT повернув {objection_score} балів. Обмежуємо до 6")
-                        objection_score = 6
-                    elif objection_score < 0:
-                        objection_score = 0
+                if objection_score == 0:
+                    all_numbers = re.findall(r'\b([0-6])\b', evaluation_text)
+                    if all_numbers:
+                        for num in reversed(all_numbers):
+                            if 0 <= int(num) <= 6:
+                                objection_score = int(num)
+                                print(f"[SCORE] Отримано {objection_score} балів за заперечення (знайдено в тексті)")
+                                break
 
-                    # Якщо все ще 0, спробуємо оцінити якість тексту
-                    if objection_score == 0:
-                        # Простий аналіз якості на основі ключових слів
-                        positive_keywords = ["переконали", "переконливо", "аргументи", "відповів", "пояснив", "зрозуміло", "логічно"]
-                        negative_keywords = ["не відповів", "незрозуміло", "непереконливо", "недостатньо", "погано", "слабко"]
-                        
-                        positive_count = sum(1 for word in positive_keywords if word in evaluation_text.lower())
-                        negative_count = sum(1 for word in negative_keywords if word in evaluation_text.lower())
-                        
-                        if positive_count > negative_count:
-                            objection_score = 4  # середній бал
-                            print(f"[SCORE] Призначено {objection_score} балів на основі ключових слів")
-                        elif positive_count == negative_count:
-                            objection_score = 2  # низький бал
-                        else:
-                            objection_score = 0  # дуже низький бал
+                if objection_score > 6:
+                    objection_score = 6
+                elif objection_score < 0:
+                    objection_score = 0
 
-                    print(f"[SCORE] Фінальна оцінка аргументів: {objection_score}/6 балів")
+                if objection_score == 0:
+                    positive_keywords = ["переконали", "переконливо", "аргументи", "відповів", "пояснив", "зрозуміло", "логічно"]
+                    negative_keywords = ["не відповів", "незрозуміло", "непереконливо", "недостатньо", "погано", "слабко"]
+                    
+                    positive_count = sum(1 for word in positive_keywords if word in evaluation_text.lower())
+                    negative_count = sum(1 for word in negative_keywords if word in evaluation_text.lower())
+                    
+                    if positive_count > negative_count:
+                        objection_score = 4
+                    elif positive_count == negative_count:
+                        objection_score = 2
 
-                    analysis_match = re.search(r"АНАЛІЗ_ЗАПЕРЕЧЕННЯ:\s*(.+?)(?=ПОРАДИ_ЗАПЕРЕЧЕННЯ:|$)", evaluation_text, re.DOTALL)
-                    advice_match = re.search(r"ПОРАДИ_ЗАПЕРЕЧЕННЯ:\s*(.+)", evaluation_text, re.DOTALL)
+                print(f"[SCORE] Фінальна оцінка аргументів: {objection_score}/6 балів")
 
-                    stage4_analysis = analysis_match.group(1).strip() if analysis_match else "Аналіз недоступний"
-                    stage4_advice = advice_match.group(1).strip() if advice_match else "Поради недоступні"
+                analysis_match = re.search(r"АНАЛІЗ_ЗАПЕРЕЧЕННЯ:\s*(.+?)(?=ПОРАДИ_ЗАПЕРЕЧЕННЯ:|$)", evaluation_text, re.DOTALL)
+                advice_match = re.search(r"ПОРАДИ_ЗАПЕРЕЧЕННЯ:\s*(.+)", evaluation_text, re.DOTALL)
 
-                    # Фінальна репліка клієнта на основі балів
-                    if objection_score >= 6:
-                        client_final_reply = "Чудово! Ви мене повністю переконали. Пакуйте!"
-                    elif objection_score >= 5:
-                        client_final_reply = "Добре, ви мене переконали. Пакуйте!"
-                    elif objection_score >= 4:
-                        client_final_reply = "Гаразд, беру. Пакуйте!"
-                    elif objection_score >= 3:
-                        client_final_reply = "Ну що ж, давайте. Пакуйте."
-                    elif objection_score >= 2:
-                        client_final_reply = "Ой, ладно, пакуйте. Але я ще сумніваюся."
-                    elif objection_score >= 1:
-                        client_final_reply = "Дякую, але я ще подумаю. Можливо, зателефоную."
-                    else:
-                        client_final_reply = "Дякую, я ще подумаю. До побачення."
+                stage4_analysis = analysis_match.group(1).strip() if analysis_match else "Аналіз недоступний"
+                stage4_advice = advice_match.group(1).strip() if advice_match else "Поради недоступні"
 
-                    session['objection_score'] = objection_score
+                # Фінальна репліка клієнта на основі балів
+                if objection_score >= 6:
+                    client_final_reply = "Чудово! Ви мене повністю переконали. Пакуйте!"
+                elif objection_score >= 5:
+                    client_final_reply = "Добре, ви мене переконали. Пакуйте!"
+                elif objection_score >= 4:
+                    client_final_reply = "Гаразд, беру. Пакуйте!"
+                elif objection_score >= 3:
+                    client_final_reply = "Ну що ж, давайте. Пакуйте."
+                elif objection_score >= 2:
+                    client_final_reply = "Ой, ладно, пакуйте. Але я ще сумніваюся."
+                elif objection_score >= 1:
+                    client_final_reply = "Дякую, але я ще подумаю. Можливо, зателефоную."
+                else:
+                    client_final_reply = "Дякую, я ще подумаю. До побачення."
 
-                    print(f"[STAGE1_ANALYSIS] Аналіз виявлення потреб: {stage1_analysis}")
-                    print(f"[STAGE3_ANALYSIS] Аналіз презентації: {stage3_analysis}")
-                    print(f"[STAGE4_ANALYSIS] Аналіз заперечень: {stage4_analysis}")
+                session['objection_score'] = objection_score
 
-                    # Додаємо фінальну репліку клієнта до логу
-                    session['conversation_log'].append({
-                        'role': 'assistant',
-                        'message': client_final_reply,
-                        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    })
+                # Додаємо фінальну репліку клієнта до логу
+                session['conversation_log'].append({
+                    'role': 'assistant',
+                    'message': client_final_reply,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
 
-                    # Розрахунок загального балу - ТЕПЕР МАКСИМУМ 30 БАЛІВ
-                    model_score = min(session.get("model_score", 0), 6)  # обмежуємо 6
-                    questions_score = min(sum(q["score"] for q in session.get("question_scores", [])), 8)  # обмежуємо 8
-                    answers_score = min(sum(a.get("score", 0) for a in session.get("user_answers", {}).values()), 10)  # обмежуємо 10
-                    objection_score = min(session.get('objection_score', 0), 6)  # обмежуємо 6
-                    total_score = model_score + questions_score + answers_score + objection_score
+                # Розрахунок загального балу
+                model_score = min(session.get("model_score", 0), 6)
+                questions_score = min(sum(q["score"] for q in session.get("question_scores", [])), 8)
+                answers_score = min(sum(a.get("score", 0) for a in session.get("user_answers", {}).values()), 10)
+                objection_score = min(session.get('objection_score', 0), 6)
+                total_score = model_score + questions_score + answers_score + objection_score
 
-                    print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
-                    print(f"[SCORE] За модель: {model_score}/6")
-                    print(f"[SCORE] За питання: {questions_score}/8")
-                    print(f"[SCORE] За відповіді: {answers_score}/10")
-                    print(f"[SCORE] За заперечення: {objection_score}/6")
-                    print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/30")
+                print("\n=== ФІНАЛЬНИЙ РАХУНОК ===")
+                print(f"[SCORE] За модель: {model_score}/6")
+                print(f"[SCORE] За питання: {questions_score}/8")
+                print(f"[SCORE] За відповіді: {answers_score}/10")
+                print(f"[SCORE] За заперечення: {objection_score}/6")
+                print(f"[SCORE] ЗАГАЛЬНИЙ БАЛ: {total_score}/30")
 
-                    if total_score >= 26:
-                        summary_label = "🟢 Чудова консультація."
-                    elif total_score >= 22:
-                        summary_label = "🟡 Задовільна консультація."
-                    else:
-                        summary_label = "🔴 Незадовільна консультація."
+                if total_score >= 26:
+                    summary_label = "🟢 Чудова консультація."
+                elif total_score >= 22:
+                    summary_label = "🟡 Задовільна консультація."
+                else:
+                    summary_label = "🔴 Незадовільна консультація."
 
-                # 🔴 ФОРМУЄМО ДЕТАЛЬНИЙ ЗВІТ З ОКРЕМИМИ БЛОКАМИ
+                # Формуємо детальний звіт
                 detailed_report = {
                     "model_score": model_score,
                     "questions_score": questions_score,
@@ -1012,7 +1028,6 @@ def chat():
                     "summary_label": summary_label,
                     "client_final_reply": client_final_reply,
                     
-                    # 🔴 ОКРЕМІ БЛОКИ ДЛЯ КОЖНОГО ЕТАПУ
                     "stage1_analysis": stage1_analysis,
                     "stage1_advice": stage1_advice,
                     "stage3_analysis": stage3_analysis,

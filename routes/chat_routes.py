@@ -178,6 +178,24 @@ def chat():
         })
         
         session["question_count"] += 1
+
+                # 🔴 Ліміт 10 повідомлень
+        if session["question_count"] >= 10:
+            session["chat_active"] = False
+            report_content = generate_report(session)
+            success = save_report_to_drive(session)
+
+            if success:
+                print("[DRIVE] Звіт успішно збережено на Google Drive")
+            else:
+                print("[DRIVE] Помилка збереження звіту")
+
+            return jsonify({
+                "reply": "Ви не обрали модель для клієнта. Уважніше читайте правила та при подальшій спробі натисніть на зелену кнопку «Оберіть модель».",
+                "chat_ended": True,
+                "show_restart_button": True,
+                "question_progress": session["question_count"]
+            })
         
         if final_score == 0:
             session["misunderstood_count"] += 1
@@ -342,7 +360,7 @@ def chat():
                 {"role": "system", "content": "Ти клієнт у магазині інструментів."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7,
+            temperature=0.6,
             max_tokens=400
         )
 
@@ -443,21 +461,42 @@ def chat():
                 "answer": user_input_text
             }
 
-            answer_prompt = f"""
-            Ти покупець у магазині інструментів.
-            Коротко відповідай на питання продавця:
-            "{user_input_text}"
-            Не вигадуй технічні характеристики. Відповідай простою мовою.
+            # Додаємо питання продавця в історію
+            session["history"].append({
+                "role": "user",
+                "content": user_input_text
+            })
 
-            Якщо користувач ставить питання, які не є коректними для продавця-консультанта в магазині, уникни відповіді на нього.
-            """
+            # Формуємо повідомлення для GPT з історією
+            messages = [
+                {
+                    "role": "system",
+                    "content": """
+        Ти покупець у магазині інструментів.
+        Відповідай коротко та простою мовою.
+        Не вигадуй технічні характеристики.
+        Ти відповідаєш лише на питання про інструмент, за яким завітав.
+
+        Якщо продавець ставить некоректне питання для магазину інструментів —
+        уникни відповіді або скажи, що не розумієш питання.
+        """
+                }
+            ] + session["history"][-10:]  # беремо останні 10 повідомлень
+
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": answer_prompt}],
-                temperature=0.7,
+                messages=messages,
+                temperature=0.4,
                 max_tokens=120
             )
+
             bot_answer = response.choices[0].message.content.strip()
+
+            # Додаємо відповідь покупця в історію
+            session["history"].append({
+                "role": "assistant",
+                "content": bot_answer
+            })
 
             reply_text = f"{bot_answer}\n\nА тепер скажіть, будь ласка: {current_question}"
 
@@ -492,7 +531,7 @@ def chat():
                 response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": simplify_prompt}],
-                    temperature=0.7,
+                    temperature=0.6,
                     max_tokens=120
                 )
                 simpler_question = response.choices[0].message.content.strip()
@@ -593,10 +632,7 @@ def chat():
 
         1 бал — НЕПОВНА ВІДПОВІДЬ:
         - Продавець назвав тільки характеристику без пояснення користі
-        - АБО пояснив користь, але не назвав конкретну характеристику
-        Приклад погано: "20 Нм" (тільки цифра)
-        Приклад погано: "Дуже потужний" (тільки загальні слова)
-
+        
         0 балів — ПОГАНА ВІДПОВІДЬ:
         - Відповідь не по темі або не стосується питання
         - Продавець уникає відповіді
@@ -736,7 +772,7 @@ def chat():
     2. Продовжуй сумніватися, став уточнюючі питання
     3. Реагуй природно на аргументи продавця
     4. Не погоджуйся на покупку зараз
-    5. Відповідай одним-двома реченнями
+    5. Відповідай одним-двома реченнями 5-15 слів
     6. Зберігай контекст заперечення"""
                 
                 response = client.chat.completions.create(
@@ -745,8 +781,8 @@ def chat():
                         {"role": "system", "content": "Ти — клієнт у діалозі з продавцем. Відповідай чесно, логічно і згідно з контекстом заперечення."},
                         {"role": "user", "content": gpt_prompt}
                     ],
-                    temperature=0.7,
-                    max_tokens=300
+                    temperature=0.4,
+                    max_tokens=150
                 )
                 
                 reply = response.choices[0].message.content

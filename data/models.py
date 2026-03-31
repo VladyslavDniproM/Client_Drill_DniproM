@@ -18,6 +18,7 @@ TOOL_MODELS = [
     "GL-125S",
     "DGA-201BC",
     "DGA-202SBC",
+    "GS-125RX",
     "GL-190S",
     "GL-280",
     "DHR-201BC",
@@ -28,6 +29,7 @@ TOOL_MODELS = [
     "BH-14S",
     "BH-20",
     "BH-30",
+    "DHR-203BCX",
     "SAB-14DMINI",
     "SAB-15DX",
     "i120",
@@ -45,15 +47,18 @@ TOOL_MODELS = [
     "CS-12",
     "DMS-201BC",
     "DNIPRO-M-43",
-    "33M",
+    "DNIPRO-M-52",
     "DNIPRO-M-110",
     "DNIPRO-M-150S",
     "30L",
+    "55L",
     "DTC-200BCDUAL",
     "DTC-201",
     "5-H",
     "12S",
     "16S",
+    "BS-202",
+    "8Li",    
     "JS-8",
     "JS-12P",
     "JS-16",
@@ -132,7 +137,7 @@ CATEGORY_SITUATION_IDS = {
     "jigsaw": list(range(126, 136)),
     "woodgrinders": list(range(136, 156)),
     "circularsaws": list(range(156, 176)),
-    "exam": list(range(1, 47))
+    "exam": list(range(1, 25)) + list(range(31, 65))
 }
 
 FEMALE_VOICES = ["nova", "shimmer", "fable", "verse", "coral", "alloy", "sage"]

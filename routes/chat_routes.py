@@ -124,7 +124,7 @@ def chat():
     """
         
         stage1_response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Ти оцінюєш якість питань продавця для виявлення потреб клієнта. Використовуй вказаний формат."},
                 {"role": "user", "content": stage1_prompt}
@@ -248,7 +248,7 @@ def chat():
 
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=session["history"][-20:],
                 temperature=0.5,
                 max_tokens=400
@@ -355,7 +355,7 @@ def chat():
         """
 
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Ти клієнт у магазині інструментів."},
                 {"role": "user", "content": prompt}
@@ -442,7 +442,7 @@ def chat():
             Відповідай одним словом.
             """
             classification = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": classification_prompt}],
                 temperature=0,
                 max_tokens=10
@@ -484,7 +484,7 @@ def chat():
             ] + session["history"][-10:]  # беремо останні 10 повідомлень
 
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=messages,
                 temperature=0.4,
                 max_tokens=120
@@ -529,7 +529,7 @@ def chat():
                 Говори як звичайний покупець.
                 """
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4o-mini",
                     messages=[{"role": "user", "content": simplify_prompt}],
                     temperature=0.6,
                     max_tokens=120
@@ -649,7 +649,7 @@ def chat():
         """
 
             evaluation = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": evaluation_prompt}],
                 temperature=0,
                 max_tokens=100
@@ -776,7 +776,7 @@ def chat():
     6. Зберігай контекст заперечення"""
                 
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": "Ти — клієнт у діалозі з продавцем. Відповідай чесно, логічно і згідно з контекстом заперечення."},
                         {"role": "user", "content": gpt_prompt}
@@ -855,7 +855,7 @@ def chat():
     """
                     
                     stage1_response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
+                        model="gpt-4o-mini",
                         messages=[
                             {"role": "system", "content": "Ти — експерт з виявлення потреб клієнтів та комунікацій."},
                             {"role": "user", "content": stage1_prompt}
@@ -911,7 +911,7 @@ def chat():
     """
                     
                     stage3_response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
+                        model="gpt-4o-mini",
                         messages=[
                             {"role": "system", "content": "Ти — експерт з презентаційних навичок та комунікацій."},
                             {"role": "user", "content": stage3_prompt}
@@ -954,7 +954,7 @@ def chat():
     """
 
                 response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": "Ти — експерт з оцінки комунікацій. Повертай тільки цілі числа від 0 до 6. Будь об'єктивним та конструктивним."},
                         {"role": "user", "content": evaluation_prompt}

@@ -16,4 +16,4 @@ class Config:
 
 # OpenAI клієнт
 client = OpenAI()
-MODEL_ENGINE = "gpt-3.5-turbo"
+MODEL_ENGINE = "gpt-4o-mini"

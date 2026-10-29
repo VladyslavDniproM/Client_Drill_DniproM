@@ -21,7 +21,7 @@ def evaluate_question(question, situation_description):
     
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=2,
